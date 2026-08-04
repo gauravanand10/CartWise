@@ -10,24 +10,48 @@ import NotFound from "../pages/NotFound/NotFound";
 
 import { SearchPage } from "../features/search";
 
-function AppRoutes() {
+export default function AppRoutes() {
+
     return (
+
         <Routes>
+
             <Route element={<MainLayout />}>
-                <Route path="/" element={<Home />} />
 
-                <Route path="/search" element={<SearchPage />} />
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
 
-                <Route path="/compare" element={<Compare />} />
+                <Route
+                    path="/search"
+                    element={<SearchPage />}
+                />
 
-                <Route path="/wishlist" element={<Wishlist />} />
+                <Route
+                    path="/compare"
+                    element={<Compare />}
+                />
 
-                <Route path="/product/:id" element={<Product />} />
+                <Route
+                    path="/wishlist"
+                    element={<Wishlist />}
+                />
+
+                <Route
+                    path="/product/:id"
+                    element={<Product />}
+                />
+
             </Route>
 
-            <Route path="*" element={<NotFound />} />
-        </Routes>
-    );
-}
+            <Route
+                path="*"
+                element={<NotFound />}
+            />
 
-export default AppRoutes;
+        </Routes>
+
+    );
+
+}

@@ -97,12 +97,18 @@ export default function Footer() {
             <div className="mt-6">
 
               <input
+                id="newsletter-email"
+                name="email"
                 type="email"
                 placeholder="Enter your email"
+                autoComplete="email"
                 className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 outline-none transition focus:border-blue-500"
               />
 
-              <button className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-4 font-semibold transition hover:-translate-y-1 hover:shadow-xl">
+              <button
+                type="button"
+                className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-4 font-semibold transition hover:-translate-y-1 hover:shadow-xl"
+              >
                 Subscribe
               </button>
 
@@ -113,9 +119,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-20 border-t border-slate-800 pt-8 text-center text-slate-500">
-
           © 2026 CartWise • Built with React, TypeScript & Tailwind CSS
-
         </div>
 
       </div>

@@ -1,19 +1,5 @@
-import { useParams } from "react-router-dom";
+import { ProductPage } from "../../features/product";
 
-function Product() {
-    const { id } = useParams();
-
-    return (
-        <section>
-            <h1 className="mb-4 text-4xl font-bold">
-                Product Details
-            </h1>
-
-            <p className="text-lg text-gray-600">
-                Product ID: {id}
-            </p>
-        </section>
-    );
+export default function Product() {
+    return <ProductPage />;
 }
-
-export default Product;
