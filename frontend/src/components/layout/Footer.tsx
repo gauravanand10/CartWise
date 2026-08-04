@@ -1,42 +1,125 @@
+import { Link } from "react-router-dom";
+
 export default function Footer() {
-    return (
-        <footer className="mt-24 bg-slate-950 text-gray-300">
-            <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-3">
-                <div>
-                    <h2 className="text-3xl font-bold text-white">
-                        CartWise
-                    </h2>
+  return (
+    <footer className="bg-slate-950 text-white">
 
-                    <p className="mt-4 text-gray-400">
-                        Compare products intelligently before making your next purchase.
-                    </p>
-                </div>
+      <div className="mx-auto max-w-7xl px-8 py-20">
 
-                <div>
-                    <h3 className="mb-4 text-lg font-semibold text-white">
-                        Quick Links
-                    </h3>
+        <div className="grid gap-16 md:grid-cols-4">
 
-                    <ul className="space-y-2">
-                        <li>Home</li>
-                        <li>Compare</li>
-                        <li>Wishlist</li>
-                    </ul>
-                </div>
+          <div>
 
-                <div>
-                    <h3 className="mb-4 text-lg font-semibold text-white">
-                        Contact
-                    </h3>
+            <h2 className="text-4xl font-black">
+              CartWise
+            </h2>
 
-                    <p>support@cartwise.com</p>
-                    <p>India</p>
-                </div>
+            <p className="mt-6 leading-8 text-slate-400">
+              Compare products smarter, discover
+              better deals and make informed buying
+              decisions with CartWise.
+            </p>
+
+          </div>
+
+          <div>
+
+            <h3 className="text-xl font-bold">
+              Product
+            </h3>
+
+            <div className="mt-6 space-y-4">
+
+              <Link
+                to="/search"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                Search
+              </Link>
+
+              <Link
+                to="/compare"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                Compare
+              </Link>
+
+              <Link
+                to="/wishlist"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                Wishlist
+              </Link>
+
             </div>
 
-            <div className="border-t border-slate-800 py-6 text-center text-sm text-gray-400">
-                © 2026 CartWise • Built with React + TypeScript
+          </div>
+
+          <div>
+
+            <h3 className="text-xl font-bold">
+              Resources
+            </h3>
+
+            <div className="mt-6 space-y-4">
+
+              <a
+                href="#"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                Documentation
+              </a>
+
+              <a
+                href="#"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                GitHub
+              </a>
+
+              <a
+                href="#"
+                className="block text-slate-400 transition hover:text-white"
+              >
+                Contact
+              </a>
+
             </div>
-        </footer>
-    );
+
+          </div>
+
+          <div>
+
+            <h3 className="text-xl font-bold">
+              Newsletter
+            </h3>
+
+            <div className="mt-6">
+
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-5 py-4 outline-none transition focus:border-blue-500"
+              />
+
+              <button className="mt-4 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-4 font-semibold transition hover:-translate-y-1 hover:shadow-xl">
+                Subscribe
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="mt-20 border-t border-slate-800 pt-8 text-center text-slate-500">
+
+          © 2026 CartWise • Built with React, TypeScript & Tailwind CSS
+
+        </div>
+
+      </div>
+
+    </footer>
+  );
 }

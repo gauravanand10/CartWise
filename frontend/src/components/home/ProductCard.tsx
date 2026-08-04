@@ -1,62 +1,63 @@
 import { Link } from "react-router-dom";
+import type { Product } from "../../types/product";
 
 interface ProductCardProps {
-  id: number;
-  name: string;
-  category: string;
-  price: string;
-  rating: number;
-  image: string;
+  product: Product;
 }
 
 export default function ProductCard({
-  id,
-  name,
-  category,
-  price,
-  rating,
-  image,
+  product,
 }: ProductCardProps) {
   return (
-    <div className="rounded-2xl border bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-2 hover:shadow-2xl">
-      <div className="mb-5 flex justify-center text-6xl">
-        {image}
+    <article className="group overflow-hidden rounded-3xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+
+      <div className="relative flex h-72 items-center justify-center overflow-hidden bg-slate-100">
+
+        <div className="text-8xl">
+          {product.image}
+        </div>
+
+        <div className="absolute left-4 top-4 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
+          {product.category}
+        </div>
+
+        <div className="absolute right-4 top-4 rounded-full bg-white px-3 py-1 text-sm font-bold shadow">
+          ⭐ {product.rating}
+        </div>
+
       </div>
 
-      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-700">
-        {category}
-      </span>
+      <div className="space-y-5 p-6">
 
-      <h3 className="mt-4 text-2xl font-bold">
-        {name}
-      </h3>
+        <h2 className="text-2xl font-bold text-slate-900">
+          {product.name}
+        </h2>
 
-      <p className="mt-4 text-4xl font-bold text-blue-600">
-        {price}
-      </p>
+        <h3 className="text-3xl font-black text-blue-600">
+          {product.price}
+        </h3>
 
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-yellow-500">
-          ⭐ {rating}
-        </span>
-
-        <span className="text-green-600">
+        <p className="text-sm font-medium text-green-600">
           In Stock
-        </span>
+        </p>
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <button className="rounded-xl bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700">
+            Compare
+          </button>
+
+          <Link
+            to={`/product/${product.id}`}
+            className="rounded-xl border border-slate-300 py-3 text-center font-semibold transition hover:border-blue-600 hover:text-blue-600"
+          >
+            Details
+          </Link>
+
+        </div>
+
       </div>
 
-      <div className="mt-6 flex gap-3">
-        <button className="flex-1 rounded-lg bg-blue-600 py-2 font-semibold text-white transition hover:bg-blue-700">
-          Compare
-        </button>
-
-        <Link
-          to={`/product/${id}`}
-          className="flex-1 rounded-lg border py-2 text-center font-semibold transition hover:bg-gray-100"
-        >
-          Details
-        </Link>
-      </div>
-    </div>
+    </article>
   );
 }

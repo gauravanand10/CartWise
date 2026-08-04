@@ -1,69 +1,136 @@
-import SearchBar from "./SearchBar";
-import heroImage from "../../assets/hero.png";
+import { Link } from "react-router-dom";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Decorative Background Blobs */}
-      <div className="absolute -left-24 top-0 h-96 w-96 rounded-full bg-blue-200 opacity-30 blur-3xl"></div>
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950">
 
-      <div className="absolute right-0 top-40 h-[450px] w-[450px] rounded-full bg-indigo-200 opacity-30 blur-3xl"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#2563eb22,transparent_35%)]" />
 
-      <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-20 px-6 py-24 lg:flex-row">
-        {/* Left Section */}
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center px-8 py-28 lg:flex-row">
+
+        {/* Left */}
+
         <div className="flex-1">
-          <span className="inline-flex items-center rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
-            🚀 Smart Product Comparison Platform
+
+          <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-5 py-2 text-sm font-semibold text-blue-300">
+            🚀 Smart Product Discovery
           </span>
 
-          <h1 className="mt-8 text-5xl font-extrabold leading-tight text-gray-900 lg:text-7xl">
-            Compare Products
-            <span className="block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Before You Buy
+          <h1 className="mt-8 text-6xl font-black leading-tight text-white">
+
+            Find.
+
+            <span className="block bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Compare.
             </span>
+
+            Buy Smarter.
+
           </h1>
 
-          <p className="mt-8 max-w-2xl text-xl leading-9 text-gray-600">
-            Compare prices, specifications, ratings and reviews from multiple
-            brands to make informed buying decisions with confidence.
+          <p className="mt-8 max-w-xl text-xl leading-9 text-slate-300">
+            CartWise helps you discover products, compare specifications,
+            analyze prices and make confident buying decisions in seconds.
           </p>
 
-          <div className="mt-10">
-            <SearchBar />
-          </div>
-
           <div className="mt-10 flex flex-wrap gap-5">
-            <button className="rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-blue-700 hover:shadow-2xl">
-              Start Comparing →
-            </button>
 
-            <button className="rounded-xl border border-gray-300 bg-white px-8 py-4 text-lg font-semibold transition duration-300 hover:-translate-y-1 hover:border-blue-500 hover:text-blue-600 hover:shadow-lg">
-              Browse Products
-            </button>
+            <Link
+              to="/search"
+              className="rounded-2xl bg-blue-600 px-8 py-4 font-semibold text-white transition hover:scale-105 hover:bg-blue-700"
+            >
+              Explore Products
+            </Link>
+
+            <Link
+              to="/compare"
+              className="rounded-2xl border border-slate-700 px-8 py-4 font-semibold text-slate-200 transition hover:border-blue-500 hover:text-white"
+            >
+              Compare Products
+            </Link>
+
           </div>
 
-          <div className="mt-14 flex items-center gap-3 text-gray-500">
-            <div className="animate-bounce text-2xl">
-              ↓
+          <div className="mt-14 flex gap-10">
+
+            <div>
+              <h2 className="text-4xl font-black text-white">
+                20+
+              </h2>
+
+              <p className="mt-2 text-slate-400">
+                Products
+              </p>
             </div>
 
-            <span className="text-sm uppercase tracking-widest">
-              Scroll to Explore
-            </span>
+            <div>
+              <h2 className="text-4xl font-black text-white">
+                8+
+              </h2>
+
+              <p className="mt-2 text-slate-400">
+                Categories
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-4xl font-black text-white">
+                4.9★
+              </h2>
+
+              <p className="mt-2 text-slate-400">
+                Ratings
+              </p>
+            </div>
+
           </div>
+
         </div>
 
-        {/* Right Section */}
-        <div className="relative flex flex-1 justify-center">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 opacity-20 blur-3xl"></div>
+        {/* Right */}
 
-          <img
-            src={heroImage}
-            alt="CartWise Hero"
-            className="relative w-full max-w-xl rounded-3xl shadow-2xl transition duration-500 hover:scale-105"
-          />
+        <div className="mt-20 flex flex-1 justify-center lg:mt-0">
+
+          <div className="rounded-[40px] border border-slate-700 bg-slate-900/60 p-10 shadow-2xl backdrop-blur">
+
+            <div className="grid grid-cols-2 gap-6">
+
+              <div className="rounded-3xl bg-slate-800 p-8 text-center transition hover:scale-105">
+                <div className="text-6xl">📱</div>
+                <p className="mt-5 font-semibold text-white">
+                  Smartphones
+                </p>
+              </div>
+
+              <div className="rounded-3xl bg-slate-800 p-8 text-center transition hover:scale-105">
+                <div className="text-6xl">💻</div>
+                <p className="mt-5 font-semibold text-white">
+                  Laptops
+                </p>
+              </div>
+
+              <div className="rounded-3xl bg-slate-800 p-8 text-center transition hover:scale-105">
+                <div className="text-6xl">🎧</div>
+                <p className="mt-5 font-semibold text-white">
+                  Audio
+                </p>
+              </div>
+
+              <div className="rounded-3xl bg-slate-800 p-8 text-center transition hover:scale-105">
+                <div className="text-6xl">⌚</div>
+                <p className="mt-5 font-semibold text-white">
+                  Wearables
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
+
       </div>
+
     </section>
   );
 }
