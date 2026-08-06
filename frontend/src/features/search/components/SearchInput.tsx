@@ -21,7 +21,7 @@ const SearchInput = ({
 
         <div className="flex items-center gap-5 px-8 py-6">
 
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-fuchsia-100 text-2xl">
             🔍
           </div>
 
@@ -47,7 +47,7 @@ const SearchInput = ({
 
           <button
             type="button"
-            className="rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-4 font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+            className="rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
           >
             Search
           </button>
@@ -67,7 +67,7 @@ const SearchInput = ({
                 key={item}
                 type="button"
                 onClick={() => onQueryChange(item)}
-                className="rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-600 transition duration-300 hover:-translate-y-0.5 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                className="rounded-full border border-slate-200 bg-white px-5 py-2 text-sm font-semibold text-slate-600 transition duration-300 hover:-translate-y-0.5 hover:border-fuchsia-500 hover:bg-fuchsia-50 hover:text-fuchsia-600"
               >
                 {item}
               </button>

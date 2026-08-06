@@ -23,7 +23,7 @@ const SortDropdown = ({
                         e.target.value as SortOption
                     )
                 }
-                className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 font-medium transition focus:border-blue-500 focus:bg-white"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 font-medium transition focus:border-fuchsia-500 focus:bg-white"
             >
                 <option value="relevance">
                     Relevance

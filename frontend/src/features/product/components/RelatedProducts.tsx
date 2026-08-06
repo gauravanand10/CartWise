@@ -57,7 +57,7 @@ export default function RelatedProducts({
 
                             </div>
 
-                            <div className="absolute left-4 top-4 rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
+                            <div className="absolute left-4 top-4 rounded-full bg-fuchsia-600 px-4 py-1 text-xs font-semibold text-white">
 
                                 {product.category}
 
@@ -75,7 +75,7 @@ export default function RelatedProducts({
 
                             <div className="flex items-center justify-between">
 
-                                <span className="text-3xl font-black text-blue-600">
+                                <span className="text-3xl font-black text-fuchsia-600">
 
                                     ₹{product.price.toLocaleString()}
 
@@ -91,7 +91,7 @@ export default function RelatedProducts({
 
                             <Link
                                 to={`/product/${product.id}`}
-                                className="block rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-3 text-center font-semibold text-white transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                                className="block rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 py-3 text-center font-semibold text-white transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                             >
 
                                 View Details

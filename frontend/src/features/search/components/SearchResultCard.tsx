@@ -17,7 +17,7 @@ const SearchResultCard = ({
 
       <div className="space-y-3 p-5">
         <div className="flex items-center justify-between">
-          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+          <span className="rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold text-purple-700">
             {product.category}
           </span>
 
@@ -35,7 +35,7 @@ const SearchResultCard = ({
         </p>
 
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold text-blue-600">
+          <h3 className="text-2xl font-bold text-fuchsia-600">
             ₹{product.price.toLocaleString()}
           </h3>
 
@@ -45,7 +45,7 @@ const SearchResultCard = ({
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button className="flex-1 rounded-lg bg-blue-600 py-2 font-semibold text-white transition hover:bg-blue-700">
+          <button className="flex-1 rounded-lg bg-fuchsia-600 py-2 font-semibold text-white transition hover:bg-purple-700">
             Compare
           </button>
 

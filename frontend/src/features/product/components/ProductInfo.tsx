@@ -21,7 +21,7 @@ export default function ProductInfo({
 
         <section className="rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
 
-            <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+            <span className="rounded-full bg-fuchsia-100 px-4 py-2 text-sm font-semibold text-purple-700">
 
                 {product.category}
 
@@ -69,7 +69,7 @@ export default function ProductInfo({
 
             <div className="mt-10 flex flex-wrap items-end gap-4">
 
-                <h2 className="text-5xl font-black text-blue-600">
+                <h2 className="text-5xl font-black text-fuchsia-600">
 
                     ₹{product.price.toLocaleString()}
 
@@ -154,7 +154,7 @@ export default function ProductInfo({
 
                 <button
                     type="button"
-                    className="rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-4 text-lg font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    className="rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 py-4 text-lg font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
                 >
 
                     Compare

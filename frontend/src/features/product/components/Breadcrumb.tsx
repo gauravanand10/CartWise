@@ -21,7 +21,7 @@ export default function Breadcrumb({
 
             <Link
                 to="/"
-                className="font-medium text-slate-500 transition hover:text-blue-600"
+                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
             >
                 Home
             </Link>
@@ -32,7 +32,7 @@ export default function Breadcrumb({
 
             <Link
                 to="/search"
-                className="font-medium text-slate-500 transition hover:text-blue-600"
+                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
             >
                 Search
             </Link>
@@ -45,7 +45,7 @@ export default function Breadcrumb({
                 to={`/search?category=${encodeURIComponent(
                     product.category
                 )}`}
-                className="font-medium text-slate-500 transition hover:text-blue-600"
+                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
             >
                 {product.category}
             </Link>

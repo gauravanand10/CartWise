@@ -36,7 +36,7 @@ export default function ProductError({
 
                     <Link
                         to="/search"
-                        className="rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 py-4 text-center font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                        className="rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 py-4 text-center font-semibold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-2xl"
                     >
 
                         Browse Products
@@ -45,7 +45,7 @@ export default function ProductError({
 
                     <Link
                         to="/"
-                        className="rounded-2xl border border-slate-300 bg-white py-4 text-center font-semibold text-slate-700 transition duration-300 hover:border-blue-600 hover:text-blue-600 hover:shadow-lg"
+                        className="rounded-2xl border border-slate-300 bg-white py-4 text-center font-semibold text-slate-700 transition duration-300 hover:border-fuchsia-600 hover:text-fuchsia-600 hover:shadow-lg"
                     >
 
                         Back to Home

@@ -13,7 +13,7 @@ function NotFound() {
 
             <Link
                 to="/"
-                className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+                className="rounded-lg bg-fuchsia-600 px-6 py-3 font-medium text-white transition hover:bg-purple-700"
             >
                 Return Home
             </Link>

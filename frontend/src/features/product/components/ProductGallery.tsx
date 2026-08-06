@@ -25,7 +25,7 @@ export default function ProductGallery({
 
                 </div>
 
-                <div className="absolute left-6 top-6 rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow">
+                <div className="absolute left-6 top-6 rounded-full bg-fuchsia-600 px-5 py-2 text-sm font-semibold text-white shadow">
 
                     {product.brand}
 
@@ -53,7 +53,7 @@ export default function ProductGallery({
                                 setSelectedImage(index)
                             }
                             className={`flex h-28 items-center justify-center rounded-2xl border bg-white text-6xl shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${selectedImage === index
-                                    ? "border-blue-600 ring-2 ring-blue-200"
+                                    ? "border-fuchsia-600 ring-2 ring-fuchsia-200"
                                     : "border-slate-200"
                                 }`}
                         >

@@ -37,7 +37,7 @@ const Pagination = ({
                             onPageChange(index + 1)
                         }
                         className={`flex h-12 w-12 items-center justify-center rounded-2xl font-bold transition ${currentPage === index + 1
-                                ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg"
+                                ? "bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-lg"
                                 : "bg-white shadow-md hover:-translate-y-1"
                             }`}
                     >

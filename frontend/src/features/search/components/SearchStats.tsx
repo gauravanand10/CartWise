@@ -24,9 +24,9 @@ const SearchStats = ({
 
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-violet-600 p-8 text-white shadow-xl">
+      <div className="rounded-3xl bg-gradient-to-br from-fuchsia-600 to-purple-600 p-8 text-white shadow-xl">
 
-        <p className="text-sm uppercase tracking-wide text-blue-100">
+        <p className="text-sm uppercase tracking-wide text-fuchsia-100">
           Engine
         </p>
 
@@ -34,7 +34,7 @@ const SearchStats = ({
           Search V1
         </h2>
 
-        <p className="mt-4 text-blue-100">
+        <p className="mt-4 text-fuchsia-100">
           Feature-based architecture with
           debounced search.
         </p>

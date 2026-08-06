@@ -6,7 +6,7 @@ const SearchHeader = ({
   totalResults,
 }: SearchHeaderProps) => {
   return (
-    <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-600 via-blue-700 to-violet-700 px-12 py-16 text-white shadow-2xl">
+    <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-fuchsia-600 via-purple-700 to-violet-700 px-12 py-16 text-white shadow-2xl">
 
       <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
@@ -27,7 +27,7 @@ const SearchHeader = ({
           </span>
         </h1>
 
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-blue-100">
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-fuchsia-100">
           Compare products, analyze specifications,
           filter results and make better buying
           decisions with a fast and intuitive search
@@ -42,7 +42,7 @@ const SearchHeader = ({
               {totalResults}
             </h2>
 
-            <p className="mt-1 text-blue-100">
+            <p className="mt-1 text-fuchsia-100">
               Products
             </p>
 
@@ -54,7 +54,7 @@ const SearchHeader = ({
               50ms
             </h2>
 
-            <p className="mt-1 text-blue-100">
+            <p className="mt-1 text-fuchsia-100">
               Search Speed
             </p>
 
@@ -66,7 +66,7 @@ const SearchHeader = ({
               100%
             </h2>
 
-            <p className="mt-1 text-blue-100">
+            <p className="mt-1 text-fuchsia-100">
               Responsive
             </p>
 

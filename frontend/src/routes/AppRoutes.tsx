@@ -3,19 +3,16 @@ import { Routes, Route } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
 
 import Home from "../pages/Home/Home";
-import Compare from "../pages/Compare/Compare";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Product from "../pages/Product/Product";
 import NotFound from "../pages/NotFound/NotFound";
 
 import { SearchPage } from "../features/search";
+import { ComparePage } from "../features/compare";
 
 export default function AppRoutes() {
-
     return (
-
         <Routes>
-
             <Route element={<MainLayout />}>
 
                 <Route
@@ -30,7 +27,7 @@ export default function AppRoutes() {
 
                 <Route
                     path="/compare"
-                    element={<Compare />}
+                    element={<ComparePage />}
                 />
 
                 <Route
@@ -51,7 +48,5 @@ export default function AppRoutes() {
             />
 
         </Routes>
-
     );
-
 }

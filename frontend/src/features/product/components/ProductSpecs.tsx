@@ -14,7 +14,7 @@ export default function ProductSpecs({
 
             <div className="mb-10">
 
-                <span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
+                <span className="rounded-full bg-fuchsia-100 px-4 py-2 text-sm font-semibold text-purple-700">
 
                     Specifications
 
