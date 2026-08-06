@@ -40,12 +40,15 @@ export default function AppRoutes() {
                     element={<Product />}
                 />
 
-            </Route>
+                {/* Inside the layout so a wrong URL still gets the nav, search
+                    and footer to recover with, rather than being a dead end. */}
 
-            <Route
-                path="*"
-                element={<NotFound />}
-            />
+                <Route
+                    path="*"
+                    element={<NotFound />}
+                />
+
+            </Route>
 
         </Routes>
     );

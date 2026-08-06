@@ -44,9 +44,11 @@ export default function ProductPage() {
 
     return (
 
-        <main className="min-h-screen bg-slate-50 pb-24">
+        // MainLayout supplies the <main> landmark and the width container, so
+        // this page only owns its own vertical rhythm.
+        <div>
 
-            <div className="mx-auto max-w-7xl px-6">
+            <div>
 
                 <Breadcrumb
                     product={product}
@@ -92,7 +94,7 @@ export default function ProductPage() {
 
             </div>
 
-        </main>
+        </div>
 
     );
 

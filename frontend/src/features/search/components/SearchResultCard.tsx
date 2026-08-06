@@ -1,4 +1,5 @@
 import type { SearchProduct } from "../types/search";
+import SafeImage from "../../../components/ui/SafeImage";
 
 interface SearchResultCardProps {
   product: SearchProduct;
@@ -9,10 +10,12 @@ const SearchResultCard = ({
 }: SearchResultCardProps) => {
   return (
     <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <img
+      <SafeImage
         src={product.image}
         alt={product.title}
-        className="h-56 w-full object-cover"
+        className="flex h-56 w-full items-center justify-center overflow-hidden bg-slate-50"
+        imgClassName="h-full w-full object-cover"
+        iconClassName="h-12 w-12 text-slate-300"
       />
 
       <div className="space-y-3 p-5">

@@ -5,6 +5,7 @@ import {
 
 import Button from "../../../components/ui/Button";
 import Card from "../../../components/ui/Card";
+import SafeImage from "../../../components/ui/SafeImage";
 
 import type { CompareProduct } from "../types/compare";
 
@@ -36,10 +37,12 @@ export default function ProductCompareCard({
 
             <div className="flex justify-center">
 
-                <img
+                <SafeImage
                     src={product.image}
                     alt={product.name}
-                    className="h-64 object-contain transition-transform duration-500 hover:scale-105"
+                    className="flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50"
+                    imgClassName="h-full w-full object-contain p-4 transition-transform duration-500 hover:scale-105"
+                    iconClassName="h-16 w-16 text-slate-300"
                 />
 
             </div>

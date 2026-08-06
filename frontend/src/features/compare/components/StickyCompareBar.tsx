@@ -1,8 +1,13 @@
 import { ShoppingCart, Trophy } from "lucide-react";
 
 import Button from "../../../components/ui/Button";
+import SafeImage from "../../../components/ui/SafeImage";
 
 import { compareData } from "../data/compareData";
+
+/** Shared frame for the two thumbnails flanking the VS badge. */
+const THUMB_FRAME =
+    "flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100";
 
 export default function StickyCompareBar() {
     const { leftProduct, rightProduct, winner } = compareData;
@@ -14,10 +19,12 @@ export default function StickyCompareBar() {
 
                 <div className="flex items-center gap-6">
 
-                    <img
+                    <SafeImage
                         src={leftProduct.image}
                         alt={leftProduct.name}
-                        className="h-16 w-16 object-contain"
+                        className={THUMB_FRAME}
+                        imgClassName="h-full w-full object-contain p-2"
+                        iconClassName="h-7 w-7 text-slate-400"
                     />
 
                     <div>
@@ -73,10 +80,12 @@ export default function StickyCompareBar() {
 
                     </div>
 
-                    <img
+                    <SafeImage
                         src={rightProduct.image}
                         alt={rightProduct.name}
-                        className="h-16 w-16 object-contain"
+                        className={THUMB_FRAME}
+                        imgClassName="h-full w-full object-contain p-2"
+                        iconClassName="h-7 w-7 text-slate-400"
                     />
 
                 </div>

@@ -145,6 +145,41 @@ export const recommendedProducts: HomeProduct[] = [
     withBadge(catalogue.applewatch, "For you"),
 ];
 
+/** Parses "₹1,29,900" → 129900. Indian digit grouping, so strip every non-digit. */
+function parseRupees(value: string): number {
+    return Number(value.replace(/\D/g, ""));
+}
+
+/** Percentage below the original price, rounded. 0 when there's no genuine drop. */
+function discountPercent(product: Omit<HomeProduct, "badge">): number {
+    if (!product.originalPrice) return 0;
+
+    const was = parseRupees(product.originalPrice);
+    const now = parseRupees(product.price);
+
+    if (!was || was <= now) return 0;
+
+    return Math.round(((was - now) / was) * 100);
+}
+
+/**
+ * Biggest percentage drops first.
+ *
+ * The badge is computed from the price fields rather than hardcoded, so it can
+ * never disagree with the prices shown on the same card.
+ */
+export const priceDropProducts: HomeProduct[] = [
+    catalogue.galaxybuds,
+    catalogue.sonyxm6,
+    catalogue.oneplus14,
+    catalogue.macbookair,
+]
+    .sort((a, b) => discountPercent(b) - discountPercent(a))
+    .map((product) => ({
+        ...product,
+        badge: `${discountPercent(product)}% off`,
+    }));
+
 export const flashDeals: FlashDeal[] = [
     {
         id: "iphone16pro-deal",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import useDebounce from "./useDebounce";
 import { searchProducts } from "../services/searchService";
+import { products } from "../data/products";
 
 import type {
     SearchProduct,
@@ -63,10 +64,15 @@ export function useSearch() {
         filter,
     ]);
 
+    // Derived from the full catalogue, not from `results`. Deriving it from the
+    // filtered results made every other category disappear as soon as one was
+    // selected, leaving no way to switch categories without clearing the filter
+    // first. The list of available categories is a property of the catalogue,
+    // not of the current result set.
     const categories = useMemo(() => {
         const unique = new Set<string>();
 
-        results.forEach((product) => {
+        products.forEach((product) => {
             unique.add(product.category);
         });
 
@@ -74,7 +80,7 @@ export function useSearch() {
             "All",
             ...Array.from(unique).sort(),
         ];
-    }, [results]);
+    }, []);
 
     return {
         query,

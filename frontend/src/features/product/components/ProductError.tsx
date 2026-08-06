@@ -10,7 +10,8 @@ export default function ProductError({
 
     return (
 
-        <main className="flex min-h-[80vh] items-center justify-center bg-slate-50 px-6">
+        // MainLayout supplies the <main> landmark and width container.
+        <div className="flex min-h-[60vh] items-center justify-center">
 
             <section className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-2xl">
 
@@ -56,7 +57,7 @@ export default function ProductError({
 
             </section>
 
-        </main>
+        </div>
 
     );
 

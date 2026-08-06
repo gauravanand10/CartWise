@@ -7,6 +7,7 @@ import {
 import Button from "../../../components/ui/Button";
 import Badge from "../../../components/ui/Badge";
 import Card from "../../../components/ui/Card";
+import SafeImage from "../../../components/ui/SafeImage";
 
 import { compareData } from "../data/compareData";
 
@@ -45,10 +46,12 @@ export default function ComparisonOverview() {
 
                     <Card className="rounded-[32px] p-8 text-center">
 
-                        <img
+                        <SafeImage
                             src={leftProduct.image}
                             alt={leftProduct.name}
-                            className="mx-auto h-64 object-contain"
+                            className="mx-auto flex h-64 items-center justify-center overflow-hidden rounded-2xl bg-slate-50"
+                            imgClassName="h-full w-full object-contain p-4"
+                            iconClassName="h-16 w-16 text-slate-300"
                         />
 
                         <h2 className="mt-8 text-3xl font-black text-slate-900">
@@ -97,10 +100,12 @@ export default function ComparisonOverview() {
 
                     <Card className="rounded-[32px] p-8 text-center">
 
-                        <img
+                        <SafeImage
                             src={rightProduct.image}
                             alt={rightProduct.name}
-                            className="mx-auto h-64 object-contain"
+                            className="mx-auto flex h-64 items-center justify-center overflow-hidden rounded-2xl bg-slate-50"
+                            imgClassName="h-full w-full object-contain p-4"
+                            iconClassName="h-16 w-16 text-slate-300"
                         />
 
                         <h2 className="mt-8 text-3xl font-black text-slate-900">

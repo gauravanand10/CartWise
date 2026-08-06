@@ -5,6 +5,7 @@ import Badge from "./Badge";
 import Button from "./Button";
 import PriceTag from "./PriceTag";
 import Rating from "./Rating";
+import SafeImage from "./SafeImage";
 import StoreBadge from "./StoreBadge";
 
 import { cn } from "../../lib/cn";
@@ -105,15 +106,13 @@ export default function ProductCard({
                     />
                 </button>
 
-                <div className="overflow-hidden rounded-t-[32px] bg-gradient-to-br from-slate-100 via-white to-fuchsia-50">
-
-                    <img
-                        src={image}
-                        alt={title}
-                        className="mx-auto h-72 object-contain p-8 transition duration-500 group-hover:scale-110"
-                    />
-
-                </div>
+                <SafeImage
+                    src={image}
+                    alt={title}
+                    className="flex h-72 items-center justify-center overflow-hidden rounded-t-[32px] bg-gradient-to-br from-slate-100 via-white to-slate-50"
+                    imgClassName="mx-auto h-full object-contain p-8 transition duration-500 group-hover:scale-110"
+                    iconClassName="h-16 w-16 text-slate-300"
+                />
 
             </div>
 

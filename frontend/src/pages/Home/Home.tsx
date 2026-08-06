@@ -2,6 +2,7 @@ import Hero from "../../features/home/components/hero/Hero";
 import CategoryGrid from "../../features/home/components/category/CategoryGrid";
 import TrendingProducts from "../../features/home/components/TrendingProducts";
 import FlashDeals from "../../features/home/components/FlashDeals";
+import PriceDrops from "../../features/home/components/PriceDrops";
 import AIPicks from "../../features/home/components/AIPicks";
 import BrandCollections from "../../features/home/components/BrandCollections";
 import RecentlyViewed from "../../features/home/components/RecentlyViewed";
@@ -26,6 +27,10 @@ export default function Home() {
             {/* Urgency */}
 
             <FlashDeals />
+
+            {/* Value, ranked by how far prices have fallen */}
+
+            <PriceDrops />
 
             {/* The differentiator */}
 

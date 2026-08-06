@@ -32,17 +32,20 @@ import RelatedComparisons from "./components/RelatedComparisons";
 
 export default function ComparePage() {
     return (
-        <main className="relative min-h-screen overflow-hidden bg-slate-50">
+        // MainLayout owns the <main> landmark and the width container; this page
+        // only adds its own ambient background and vertical rhythm.
+        <div className="relative">
 
-            {/* Background Decorations */}
+            {/* Background Decorations — pointer-events-none so the blurred
+                blooms can never swallow clicks on the content above them. */}
 
-            <div className="absolute left-0 top-0 h-[700px] w-[700px] rounded-full bg-fuchsia-300/20 blur-[180px]" />
+            <div className="pointer-events-none absolute left-0 top-0 h-[700px] w-[700px] rounded-full bg-blue-300/20 blur-[180px]" />
 
-            <div className="absolute right-0 top-[500px] h-[700px] w-[700px] rounded-full bg-violet-300/20 blur-[180px]" />
+            <div className="pointer-events-none absolute right-0 top-[500px] h-[700px] w-[700px] rounded-full bg-violet-300/20 blur-[180px]" />
 
-            <div className="absolute bottom-0 left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-cyan-300/20 blur-[180px]" />
+            <div className="pointer-events-none absolute bottom-0 left-1/2 h-[700px] w-[700px] -translate-x-1/2 rounded-full bg-cyan-300/20 blur-[180px]" />
 
-            <div className="relative mx-auto flex w-full max-w-[1500px] flex-col gap-24 px-6 py-10 lg:px-10">
+            <div className="relative flex w-full flex-col gap-24">
 
                 {/* Sticky Header */}
 
@@ -110,6 +113,6 @@ export default function ComparePage() {
 
             </div>
 
-        </main>
+        </div>
     );
 }

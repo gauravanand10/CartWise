@@ -2,9 +2,10 @@ export default function ProductSkeleton() {
 
     return (
 
-        <main className="min-h-screen bg-slate-50">
+        // MainLayout supplies the <main> landmark and width container.
+        <div>
 
-            <div className="mx-auto max-w-7xl px-6 py-10 animate-pulse">
+            <div className="animate-pulse">
 
                 {/* Breadcrumb */}
 
@@ -128,7 +129,7 @@ export default function ProductSkeleton() {
 
             </div>
 
-        </main>
+        </div>
 
     );
 

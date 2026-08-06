@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     Camera,
     Gamepad2,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import SafeImage from "../../../../components/ui/SafeImage";
 import type { ProductCategory } from "../../types/home";
 
 const categoryGlyph: Record<ProductCategory, LucideIcon> = {
@@ -37,12 +37,11 @@ interface ProductImageProps {
 }
 
 /**
- * Renders a product image, falling back to a category glyph on a soft tint
- * when the file is missing.
+ * Product imagery for the homepage.
  *
- * The catalogue currently points at image paths the API doesn't serve yet, so
- * the fallback is the common case — it's styled to look like a deliberate
- * placeholder rather than a broken image.
+ * Thin wrapper over <SafeImage> that picks a category-appropriate fallback
+ * glyph, so a missing file reads as "phone" or "laptop" rather than a generic
+ * broken image.
  */
 export default function ProductImage({
     src,
@@ -51,15 +50,15 @@ export default function ProductImage({
     heightClass = "h-48",
     zoomOnGroupHover = true,
 }: ProductImageProps) {
-    const [failed, setFailed] = useState(false);
-    const Glyph = categoryGlyph[category];
-
     const zoom = zoomOnGroupHover
         ? "transition-transform duration-500 ease-out group-hover:scale-[1.06]"
         : "";
 
     return (
-        <div
+        <SafeImage
+            src={src}
+            alt={alt}
+            icon={categoryGlyph[category]}
             className={`
                 flex
                 ${heightClass}
@@ -71,22 +70,8 @@ export default function ProductImage({
                 from-slate-50
                 to-slate-100
             `}
-        >
-            {failed || !src ? (
-                <Glyph
-                    className={`h-14 w-14 text-slate-300 ${zoom}`}
-                    strokeWidth={1.25}
-                    aria-hidden="true"
-                />
-            ) : (
-                <img
-                    src={src}
-                    alt={alt}
-                    loading="lazy"
-                    onError={() => setFailed(true)}
-                    className={`h-full w-full object-contain p-4 ${zoom}`}
-                />
-            )}
-        </div>
+            imgClassName={`h-full w-full object-contain p-4 ${zoom}`}
+            iconClassName={`h-14 w-14 text-slate-300 ${zoom}`}
+        />
     );
 }

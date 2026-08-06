@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import SearchHeader from "./components/SearchHeader";
 import SearchInput from "./components/SearchInput";
@@ -37,9 +37,17 @@ export default function SearchPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
+    // Reset to page 1 whenever the result set changes. Adjusting state during
+    // render (React's documented pattern) rather than in an effect avoids the
+    // extra commit — and the flash of an out-of-range page — that a
+    // setState-inside-useEffect would cause.
+    const resultsKey = `${query}|${sort}|${filter.category ?? ""}`;
+    const [lastResultsKey, setLastResultsKey] = useState(resultsKey);
+
+    if (resultsKey !== lastResultsKey) {
+        setLastResultsKey(resultsKey);
         setCurrentPage(1);
-    }, [query, sort, filter]);
+    }
 
     const totalPages = Math.ceil(
         results.length / PRODUCTS_PER_PAGE
@@ -51,13 +59,17 @@ export default function SearchPage() {
     );
 
     return (
-        <main className="min-h-screen bg-slate-50 pb-24">
+        // No <main> or width wrapper here: MainLayout already provides both.
+        // Repeating them nested a second <main> landmark inside the first and
+        // added a second layer of horizontal padding, which pushed this page's
+        // content out of alignment with the navbar above it.
+        <div>
 
             <SearchHeader
                 totalResults={results.length}
             />
 
-            <section className="mx-auto mt-10 max-w-7xl px-6">
+            <section className="mt-10">
 
                 <SearchInput
                     query={query}
@@ -137,6 +149,6 @@ export default function SearchPage() {
 
             </section>
 
-        </main>
+        </div>
     );
 }
