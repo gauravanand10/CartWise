@@ -1,275 +1,417 @@
-# 📚 CartWise Engineering Handbook
+# 🛒 CartWise
 
-> **Learn Software Engineering by building a production-grade application from scratch.**
+<p align="center">
 
----
+### **AI-Powered Smart Product Comparison Platform**
 
-# 📖 About This Handbook
-
-Welcome to the CartWise Engineering Handbook.
-
-This handbook documents the complete engineering journey of building **CartWise**, a real-world product comparison platform.
-
-Unlike traditional tutorials that teach concepts in isolation, this handbook follows a **project-first engineering approach**.
-
-Every chapter is written **only after the corresponding milestone has been successfully completed**.
-
-This ensures that every explanation is based on real implementation, real debugging, and real engineering decisions.
-
-Nothing is assumed.
-
-Nothing is treated as magic.
-
-Every concept is explained through the CartWise project.
+Compare products, analyze specifications, discover the best prices, and receive AI-powered recommendations — all in one place.
 
 ---
 
-# 🎯 Objectives
+**Current Development Status:** 🚧 Active Development
 
-The goal of this handbook is to help you:
-
-- Build production-grade software.
-- Understand why engineering decisions are made.
-- Learn modern frontend and backend development.
-- Understand scalable software architecture.
-- Develop professional engineering workflows.
-- Prepare for Software Engineering interviews.
-- Create a long-term engineering reference.
+</p>
 
 ---
 
-# 🧠 Learning Philosophy
+# 📖 Table of Contents
 
-CartWise follows a **Project-First Learning** methodology.
+- [About CartWise](#-about-cartwise)
+- [Problem Statement](#-problem-statement)
+- [Solution](#-solution)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Project Architecture](#-project-architecture)
+- [Folder Structure](#-folder-structure)
+- [Documentation Roadmap](#-documentation-roadmap)
+- [Project Status](#-project-status)
+- [Future Roadmap](#-future-roadmap)
+- [How to Run](#-how-to-run)
+- [Project Goals](#-project-goals)
+- [License](#-license)
 
-Instead of learning technologies independently, every concept is introduced naturally while building the application.
+---
 
-The learning cycle is:
+# 🚀 About CartWise
 
-```text
-Problem
-    ↓
-Research
-    ↓
-Design
-    ↓
-Implementation
-    ↓
-Testing
-    ↓
-Git Commit
-    ↓
-Git Push
-    ↓
-Engineering Handbook
+CartWise is an AI-powered product comparison platform designed to help users make better purchasing decisions.
+
+Instead of visiting multiple shopping websites individually, CartWise allows users to:
+
+- Compare products side-by-side
+- Track prices across multiple stores
+- View detailed specifications
+- Receive AI-powered recommendations
+- Analyze reviews
+- Discover the best deals
+
+The long-term vision is to build a production-ready platform that supports both web and mobile applications using a shared backend.
+
+---
+
+# ❓ Problem Statement
+
+Online shopping has become increasingly fragmented.
+
+Users typically need to:
+
+- Open multiple shopping websites
+- Compare specifications manually
+- Search for reviews
+- Check different prices
+- Determine the best overall product
+
+This process is time-consuming and often leads to poor purchasing decisions.
+
+---
+
+# 💡 Solution
+
+CartWise provides a single platform where users can:
+
+- Search products
+- Compare specifications
+- Compare prices
+- Receive AI-generated recommendations
+- Save products
+- Build wishlists
+- Analyze review summaries
+- Track historical prices
+
+---
+
+# ✨ Key Features
+
+## Product Search
+
+- Intelligent product search
+- Auto suggestions
+- Category filtering
+
+---
+
+## Product Comparison
+
+- Side-by-side comparison
+- Technical specifications
+- Price comparison
+- Store comparison
+- AI-generated summary
+
+---
+
+## AI Features
+
+- Product recommendations
+- Buying advice
+- Review summarization
+- Smart comparison insights
+
+---
+
+## Wishlist
+
+- Save products
+- Recently viewed products
+- Compare history
+
+---
+
+## Price Tracking
+
+- Lowest price
+- Historical pricing
+- Price drop alerts
+
+---
+
+## Authentication
+
+- User accounts
+- Login
+- Signup
+- JWT Authentication
+
+---
+
+# 🛠 Technology Stack
+
+## Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS v4
+- React Router
+- Lucide React
+
+---
+
+## Backend (Planned)
+
+- Spring Boot
+- Spring Security
+- JWT
+- REST APIs
+
+---
+
+## Database (Planned)
+
+- PostgreSQL
+
+---
+
+## AI (Planned)
+
+- Gemini API
+- OpenAI
+- Recommendation Engine
+
+---
+
+## Deployment (Planned)
+
+Frontend
+
+- Vercel
+
+Backend
+
+- Railway / Render / AWS
+
+Database
+
+- Neon PostgreSQL
+
+---
+
+# 🏗 Project Architecture
+
 ```
-
-Documentation is always written after implementation.
-
-This ensures every chapter reflects actual engineering work instead of theoretical examples.
-
----
-
-# 🏗 Engineering Workflow
-
-Every milestone follows the exact same engineering process.
-
-```text
-Problem
-      │
-      ▼
-Research
-      │
-      ▼
-Design
-      │
-      ▼
-Implementation
-      │
-      ▼
-Debugging
-      │
-      ▼
-Testing
-      │
-      ▼
-Git Commit
-      │
-      ▼
-Git Push
-      │
-      ▼
-Engineering Handbook Chapter
-```
-
----
-
-# 📚 Handbook Roadmap
-
-## Phase 1 — Project Foundation
-
-- [ ] Chapter 1 — Development Environment & Project Initialization
-
----
-
-## Phase 2 — Application Foundation
-
-- [ ] Chapter 2 — Project Architecture & Routing
-
----
-
-## Phase 3 — Home Experience
-
-- [ ] Chapter 3 — Building the Home Page
-
----
-
-## Phase 4 — Search System
-
-- [ ] Chapter 4 — Search & Filtering
-
----
-
-## Phase 5 — Product Details
-
-- [ ] Chapter 5 — Dynamic Product Pages
-
----
-
-## Phase 6 — Comparison Engine
-
-- [ ] Chapter 6 — Product Comparison Architecture
-
----
-
-## Phase 7 — Wishlist
-
-- [ ] Chapter 7 — Wishlist & User State
-
----
-
-## Phase 8 — Backend Engineering
-
-- [ ] Chapter 8 — Backend APIs & Database
-
----
-
-## Phase 9 — Authentication
-
-- [ ] Chapter 9 — Authentication & Authorization
-
----
-
-## Phase 10 — Deployment
-
-- [ ] Chapter 10 — Deployment, CI/CD & DevOps
-
----
-
-## Phase 11 — Performance & Scaling
-
-- [ ] Chapter 11 — Performance, Security & Scaling
-
----
-
-# 📖 Chapter Structure
-
-Every chapter follows the same structure.
-
-1. Learning Objectives
-2. Problem Statement
-3. What We Built
-4. Why We Needed It
-5. Requirements
-6. Design Decisions
-7. Internal Working
-8. Architecture Diagram
-9. Folder Structure
-10. Commands Used
-11. Code Walkthrough
-12. Application in CartWise
-13. Industry Insight
-14. Alternatives Considered
-15. Common Mistakes
-16. Debugging Guide
-17. Best Practices
-18. Interview Questions (with Answers)
-19. Summary
-20. Key Takeaways
-21. Evolution
-22. Related Chapters
-
----
-
-# 📂 Handbook Structure
-
-```text
-docs/
-│
-├── README.md
-│
-├── 01-Project-Foundation/
-│   └── README.md
-│
-├── 02-Application-Foundation/
-│   └── README.md
-│
-├── 03-Home-Experience/
-│   └── README.md
-│
-├── 04-Search-System/
-│   └── README.md
-│
-├── 05-Product-Details/
-│   └── README.md
-│
-├── 06-Comparison-Engine/
-│   └── README.md
-│
-├── 07-Wishlist/
-│   └── README.md
-│
-├── 08-Backend/
-│   └── README.md
-│
-├── 09-Authentication/
-│   └── README.md
-│
-├── 10-Deployment/
-│   └── README.md
-│
-└── 11-Performance-and-Scaling/
-    └── README.md
+                User
+                  │
+                  ▼
+          React Frontend
+                  │
+                  ▼
+           REST API Layer
+                  │
+                  ▼
+          Spring Boot Backend
+                  │
+                  ▼
+             PostgreSQL
+                  │
+                  ▼
+          AI Recommendation
+               Services
 ```
 
 ---
 
-# 📜 Engineering Principles
+# 📁 Folder Structure
 
-Throughout this project, the following principles will always be followed.
+```
+CartWise/
 
-- Build first, document later.
-- Never skip the "Why?"
-- Every engineering decision must be justified.
-- Every feature must be production-ready.
-- Every milestone must be committed to Git.
-- Every milestone must be pushed to GitHub.
-- Every completed milestone results in one handbook chapter.
-- Documentation should explain the implementation, not predict it.
+├── frontend/
+│
+├── backend/                  (Planned)
+│
+├── docs/
+│
+├── datasets/                 (Future)
+│
+├── models/                   (Future)
+│
+└── README.md
+```
 
 ---
 
-# 🚀 Final Vision
+## Frontend Structure
 
-By the end of CartWise, this repository will contain:
+```
+src/
 
-- A production-ready full-stack application.
-- A complete Software Engineering handbook.
-- A clean and meaningful Git history.
-- Practical engineering knowledge gained through real implementation.
-- A long-term reference for future projects.
-- A portfolio that demonstrates both development skills and engineering thinking.
+assets/
 
-CartWise is not just an application.
+components/
 
-It is a complete engineering journey documented from the first line of code to production deployment.
+constants/
+
+data/
+
+features/
+
+hooks/
+
+lib/
+
+pages/
+
+routes/
+
+services/
+
+types/
+
+utils/
+```
+
+---
+
+# 📚 Documentation Roadmap
+
+The project documentation is divided into **25 structured chapters**.
+
+| Chapter | Topic | Status |
+|----------|-------|--------|
+| 01 | Project Planning & Vision | ⏳ |
+| 02 | Project Initialization | ⏳ |
+| 03 | Software Architecture | ⏳ |
+| 04 | Routing & Navigation | ⏳ |
+| 05 | Design System | ⏳ |
+| 06 | Shared Components | ⏳ |
+| 07 | Layout Architecture | ⏳ |
+| 08 | Homepage Development | ⏳ |
+| 09 | Responsive Design | ⏳ |
+| 10 | Search System | ⏳ |
+| 11 | Product Details | ⏳ |
+| 12 | Product Comparison | ⏳ |
+| 13 | Wishlist | ⏳ |
+| 14 | State Management | ⏳ |
+| 15 | Backend Architecture | ⏳ |
+| 16 | Database Design | ⏳ |
+| 17 | REST APIs | ⏳ |
+| 18 | Authentication | ⏳ |
+| 19 | AI Integration | ⏳ |
+| 20 | Image & Media Management | ⏳ |
+| 21 | Performance Optimization | ⏳ |
+| 22 | Testing | ⏳ |
+| 23 | Deployment & DevOps | ⏳ |
+| 24 | Mobile Application | ⏳ |
+| 25 | Production Scaling & Maintenance | ⏳ |
+
+---
+
+# 📈 Current Project Status
+
+## Completed
+
+- Project initialization
+- Folder architecture
+- Routing
+- Layout
+- Homepage development
+- Feature-based architecture
+- Shared component library
+
+---
+
+## In Progress
+
+- Homepage UI refinement
+- Responsive design
+- Layout improvements
+
+---
+
+## Planned
+
+- Backend APIs
+- Authentication
+- AI Integration
+- Database
+- Mobile application
+- Production deployment
+
+---
+
+# 🗺 Future Roadmap
+
+## Phase 1
+
+Frontend Development
+
+## Phase 2
+
+Backend Development
+
+## Phase 3
+
+Database Integration
+
+## Phase 4
+
+AI Features
+
+## Phase 5
+
+Authentication
+
+## Phase 6
+
+Deployment
+
+## Phase 7
+
+Mobile Application
+
+## Phase 8
+
+Production Scaling
+
+---
+
+# ▶️ How to Run
+
+Clone the repository
+
+```bash
+git clone <repository-url>
+```
+
+Navigate to the frontend
+
+```bash
+cd frontend
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Start the development server
+
+```bash
+npm run dev
+```
+
+---
+
+# 🎯 Project Goals
+
+- Build a production-ready shopping platform.
+- Learn modern Software Engineering through a real-world project.
+- Follow scalable architecture and clean code principles.
+- Build reusable components and modular features.
+- Support both web and mobile from a shared backend.
+- Integrate AI for smarter shopping decisions.
+
+---
+
+# 📜 License
+
+This project is being developed for educational and portfolio purposes.
+
+Future licensing may change as the project evolves.
+
+---
+
+# ❤️ CartWise
+
+**Compare Better. Buy Smarter.**
