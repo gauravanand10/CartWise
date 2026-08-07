@@ -32,9 +32,9 @@ const categories = [
  */
 export default function CategoryStrip() {
     return (
-        <div className="border-t border-slate-100 bg-white">
+        <div className="relative border-t border-slate-100 bg-white">
 
-            <Container className="flex h-11 items-center gap-1 overflow-x-auto scrollbar-hide">
+            <Container className="flex h-12 items-center gap-1 overflow-x-auto scrollbar-hide sm:h-11">
 
                 {categories.map((category) => {
                     const Icon = category.icon;
@@ -50,9 +50,10 @@ export default function CategoryStrip() {
                                 gap-2
                                 rounded-full
                                 px-3
-                                py-1.5
+                                py-2.5
                                 text-[13px]
                                 font-medium
+                                sm:py-1.5
                                 text-slate-600
                                 transition
                                 duration-200
@@ -74,6 +75,15 @@ export default function CategoryStrip() {
                 })}
 
             </Container>
+
+            {/* Right-edge fade: the strip scrolls on small screens but has no
+                arrows, so this is the only cue that more categories exist.
+                Hidden from `lg`, where the full set already fits. */}
+
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent lg:hidden"
+            />
 
         </div>
     );

@@ -53,7 +53,7 @@ export default function CompareHero() {
 
                         <div className="rounded-3xl border border-white/20 bg-white/10 p-8 backdrop-blur-xl transition duration-300 hover:-translate-y-2">
 
-                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-fuchsia-500 text-white text-4xl">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-fuchsia-500 text-white text-2xl sm:text-3xl lg:text-4xl">
                                 📱
                             </div>
 
@@ -69,7 +69,7 @@ export default function CompareHero() {
 
                         <div className="rounded-3xl border border-white/20 bg-white/10 p-8 backdrop-blur-xl transition duration-300 hover:-translate-y-2">
 
-                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-violet-500 text-white text-4xl">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-violet-500 text-white text-2xl sm:text-3xl lg:text-4xl">
                                 🤖
                             </div>
 
@@ -93,13 +93,13 @@ export default function CompareHero() {
                                         AI Recommendation
                                     </p>
 
-                                    <h3 className="mt-2 text-3xl font-black">
+                                    <h3 className="mt-2 text-2xl sm:text-3xl font-black">
                                         Best Value
                                     </h3>
 
                                 </div>
 
-                                <div className="rounded-full bg-yellow-400 p-5 text-4xl">
+                                <div className="rounded-full bg-yellow-400 p-5 text-2xl sm:text-3xl lg:text-4xl">
                                     🏆
                                 </div>
 

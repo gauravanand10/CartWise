@@ -38,7 +38,7 @@ export default function ErrorState({
                 )}
             </div>
 
-            <h2 className="mt-8 text-3xl font-black text-slate-900">
+            <h2 className="mt-8 text-2xl sm:text-3xl font-black text-slate-900">
                 {title}
             </h2>
 

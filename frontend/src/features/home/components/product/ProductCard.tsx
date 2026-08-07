@@ -31,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     } = product;
 
     return (
-        <article className={`group flex h-full flex-col p-4 ${surfaceCard}`}>
+        <article className={`group flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}>
 
             {/* Media + overlay actions */}
 
@@ -40,7 +40,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     src={image}
                     alt={name}
                     category={category}
-                    heightClass="h-44"
+                    heightClass="h-32 min-[400px]:h-36 sm:h-44"
                 />
 
                 {badge && (
@@ -64,21 +64,31 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </span>
                 )}
 
-                {/* Revealed on hover for pointer users; always available to keyboards. */}
+                {/*
+                    Always visible up to `md`, hover-revealed above it.
+
+                    Tailwind v4 gates `hover:` behind `@media (hover: hover)`, so
+                    a purely hover-revealed control is unreachable on touch — the
+                    buttons would have stayed at opacity 0 forever on every phone
+                    and tablet. Keyboard users are covered by `focus-within`.
+                */}
 
                 <div
                     className="
                         absolute
-                        right-3
-                        top-3
+                        right-2
+                        top-2
                         flex
                         flex-col
-                        gap-2
-                        opacity-0
+                        gap-1.5
                         transition-opacity
                         duration-200
-                        group-hover:opacity-100
                         focus-within:opacity-100
+                        sm:right-3
+                        sm:top-3
+                        sm:gap-2
+                        md:opacity-0
+                        md:group-hover:opacity-100
                     "
                 >
                     <button
@@ -86,20 +96,24 @@ export default function ProductCard({ product }: ProductCardProps) {
                         aria-label={`Add ${name} to wishlist`}
                         className="
                             flex
-                            h-8
-                            w-8
+                            h-9
+                            w-9
                             items-center
                             justify-center
                             rounded-full
-                            bg-white
+                            bg-white/95
                             text-slate-600
                             shadow-sm
+                            backdrop-blur-sm
                             transition
                             hover:bg-rose-500
                             hover:text-white
                             focus-visible:outline-none
                             focus-visible:ring-2
                             focus-visible:ring-blue-500
+                            md:h-8
+                            md:w-8
+                            md:bg-white
                         "
                     >
                         <Heart size={15} />
@@ -110,20 +124,24 @@ export default function ProductCard({ product }: ProductCardProps) {
                         aria-label={`Compare ${name}`}
                         className="
                             flex
-                            h-8
-                            w-8
+                            h-9
+                            w-9
                             items-center
                             justify-center
                             rounded-full
-                            bg-white
+                            bg-white/95
                             text-slate-600
                             shadow-sm
+                            backdrop-blur-sm
                             transition
                             hover:bg-blue-600
                             hover:text-white
                             focus-visible:outline-none
                             focus-visible:ring-2
                             focus-visible:ring-blue-500
+                            md:h-8
+                            md:w-8
+                            md:bg-white
                         "
                     >
                         <Scale size={15} />
@@ -133,12 +151,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Meta */}
 
-            <div className="mt-4 flex-1">
-                <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-slate-900">
+            <div className="mt-3 flex-1 sm:mt-4">
+                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 sm:text-[15px]">
                     {name}
                 </h3>
 
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-x-3">
                     <span className="inline-flex items-center gap-1 text-[13px]">
                         <Star
                             size={13}
@@ -173,7 +191,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </div>
 
                 {store && (
-                    <p className="mt-2 truncate text-[13px] text-slate-500">
+                    <p className="mt-2 truncate text-xs text-slate-500 sm:text-[13px]">
                         Lowest at{" "}
                         <span className="font-medium text-slate-700">
                             {store}
@@ -184,34 +202,37 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Price block — pinned to the bottom so rows stay aligned. */}
 
-            <div className="mt-4">
-                <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="text-xl font-semibold tracking-tight text-slate-900">
+            <div className="mt-3 sm:mt-4">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                         {price}
                     </span>
 
                     {originalPrice && (
-                        <span className="text-[13px] text-slate-400 line-through">
+                        <span className="text-xs text-slate-400 line-through sm:text-[13px]">
                             {originalPrice}
                         </span>
                     )}
                 </div>
 
                 {discount && (
-                    <p className="mt-1 text-[13px] font-medium text-emerald-600">
+                    <p className="mt-1 text-xs font-medium text-emerald-600 sm:text-[13px]">
                         {discount}
                     </p>
                 )}
 
+                {/* Label shortens on the narrowest cards so it never wraps to
+                    two lines and breaks the shared card height. */}
+
                 <button
                     type="button"
                     className="
-                        mt-4
+                        mt-3
                         w-full
                         rounded-full
                         bg-slate-900
                         py-2.5
-                        text-sm
+                        text-[13px]
                         font-semibold
                         text-white
                         transition
@@ -221,9 +242,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                         focus-visible:ring-2
                         focus-visible:ring-blue-500
                         focus-visible:ring-offset-2
+                        sm:mt-4
+                        sm:text-sm
                     "
                 >
-                    Compare prices
+                    <span className="sm:hidden">Compare</span>
+                    <span className="hidden sm:inline">Compare prices</span>
                 </button>
             </div>
 

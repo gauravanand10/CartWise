@@ -16,7 +16,7 @@ export default function ProductRail({ products, label }: ProductRailProps) {
             {products.map((product) => (
                 <div
                     key={product.id}
-                    className={`${railItem} w-[260px] sm:w-[280px]`}
+                    className={railItem}
                 >
                     <ProductCard product={product} />
                 </div>

@@ -28,7 +28,7 @@ export default function FlashDeals() {
                     {flashDeals.map((deal) => (
                         <div
                             key={deal.id}
-                            className={`${railItem} w-[260px] sm:w-[280px]`}
+                            className={railItem}
                         >
                             <FlashDealCard deal={deal} />
                         </div>

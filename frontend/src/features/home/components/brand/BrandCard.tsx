@@ -23,14 +23,18 @@ export default function BrandCard({ brand }: BrandCardProps) {
                 w-full
                 flex-col
                 items-center
-                gap-3
-                rounded-[24px]
+                gap-2.5
+                rounded-[20px]
                 border
                 border-slate-200/70
                 bg-white
-                px-4
-                py-6
+                px-3
+                py-5
                 text-center
+                sm:gap-3
+                sm:rounded-[24px]
+                sm:px-4
+                sm:py-6
                 transition-[transform,box-shadow,border-color]
                 duration-300
                 ease-out
@@ -46,16 +50,19 @@ export default function BrandCard({ brand }: BrandCardProps) {
             <span
                 className="
                     flex
-                    h-16
-                    w-16
+                    h-14
+                    w-14
                     items-center
                     justify-center
                     overflow-hidden
-                    rounded-[18px]
+                    rounded-[16px]
                     transition-transform
                     duration-300
                     ease-out
                     group-hover:scale-105
+                    sm:h-16
+                    sm:w-16
+                    sm:rounded-[18px]
                 "
             >
                 {logoFailed || !logo ? (
@@ -88,12 +95,12 @@ export default function BrandCard({ brand }: BrandCardProps) {
                 )}
             </span>
 
-            <span>
-                <span className="block text-[15px] font-semibold text-slate-900">
+            <span className="w-full">
+                <span className="block truncate text-sm font-semibold text-slate-900 sm:text-[15px]">
                     {name}
                 </span>
 
-                <span className="mt-0.5 block text-xs text-slate-500">
+                <span className="mt-0.5 block text-[11px] text-slate-500 sm:text-xs">
                     {products}
                 </span>
             </span>

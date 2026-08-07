@@ -1,12 +1,12 @@
 const EmptyState = () => {
     return (
-        <section className="mt-16 flex flex-col items-center justify-center rounded-[36px] bg-white p-20 text-center shadow-xl">
+        <section className="mt-10 flex flex-col items-center justify-center rounded-[24px] bg-white p-8 text-center shadow-xl sm:mt-16 sm:rounded-[36px] sm:p-14 lg:p-20">
 
-            <div className="text-8xl">
+            <div className="text-5xl sm:text-7xl lg:text-8xl">
                 🔍
             </div>
 
-            <h2 className="mt-8 text-4xl font-black text-slate-900">
+            <h2 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                 No Products Found
             </h2>
 

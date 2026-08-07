@@ -52,7 +52,7 @@ export default function ProductGallery({
                             onClick={() =>
                                 setSelectedImage(index)
                             }
-                            className={`flex h-28 items-center justify-center rounded-2xl border bg-white text-6xl shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${selectedImage === index
+                            className={`flex h-28 items-center justify-center rounded-2xl border bg-white text-3xl sm:text-5xl lg:text-6xl shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${selectedImage === index
                                     ? "border-fuchsia-600 ring-2 ring-fuchsia-200"
                                     : "border-slate-200"
                                 }`}

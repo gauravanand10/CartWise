@@ -19,7 +19,7 @@ export default function ProductInfo({
 
     return (
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 lg:p-10 shadow-xl">
 
             <span className="rounded-full bg-fuchsia-100 px-4 py-2 text-sm font-semibold text-purple-700">
 
@@ -27,7 +27,7 @@ export default function ProductInfo({
 
             </span>
 
-            <h1 className="mt-6 text-5xl font-black leading-tight text-slate-900">
+            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-slate-900">
 
                 {product.name}
 
@@ -69,7 +69,7 @@ export default function ProductInfo({
 
             <div className="mt-10 flex flex-wrap items-end gap-4">
 
-                <h2 className="text-5xl font-black text-fuchsia-600">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-fuchsia-600">
 
                     ₹{product.price.toLocaleString()}
 

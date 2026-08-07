@@ -17,7 +17,7 @@ export default function CompareError({
     return (
         <section className="flex min-h-[500px] items-center justify-center">
 
-            <Card className="w-full max-w-3xl rounded-[36px] p-12 text-center">
+            <Card className="w-full max-w-3xl rounded-[36px] p-6 sm:p-9 lg:p-12 text-center">
 
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
 
@@ -28,7 +28,7 @@ export default function CompareError({
 
                 </div>
 
-                <h2 className="mt-8 text-4xl font-black text-slate-900">
+                <h2 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
 
                     {title}
 

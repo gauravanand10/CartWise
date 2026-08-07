@@ -39,7 +39,10 @@ export default function SectionHeader({
     hideCta = false,
 }: SectionHeaderProps) {
     return (
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        // `items-start` while stacked, `items-end` once side by side: when the
+        // CTA wraps onto its own line on narrow screens, baseline-aligning it
+        // against a two-line title left it visually detached.
+        <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
 
             <div className="min-w-0">
                 {eyebrow && (
@@ -60,9 +63,10 @@ export default function SectionHeader({
 
                 <h2
                     className={`
-                        text-2xl
+                        text-xl
                         font-semibold
                         tracking-tight
+                        min-[400px]:text-2xl
                         sm:text-3xl
                         ${onDark ? "text-white" : "text-slate-900"}
                     `}
@@ -73,10 +77,12 @@ export default function SectionHeader({
                 {subtitle && (
                     <p
                         className={`
-                            mt-2
+                            mt-1.5
                             max-w-2xl
-                            text-[15px]
+                            text-sm
                             leading-relaxed
+                            sm:mt-2
+                            sm:text-[15px]
                             ${onDark ? "text-white/70" : "text-slate-500"}
                         `}
                     >

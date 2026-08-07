@@ -22,14 +22,18 @@ export default function CategoryCard({ category }: CategoryCardProps) {
                 w-full
                 flex-col
                 items-center
-                gap-4
-                rounded-[24px]
+                gap-3
+                rounded-[20px]
                 border
                 border-slate-200/70
                 bg-white
-                px-4
-                py-7
+                px-3
+                py-5
                 text-center
+                sm:gap-4
+                sm:rounded-[24px]
+                sm:px-4
+                sm:py-7
                 transition-[transform,box-shadow,border-color]
                 duration-300
                 ease-out
@@ -45,42 +49,56 @@ export default function CategoryCard({ category }: CategoryCardProps) {
             <span
                 className={`
                     flex
-                    h-20
-                    w-20
+                    h-16
+                    w-16
                     items-center
                     justify-center
-                    rounded-[22px]
+                    rounded-[18px]
                     ${tint}
                     transition-transform
                     duration-300
                     ease-out
                     group-hover:scale-105
+                    sm:h-20
+                    sm:w-20
+                    sm:rounded-[22px]
                 `}
             >
                 <span
                     className={`
                         flex
-                        h-14
-                        w-14
+                        h-11
+                        w-11
                         items-center
                         justify-center
-                        rounded-[16px]
+                        rounded-[13px]
                         bg-gradient-to-br
                         ${gradient}
                         text-white
                         shadow-sm
+                        sm:h-14
+                        sm:w-14
+                        sm:rounded-[16px]
                     `}
                 >
-                    <Icon size={26} strokeWidth={1.75} />
+                    <Icon
+                        className="h-[21px] w-[21px] sm:h-[26px] sm:w-[26px]"
+                        strokeWidth={1.75}
+                    />
                 </span>
             </span>
 
-            <span className="space-y-1">
-                <span className="block text-[15px] font-semibold leading-snug text-slate-900">
+            <span className="w-full space-y-0.5 sm:space-y-1">
+                {/* Wraps to a second line rather than truncating: "Home
+                    Appliances" needs 111px and the tile is 108px at 320px, so
+                    truncating cost the last word for no reason. Grid rows
+                    stretch, so a two-line title keeps the cards level. */}
+
+                <span className="block text-sm font-semibold leading-snug text-slate-900 sm:text-[15px]">
                     {title}
                 </span>
 
-                <span className="block text-xs font-medium text-slate-500">
+                <span className="block text-[11px] font-medium text-slate-500 sm:text-xs">
                     {caption}
                 </span>
             </span>

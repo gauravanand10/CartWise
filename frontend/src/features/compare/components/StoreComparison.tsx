@@ -21,7 +21,7 @@ export default function StoreComparison() {
                     Best Store Prices
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black">
                     Compare Prices Across Stores
                 </h2>
 
@@ -60,7 +60,7 @@ export default function StoreComparison() {
                                     Starting From
                                 </p>
 
-                                <p className="text-3xl font-black text-fuchsia-600">
+                                <p className="text-2xl sm:text-3xl font-black text-fuchsia-600">
                                     ₹{Math.min(...product.stores.map(store => store.price)).toLocaleString()}
                                 </p>
 

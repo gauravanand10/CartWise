@@ -26,7 +26,7 @@ export default function RelatedProducts({
 
                 </span>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
 
                     Related Products
 
@@ -51,7 +51,7 @@ export default function RelatedProducts({
 
                         <div className="relative flex h-60 items-center justify-center bg-slate-100">
 
-                            <div className="text-8xl transition duration-300 group-hover:scale-110">
+                            <div className="text-5xl sm:text-7xl lg:text-8xl transition duration-300 group-hover:scale-110">
 
                                 {product.images[0]}
 
@@ -75,7 +75,7 @@ export default function RelatedProducts({
 
                             <div className="flex items-center justify-between">
 
-                                <span className="text-3xl font-black text-fuchsia-600">
+                                <span className="text-2xl sm:text-3xl font-black text-fuchsia-600">
 
                                     ₹{product.price.toLocaleString()}
 

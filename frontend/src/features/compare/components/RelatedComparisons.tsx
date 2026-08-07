@@ -62,7 +62,7 @@ export default function RelatedComparisons() {
                     Popular Comparisons
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                     Continue Exploring
                 </h2>
 
@@ -93,7 +93,7 @@ export default function RelatedComparisons() {
 
                             </div>
 
-                            <div className="mt-8 text-center text-7xl">
+                            <div className="mt-8 text-center text-4xl sm:text-5xl lg:text-7xl">
                                 {item.emoji}
                             </div>
 
@@ -141,7 +141,7 @@ export default function RelatedComparisons() {
 
                                 <div className="mt-2 flex items-center justify-between">
 
-                                    <span className="text-3xl font-black text-fuchsia-600">
+                                    <span className="text-2xl sm:text-3xl font-black text-fuchsia-600">
                                         {item.score}
                                     </span>
 

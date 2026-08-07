@@ -21,7 +21,7 @@ export default function EmptyCompare({
 
                 <div className="grid items-center lg:grid-cols-2">
 
-                    <div className="space-y-8 p-12">
+                    <div className="space-y-8 p-6 sm:p-9 lg:p-12">
 
                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-fuchsia-100">
 
@@ -32,7 +32,7 @@ export default function EmptyCompare({
 
                         </div>
 
-                        <h1 className="text-5xl font-black leading-tight text-slate-900">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-slate-900">
 
                             No Products Selected
 
@@ -62,7 +62,7 @@ export default function EmptyCompare({
 
                     </div>
 
-                    <div className="relative flex h-full items-center justify-center overflow-hidden bg-gradient-to-br from-fuchsia-600 via-pink-600 to-purple-700 p-16">
+                    <div className="relative flex h-full items-center justify-center overflow-hidden bg-gradient-to-br from-fuchsia-600 via-pink-600 to-purple-700 p-8 sm:p-12 lg:p-16">
 
                         <div className="absolute h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
@@ -76,7 +76,7 @@ export default function EmptyCompare({
 
                                 <div className="flex items-center">
 
-                                    <div className="rounded-full bg-white p-5 text-3xl font-black text-purple-700">
+                                    <div className="rounded-full bg-white p-5 text-2xl sm:text-3xl font-black text-purple-700">
 
                                         VS
 

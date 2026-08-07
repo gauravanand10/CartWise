@@ -56,7 +56,7 @@ export default function DisplayComparison() {
                     Display Comparison
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black">
                     Display & Visual Experience
                 </h2>
 
@@ -75,11 +75,11 @@ export default function DisplayComparison() {
                         className="rounded-[30px] p-8"
                     >
 
-                        <div className="grid grid-cols-[1fr_240px_1fr] items-center gap-8">
+                        <div className="grid grid-cols-2 items-center gap-x-4 gap-y-3 sm:gap-x-6 lg:grid-cols-[1fr_240px_1fr] lg:gap-8">
 
                             <div>
 
-                                <h3 className="text-3xl font-black">
+                                <h3 className="text-lg font-black break-words sm:text-2xl lg:text-3xl">
 
                                     {item.left}
 
@@ -87,9 +87,9 @@ export default function DisplayComparison() {
 
                             </div>
 
-                            <div className="text-center">
+                            <div className="order-first col-span-2 text-center lg:order-none lg:col-span-1">
 
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-100 text-cyan-600">
+                                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-cyan-100 text-cyan-600 lg:mb-4 lg:h-16 lg:w-16">
 
                                     {item.icon}
 
@@ -106,7 +106,7 @@ export default function DisplayComparison() {
                             <div className="text-right">
 
                                 <h3
-                                    className={`text-3xl font-black ${
+                                    className={`text-lg font-black break-words sm:text-2xl lg:text-3xl ${
                                         item.winner === "right"
                                             ? "text-emerald-600"
                                             : "text-slate-900"
@@ -125,9 +125,9 @@ export default function DisplayComparison() {
 
             </div>
 
-            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-cyan-600 via-sky-600 to-purple-700 p-10 text-white">
+            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-cyan-600 via-sky-600 to-purple-700 p-5 sm:p-8 lg:p-10 text-white">
 
-                <h3 className="text-3xl font-black">
+                <h3 className="text-lg font-black break-words sm:text-2xl lg:text-3xl">
 
                     AI Display Verdict
 

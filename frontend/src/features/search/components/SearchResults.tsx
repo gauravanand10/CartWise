@@ -15,7 +15,7 @@ const SearchResults = ({
 
                 <div>
 
-                    <h2 className="text-3xl font-black text-slate-900">
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
                         Products
                     </h2>
 
@@ -27,7 +27,7 @@ const SearchResults = ({
 
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 min-[400px]:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 
                 {products.map((product) => (
                     <SearchResultCard

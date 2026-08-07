@@ -29,12 +29,17 @@ export default function CategoryGrid() {
                 </div>
             </Reveal>
 
+            {/* 2 → 3 → 4 → 5 columns. The extra `md` step stops tablets from
+                jumping straight from 3 oversized tiles to 5 cramped ones. */}
+
             <div
                 className="
                     grid
                     grid-cols-2
-                    gap-4
+                    gap-3
+                    min-[400px]:gap-4
                     sm:grid-cols-3
+                    md:grid-cols-4
                     lg:grid-cols-5
                     xl:gap-5
                 "

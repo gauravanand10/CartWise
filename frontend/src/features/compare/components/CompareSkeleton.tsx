@@ -4,7 +4,7 @@ export default function CompareSkeleton() {
     return (
         <div className="space-y-12 animate-pulse">
 
-            <Card className="rounded-[36px] p-10">
+            <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
 
                 <div className="grid gap-10 lg:grid-cols-2">
 

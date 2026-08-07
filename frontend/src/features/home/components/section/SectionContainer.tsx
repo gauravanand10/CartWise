@@ -44,8 +44,9 @@ export default function SectionContainer({
         <section
             id={id}
             className={`
-                rounded-[36px]
-                p-7
+                rounded-[24px]
+                p-5
+                sm:rounded-[36px]
                 sm:p-10
                 lg:p-14
                 ${dark

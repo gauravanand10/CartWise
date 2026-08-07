@@ -10,7 +10,7 @@ export default function ProductSpecs({
 
     return (
 
-        <section className="rounded-3xl border border-slate-200 bg-white p-10 shadow-xl">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 lg:p-10 shadow-xl">
 
             <div className="mb-10">
 
@@ -20,7 +20,7 @@ export default function ProductSpecs({
 
                 </span>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
 
                     Technical Specifications
 

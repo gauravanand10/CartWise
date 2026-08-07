@@ -12,7 +12,7 @@ export default function MainLayout() {
             {/* Navbar is sticky (in-flow), so no offset padding is needed here */}
 
             <main className="flex-1">
-                <Container className="pt-8 pb-24 md:pt-12 md:pb-32">
+                <Container className="pb-16 pt-6 sm:pb-24 sm:pt-8 md:pb-32 md:pt-12">
                     <Outlet />
                 </Container>
             </main>

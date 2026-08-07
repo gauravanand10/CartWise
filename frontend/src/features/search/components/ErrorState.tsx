@@ -6,13 +6,13 @@ const ErrorState = ({
     message,
 }: ErrorStateProps) => {
     return (
-        <section className="mt-16 rounded-[36px] border border-red-200 bg-red-50 p-20 text-center">
+        <section className="mt-16 rounded-[36px] border border-red-200 bg-red-50 p-8 sm:p-14 lg:p-20 text-center">
 
-            <div className="text-8xl">
+            <div className="text-5xl sm:text-7xl lg:text-8xl">
                 ⚠️
             </div>
 
-            <h2 className="mt-8 text-4xl font-black text-red-700">
+            <h2 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-red-700">
                 Something went wrong
             </h2>
 

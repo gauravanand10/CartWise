@@ -52,8 +52,10 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                     overflow-hidden
                     bg-gradient-to-br
                     ${gradient}
-                    px-5
-                    py-4
+                    px-4
+                    py-3.5
+                    sm:px-5
+                    sm:py-4
                 `}
             >
                 <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
@@ -91,15 +93,15 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col p-5">
+            <div className="flex flex-1 flex-col p-4 sm:p-5">
                 <ProductImage
                     src={image}
                     alt={name}
                     category={category}
-                    heightClass="h-36"
+                    heightClass="h-32 sm:h-36"
                 />
 
-                <h3 className="mt-4 text-lg font-semibold tracking-tight text-slate-900">
+                <h3 className="mt-4 text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
                     {name}
                 </h3>
 

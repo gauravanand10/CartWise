@@ -24,7 +24,7 @@ export default function ComparisonTable() {
                     Detailed Specifications
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                     Side-by-Side Comparison
                 </h2>
 
@@ -37,37 +37,41 @@ export default function ComparisonTable() {
 
             <Card className="overflow-hidden rounded-[36px] p-0">
 
-                <div className="grid grid-cols-[1fr_240px_1fr] border-b bg-slate-50">
+                {/* The trophy divider collapses to a narrow auto column on
+                    phones; a fixed 240px middle track left almost nothing for
+                    the two product names either side of it. */}
 
-                    <div className="p-8 text-center">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] border-b bg-slate-50 lg:grid-cols-[1fr_240px_1fr]">
 
-                        <h3 className="text-2xl font-black">
+                    <div className="p-4 text-center sm:p-6 lg:p-8">
+
+                        <h3 className="text-base font-black sm:text-xl lg:text-2xl">
                             {left.name}
                         </h3>
 
-                        <p className="mt-2 text-3xl font-black text-fuchsia-600">
+                        <p className="mt-2 text-base font-black text-fuchsia-600 sm:text-2xl lg:text-3xl">
                             ₹{left.price.toLocaleString()}
                         </p>
 
                     </div>
 
-                    <div className="flex items-center justify-center border-x">
+                    <div className="flex items-center justify-center border-x px-3 lg:px-0">
 
-                        <div className="rounded-full bg-fuchsia-600 p-4 text-white">
+                        <div className="rounded-full bg-fuchsia-600 p-2.5 text-white lg:p-4">
 
-                            <Trophy size={28} />
+                            <Trophy className="h-5 w-5 lg:h-7 lg:w-7" />
 
                         </div>
 
                     </div>
 
-                    <div className="p-8 text-center">
+                    <div className="p-4 text-center sm:p-6 lg:p-8">
 
-                        <h3 className="text-2xl font-black">
+                        <h3 className="text-base font-black sm:text-xl lg:text-2xl">
                             {right.name}
                         </h3>
 
-                        <p className="mt-2 text-3xl font-black text-fuchsia-600">
+                        <p className="mt-2 text-base font-black text-fuchsia-600 sm:text-2xl lg:text-3xl">
                             ₹{right.price.toLocaleString()}
                         </p>
 

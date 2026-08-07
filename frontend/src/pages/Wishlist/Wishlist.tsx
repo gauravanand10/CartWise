@@ -6,7 +6,7 @@ function Wishlist() {
         <section>
 
             <header>
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
                     Wishlist
                 </h1>
 

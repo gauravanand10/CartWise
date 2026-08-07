@@ -45,7 +45,7 @@ export default function BenchmarkComparison() {
                     Performance Benchmarks
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black">
 
                     Real World Performance
 
@@ -83,7 +83,7 @@ export default function BenchmarkComparison() {
 
                                 </div>
 
-                                <h3 className="text-2xl font-black">
+                                <h3 className="text-base font-black break-words sm:text-xl lg:text-2xl">
 
                                     {benchmark.title}
 
@@ -91,11 +91,11 @@ export default function BenchmarkComparison() {
 
                             </div>
 
-                            <div className="grid grid-cols-[120px_1fr_120px] items-center gap-6">
+                            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)] items-center gap-3 sm:gap-6 lg:grid-cols-[120px_1fr_120px]">
 
                                 <div className="text-center">
 
-                                    <p className="text-2xl font-black">
+                                    <p className="text-base font-black break-words sm:text-xl lg:text-2xl">
 
                                         {benchmark.left.toLocaleString()}
 
@@ -141,7 +141,7 @@ export default function BenchmarkComparison() {
 
                                 <div className="text-center">
 
-                                    <p className="text-2xl font-black text-emerald-600">
+                                    <p className="text-base font-black break-words text-emerald-600 sm:text-xl lg:text-2xl">
 
                                         {benchmark.right.toLocaleString()}
 

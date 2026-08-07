@@ -25,7 +25,7 @@ export default function AIPicks() {
                 />
             </Reveal>
 
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                 {aiPicks.map((pick, index) => (
                     <Reveal
                         key={pick.id}

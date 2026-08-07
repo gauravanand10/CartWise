@@ -53,7 +53,7 @@ export default function ProductCompareCard({
                     {product.brand}
                 </p>
 
-                <h2 className="mt-2 text-3xl font-black text-slate-900">
+                <h2 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900">
                     {product.name}
                 </h2>
 
@@ -82,7 +82,7 @@ export default function ProductCompareCard({
                     Starting From
                 </p>
 
-                <h3 className="mt-2 text-4xl font-black text-fuchsia-600">
+                <h3 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-black text-fuchsia-600">
                     ₹{product.price.toLocaleString()}
                 </h3>
 
@@ -100,7 +100,7 @@ export default function ProductCompareCard({
                         Overall
                     </p>
 
-                    <h3 className="mt-2 text-3xl font-black text-emerald-600">
+                    <h3 className="mt-2 text-2xl sm:text-3xl font-black text-emerald-600">
                         {product.score.overall}
                     </h3>
 
@@ -112,7 +112,7 @@ export default function ProductCompareCard({
                         Camera
                     </p>
 
-                    <h3 className="mt-2 text-3xl font-black text-fuchsia-600">
+                    <h3 className="mt-2 text-2xl sm:text-3xl font-black text-fuchsia-600">
                         {product.score.camera}
                     </h3>
 

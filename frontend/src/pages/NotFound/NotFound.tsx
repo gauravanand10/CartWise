@@ -9,7 +9,7 @@ const suggestions = [
 
 function NotFound() {
     return (
-        <section className="flex min-h-[55vh] flex-col items-center justify-center py-16 text-center">
+        <section className="flex min-h-[55vh] flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center">
 
             <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-white shadow-sm">
                 <Compass size={28} strokeWidth={1.75} />

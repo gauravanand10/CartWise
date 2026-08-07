@@ -62,7 +62,7 @@ export default function FinalVerdict() {
                     Final Verdict
                 </Badge>
 
-                <h2 className="mt-5 text-5xl font-black">
+                <h2 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black">
 
                     Which Phone Should You Buy?
 
@@ -134,7 +134,7 @@ export default function FinalVerdict() {
 
             </div>
 
-            <Card className="mt-12 rounded-[36px] bg-gradient-to-r from-purple-700 via-indigo-700 to-violet-700 p-12 text-white">
+            <Card className="mt-12 rounded-[36px] bg-gradient-to-r from-purple-700 via-indigo-700 to-violet-700 p-6 sm:p-9 lg:p-12 text-white">
 
                 <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]">
 
@@ -144,7 +144,7 @@ export default function FinalVerdict() {
                             AI Recommendation
                         </Badge>
 
-                        <h2 className="mt-6 text-5xl font-black">
+                        <h2 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black">
 
                             Samsung Galaxy S25 Ultra
 
@@ -189,7 +189,7 @@ export default function FinalVerdict() {
 
             </Card>
 
-            <Card className="mt-10 rounded-[30px] p-10">
+            <Card className="mt-10 rounded-[30px] p-5 sm:p-8 lg:p-10">
 
                 <div className="flex items-center gap-4">
 
@@ -198,7 +198,7 @@ export default function FinalVerdict() {
                         className="text-violet-600"
                     />
 
-                    <h3 className="text-3xl font-black">
+                    <h3 className="text-2xl sm:text-3xl font-black">
 
                         AI Confidence
 

@@ -27,7 +27,7 @@ export default function AISummary() {
     return (
         <section className="mt-20">
 
-            <Card className="overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-12 text-white">
+            <Card className="overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-6 sm:p-9 lg:p-12 text-white">
 
                 <div className="grid gap-12 lg:grid-cols-[1.3fr_420px]">
 
@@ -38,7 +38,7 @@ export default function AISummary() {
                             AI Recommendation
                         </Badge>
 
-                        <h2 className="mt-6 text-5xl font-black leading-tight">
+                        <h2 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
                             Why did AI choose{" "}
                             <span className="text-fuchsia-400">
                                 {winnerProduct.name}
@@ -144,11 +144,11 @@ export default function AISummary() {
 
                                 <div className="flex items-end gap-3">
 
-                                    <span className="text-6xl font-black">
+                                    <span className="text-3xl sm:text-5xl lg:text-6xl font-black">
                                         {confidence}
                                     </span>
 
-                                    <span className="mb-2 text-3xl font-bold">
+                                    <span className="mb-2 text-2xl sm:text-3xl font-bold">
                                         %
                                     </span>
 
@@ -188,7 +188,7 @@ export default function AISummary() {
                                         {winnerProduct.name}
                                     </span>
 
-                                    <span className="text-3xl font-black text-emerald-400">
+                                    <span className="text-2xl sm:text-3xl font-black text-emerald-400">
                                         {
                                             winnerProduct.score
                                                 .overall

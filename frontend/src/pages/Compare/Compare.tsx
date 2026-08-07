@@ -1,7 +1,7 @@
 function Compare() {
     return (
         <section>
-            <h1 className="mb-4 text-4xl font-bold">
+            <h1 className="mb-4 text-2xl sm:text-3xl lg:text-4xl font-bold">
                 Compare Products
             </h1>
 

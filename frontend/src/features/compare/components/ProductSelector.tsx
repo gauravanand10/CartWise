@@ -7,7 +7,7 @@ export default function ProductSelector() {
     return (
         <section className="mt-12">
 
-            <Card className="rounded-[36px] p-10">
+            <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
 
                 <div className="mb-10 text-center">
 
@@ -15,7 +15,7 @@ export default function ProductSelector() {
                         Compare Products
                     </p>
 
-                    <h2 className="text-4xl font-black text-slate-900">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                         Select Two Products
                     </h2>
 
@@ -35,7 +35,7 @@ export default function ProductSelector() {
 
                             <div className="flex items-center gap-5 p-6">
 
-                                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-5xl">
+                                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-3xl sm:text-4xl lg:text-5xl">
                                     📱
                                 </div>
 
@@ -97,7 +97,7 @@ export default function ProductSelector() {
 
                             <div className="flex items-center gap-5 p-6">
 
-                                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-5xl">
+                                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-3xl sm:text-4xl lg:text-5xl">
                                     🤖
                                 </div>
 

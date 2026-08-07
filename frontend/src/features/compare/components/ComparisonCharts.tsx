@@ -55,7 +55,7 @@ export default function ComparisonCharts() {
                     Performance Analytics
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                     Visual Score Comparison
                 </h2>
 
@@ -68,7 +68,7 @@ export default function ComparisonCharts() {
 
             <div className="grid gap-8 xl:grid-cols-2">
 
-                <Card className="rounded-[36px] p-10">
+                <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
 
                     <div className="mb-8 flex items-center gap-4">
 
@@ -160,7 +160,7 @@ export default function ComparisonCharts() {
 
                 </Card>
 
-                <Card className="rounded-[36px] p-10">
+                <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
 
                     <h3 className="text-2xl font-black">
                         Overall Analysis
@@ -176,11 +176,11 @@ export default function ComparisonCharts() {
                                     Winner
                                 </p>
 
-                                <h2 className="mt-4 text-center text-3xl font-black">
+                                <h2 className="mt-4 text-center text-2xl sm:text-3xl font-black">
                                     {compareData.rightProduct.brand}
                                 </h2>
 
-                                <span className="mt-3 text-6xl font-black text-fuchsia-600">
+                                <span className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-black text-fuchsia-600">
                                     {compareData.rightProduct.score.overall}
                                 </span>
 
@@ -198,7 +198,7 @@ export default function ComparisonCharts() {
                                 Price Difference
                             </p>
 
-                            <h3 className="mt-2 text-3xl font-black text-fuchsia-600">
+                            <h3 className="mt-2 text-2xl sm:text-3xl font-black text-fuchsia-600">
                                 ₹
                                 {(
                                     compareData.leftProduct.price -
@@ -214,7 +214,7 @@ export default function ComparisonCharts() {
                                 AI Confidence
                             </p>
 
-                            <h3 className="mt-2 text-3xl font-black text-emerald-600">
+                            <h3 className="mt-2 text-2xl sm:text-3xl font-black text-emerald-600">
                                 {compareData.confidence}%
                             </h3>
 

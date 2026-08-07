@@ -15,7 +15,10 @@ const FilterSidebar = ({
     onCategoryChange,
 }: FilterSidebarProps) => {
     return (
-        <aside className="sticky top-40 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        // Sticky only from `lg`, where the sidebar sits beside the results.
+        // Below that it stacks above them, and sticking would pin the filter
+        // panel over the results the user is trying to scroll through.
+        <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:sticky lg:top-40">
 
             <h2 className="text-lg font-semibold text-slate-900">
                 Filters

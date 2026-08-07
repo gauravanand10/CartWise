@@ -36,7 +36,7 @@ export default function ProductSkeleton() {
 
                     {/* Product Info */}
 
-                    <section className="rounded-3xl bg-white p-10 shadow-xl">
+                    <section className="rounded-3xl bg-white p-5 sm:p-8 lg:p-10 shadow-xl">
 
                         <div className="h-8 w-32 rounded bg-slate-200" />
 
@@ -85,7 +85,7 @@ export default function ProductSkeleton() {
 
                 {/* Specifications */}
 
-                <section className="mt-16 rounded-3xl bg-white p-10 shadow-xl">
+                <section className="mt-16 rounded-3xl bg-white p-5 sm:p-8 lg:p-10 shadow-xl">
 
                     <div className="mb-8 h-10 w-60 rounded bg-slate-200" />
 
@@ -108,7 +108,7 @@ export default function ProductSkeleton() {
 
                 {/* Description */}
 
-                <section className="mt-16 rounded-3xl bg-white p-10 shadow-xl">
+                <section className="mt-16 rounded-3xl bg-white p-5 sm:p-8 lg:p-10 shadow-xl">
 
                     <div className="h-10 w-56 rounded bg-slate-200" />
 

@@ -47,7 +47,7 @@ export default function Footer() {
     return (
         <footer className="bg-slate-950 text-slate-400">
 
-            <Container className="py-16 lg:py-20">
+            <Container className="py-12 sm:py-16 lg:py-20">
 
                 {/* Newsletter */}
 
@@ -56,14 +56,16 @@ export default function Footer() {
                         flex
                         flex-col
                         gap-8
-                        rounded-[28px]
+                        rounded-[22px]
                         border
                         border-white/10
                         bg-gradient-to-br
                         from-blue-600/15
                         via-violet-600/10
                         to-transparent
-                        p-8
+                        p-6
+                        sm:rounded-[28px]
+                        sm:p-8
                         lg:flex-row
                         lg:items-center
                         lg:justify-between
@@ -147,7 +149,10 @@ export default function Footer() {
 
                 {/* Links */}
 
-                <div className="mt-16 grid gap-12 md:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
+                {/* 1 → 2 (link columns share a row from `sm`) → 4. The brand
+                    blurb keeps a wider track only once there's room at `lg`. */}
+
+                <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12 lg:mt-16 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
 
                     <div className="max-w-xs">
                         <Link
@@ -195,7 +200,7 @@ export default function Footer() {
 
                 {/* Stores */}
 
-                <div className="mt-14 border-t border-white/10 pt-8">
+                <div className="mt-12 border-t border-white/10 pt-8 lg:mt-14">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                         Prices tracked across
                     </p>

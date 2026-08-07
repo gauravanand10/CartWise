@@ -52,7 +52,7 @@ export default function ComparisonScore() {
                     AI Score Breakdown
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black text-slate-900">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
                     Category Comparison
                 </h2>
 
@@ -63,9 +63,9 @@ export default function ComparisonScore() {
 
             </div>
 
-            <Card className="rounded-[36px] p-10">
+            <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
 
-                <div className="mb-10 grid grid-cols-[140px_1fr_140px] items-center">
+                <div className="mb-10 grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center lg:grid-cols-[140px_1fr_140px]">
 
                     <div className="text-center">
 
@@ -105,13 +105,13 @@ export default function ComparisonScore() {
 
                             <div
                                 key={key}
-                                className="grid grid-cols-[140px_1fr_140px] items-center gap-6"
+                                className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center lg:grid-cols-[140px_1fr_140px] gap-6"
                             >
 
                                 <div className="text-center">
 
                                     <p
-                                        className={`text-3xl font-black ${winner === "left"
+                                        className={`text-2xl sm:text-3xl font-black ${winner === "left"
                                                 ? "text-emerald-600"
                                                 : "text-slate-900"
                                             }`}
@@ -154,7 +154,7 @@ export default function ComparisonScore() {
                                 <div className="text-center">
 
                                     <p
-                                        className={`text-3xl font-black ${winner === "right"
+                                        className={`text-2xl sm:text-3xl font-black ${winner === "right"
                                                 ? "text-emerald-600"
                                                 : "text-slate-900"
                                             }`}

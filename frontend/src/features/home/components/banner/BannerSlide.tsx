@@ -41,14 +41,16 @@ export default function BannerSlide({ banner }: BannerSlideProps) {
                     items-center
                     justify-between
                     gap-8
-                    px-8
-                    pb-24
-                    pt-12
-                    sm:px-12
+                    px-6
+                    pb-20
+                    pt-9
+                    sm:px-10
+                    sm:pb-24
+                    sm:pt-12
                     lg:px-16
                 "
             >
-                <div className="max-w-xl">
+                <div className="min-w-0 max-w-xl">
                     <span
                         className={`
                             inline-flex
@@ -57,34 +59,39 @@ export default function BannerSlide({ banner }: BannerSlideProps) {
                             border
                             border-white/25
                             bg-white/10
-                            px-3.5
-                            py-1.5
+                            px-3
+                            py-1
                             text-white/90
                             backdrop-blur-sm
+                            sm:px-3.5
+                            sm:py-1.5
                             ${eyebrow}
                         `}
                     >
                         {label}
                     </span>
 
-                    <h3 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                    <h3 className="mt-4 text-[26px] font-semibold leading-tight tracking-tight text-white min-[400px]:text-3xl sm:mt-5 sm:text-4xl lg:text-5xl">
                         {title}
                     </h3>
 
-                    <p className="mt-4 max-w-md text-sm leading-relaxed text-white/80 sm:text-base">
+                    {/* Clamped rather than hidden on mobile: the subtitle carries
+                        the offer detail, so it should shorten, not disappear. */}
+
+                    <p className="mt-3 line-clamp-3 max-w-md text-sm leading-relaxed text-white/80 sm:mt-4 sm:line-clamp-none sm:text-base">
                         {subtitle}
                     </p>
 
                     <button
                         type="button"
                         className="
-                            mt-8
+                            mt-6
                             inline-flex
                             items-center
                             gap-2
                             rounded-full
                             bg-white
-                            px-6
+                            px-5
                             py-3
                             text-sm
                             font-semibold
@@ -98,6 +105,8 @@ export default function BannerSlide({ banner }: BannerSlideProps) {
                             focus-visible:ring-white
                             focus-visible:ring-offset-2
                             focus-visible:ring-offset-transparent
+                            sm:mt-8
+                            sm:px-6
                         "
                     >
                         {cta}
@@ -105,25 +114,29 @@ export default function BannerSlide({ banner }: BannerSlideProps) {
                     </button>
                 </div>
 
-                {/* Oversized glyph anchors the right side; hidden when space is tight. */}
+                {/* Oversized glyph anchors the right side. Appears from `md` and
+                    grows at `lg`; below that the copy needs the full width. */}
 
-                <div className="hidden shrink-0 lg:block">
+                <div className="hidden shrink-0 md:block">
                     <div
                         className="
                             flex
-                            h-40
-                            w-40
+                            h-28
+                            w-28
                             items-center
                             justify-center
-                            rounded-[36px]
+                            rounded-[28px]
                             border
                             border-white/20
                             bg-white/10
                             backdrop-blur-sm
+                            lg:h-40
+                            lg:w-40
+                            lg:rounded-[36px]
                         "
                     >
                         <Icon
-                            className="h-20 w-20 text-white/90"
+                            className="h-14 w-14 text-white/90 lg:h-20 lg:w-20"
                             strokeWidth={1.25}
                             aria-hidden="true"
                         />

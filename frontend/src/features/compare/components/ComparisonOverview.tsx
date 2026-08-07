@@ -15,7 +15,7 @@ export default function ComparisonOverview() {
     const { leftProduct, rightProduct } = compareData;
 
     return (
-        <section className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-12 text-white">
+        <section className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-6 sm:p-9 lg:p-12 text-white">
 
             <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-3xl" />
             <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
@@ -28,7 +28,7 @@ export default function ComparisonOverview() {
                         Premium Comparison
                     </Badge>
 
-                    <h1 className="mt-6 text-5xl font-black">
+                    <h1 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black">
                         {leftProduct.name}
                         <span className="mx-5 text-fuchsia-400">VS</span>
                         {rightProduct.name}
@@ -54,7 +54,7 @@ export default function ComparisonOverview() {
                             iconClassName="h-16 w-16 text-slate-300"
                         />
 
-                        <h2 className="mt-8 text-3xl font-black text-slate-900">
+                        <h2 className="mt-8 text-2xl sm:text-3xl font-black text-slate-900">
                             {leftProduct.name}
                         </h2>
 
@@ -75,7 +75,7 @@ export default function ComparisonOverview() {
 
                         </div>
 
-                        <p className="mt-6 text-4xl font-black text-fuchsia-600">
+                        <p className="mt-6 text-2xl sm:text-3xl lg:text-4xl font-black text-fuchsia-600">
                             ₹{leftProduct.price.toLocaleString()}
                         </p>
 
@@ -108,7 +108,7 @@ export default function ComparisonOverview() {
                             iconClassName="h-16 w-16 text-slate-300"
                         />
 
-                        <h2 className="mt-8 text-3xl font-black text-slate-900">
+                        <h2 className="mt-8 text-2xl sm:text-3xl font-black text-slate-900">
                             {rightProduct.name}
                         </h2>
 
@@ -129,7 +129,7 @@ export default function ComparisonOverview() {
 
                         </div>
 
-                        <p className="mt-6 text-4xl font-black text-fuchsia-600">
+                        <p className="mt-6 text-2xl sm:text-3xl lg:text-4xl font-black text-fuchsia-600">
                             ₹{rightProduct.price.toLocaleString()}
                         </p>
 

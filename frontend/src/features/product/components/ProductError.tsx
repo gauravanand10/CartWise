@@ -13,15 +13,15 @@ export default function ProductError({
         // MainLayout supplies the <main> landmark and width container.
         <div className="flex min-h-[60vh] items-center justify-center">
 
-            <section className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-2xl">
+            <section className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-9 lg:p-12 text-center shadow-2xl">
 
-                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-red-100 text-6xl">
+                <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-full bg-red-100 text-3xl sm:text-5xl lg:text-6xl">
 
                     ⚠️
 
                 </div>
 
-                <h1 className="mt-8 text-4xl font-black text-slate-900">
+                <h1 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
 
                     Product Not Available
 

@@ -56,7 +56,7 @@ export default function BatteryComparison() {
                     Battery Comparison
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black">
                     Battery & Charging
                 </h2>
 
@@ -75,11 +75,16 @@ export default function BatteryComparison() {
                         className="rounded-[30px] p-8"
                     >
 
-                        <div className="grid grid-cols-[1fr_240px_1fr] items-center gap-8">
+                        {/* Below `lg` the fixed 240px label column alone exceeds a
+                            phone viewport, so the label moves to its own full-width
+                            row and the two values sit side by side beneath it —
+                            keeping them directly comparable. */}
+
+                        <div className="grid grid-cols-2 items-center gap-x-4 gap-y-3 sm:gap-x-6 lg:grid-cols-[1fr_240px_1fr] lg:gap-8">
 
                             <div>
 
-                                <h3 className="text-3xl font-black">
+                                <h3 className="text-lg font-black break-words sm:text-2xl lg:text-3xl">
 
                                     {item.left}
 
@@ -87,9 +92,9 @@ export default function BatteryComparison() {
 
                             </div>
 
-                            <div className="text-center">
+                            <div className="order-first col-span-2 text-center lg:order-none lg:col-span-1">
 
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 lg:mb-4 lg:h-16 lg:w-16">
 
                                     {item.icon}
 
@@ -106,7 +111,7 @@ export default function BatteryComparison() {
                             <div className="text-right">
 
                                 <h3
-                                    className={`text-3xl font-black ${item.winner === "right"
+                                    className={`text-lg font-black break-words sm:text-2xl lg:text-3xl ${item.winner === "right"
                                             ? "text-emerald-600"
                                             : "text-slate-900"
                                         }`}
@@ -124,9 +129,9 @@ export default function BatteryComparison() {
 
             </div>
 
-            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-10 text-white">
+            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-5 sm:p-8 lg:p-10 text-white">
 
-                <h3 className="text-3xl font-black">
+                <h3 className="text-lg font-black break-words sm:text-2xl lg:text-3xl">
                     AI Battery Verdict
                 </h3>
 

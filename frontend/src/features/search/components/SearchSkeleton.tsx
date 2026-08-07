@@ -1,6 +1,6 @@
 const SearchSkeleton = () => {
   return (
-    <div className="mt-10 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-10 grid gap-4 min-[400px]:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-8">
 
       {Array.from({ length: 6 }).map(
         (_, index) => (

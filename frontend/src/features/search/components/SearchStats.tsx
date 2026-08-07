@@ -6,7 +6,7 @@ const SearchStats = ({
   total,
 }: SearchStatsProps) => {
   return (
-    <section className="mt-10 grid gap-6 md:grid-cols-3">
+    <section className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-6 lg:mt-10">
 
       <div className="rounded-3xl bg-white p-8 shadow-lg">
 
@@ -14,7 +14,7 @@ const SearchStats = ({
           Products
         </p>
 
-        <h2 className="mt-3 text-5xl font-black text-slate-900">
+        <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900">
           {total}
         </h2>
 
@@ -30,7 +30,7 @@ const SearchStats = ({
           Engine
         </p>
 
-        <h2 className="mt-3 text-4xl font-black">
+        <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black">
           Search V1
         </h2>
 
@@ -47,7 +47,7 @@ const SearchStats = ({
           Response
         </p>
 
-        <h2 className="mt-3 text-4xl font-black text-green-600">
+        <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black text-green-600">
           Mock API
         </h2>
 

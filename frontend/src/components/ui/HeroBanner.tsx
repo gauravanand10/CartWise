@@ -37,7 +37,7 @@ export default function HeroBanner({
                     {badge}
 
                     <div className="space-y-5">
-                        <h1 className="text-5xl font-black leading-tight tracking-tight lg:text-6xl">
+                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-tight lg:text-6xl">
                             {title}
                         </h1>
 

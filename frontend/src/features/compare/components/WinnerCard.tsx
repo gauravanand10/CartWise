@@ -23,7 +23,7 @@ export default function WinnerCard() {
     return (
         <section className="mt-16">
 
-            <Card className="overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-12 text-white">
+            <Card className="overflow-hidden rounded-[40px] bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 p-6 sm:p-9 lg:p-12 text-white">
 
                 <div className="grid gap-12 lg:grid-cols-[1.3fr_1fr]">
 
@@ -34,7 +34,7 @@ export default function WinnerCard() {
                             AI Recommendation
                         </Badge>
 
-                        <h2 className="mt-6 text-5xl font-black leading-tight">
+                        <h2 className="mt-6 text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
                             Overall Winner
                         </h2>
 
@@ -47,7 +47,7 @@ export default function WinnerCard() {
 
                         <div className="mt-10 flex items-center gap-6">
 
-                            <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/10 text-6xl backdrop-blur">
+                            <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/10 text-3xl sm:text-5xl lg:text-6xl backdrop-blur">
                                 🤖
                             </div>
 
@@ -57,7 +57,7 @@ export default function WinnerCard() {
                                     Winner
                                 </p>
 
-                                <h3 className="mt-2 text-4xl font-black">
+                                <h3 className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-black">
                                     Samsung Galaxy S25 Ultra
                                 </h3>
 
@@ -72,7 +72,7 @@ export default function WinnerCard() {
                                         className="fill-yellow-400 text-yellow-400"
                                     />
 
-                                    <span className="text-3xl font-black">
+                                    <span className="text-2xl sm:text-3xl font-black">
                                         9.6 / 10
                                     </span>
 
@@ -144,7 +144,7 @@ export default function WinnerCard() {
 
                                 </div>
 
-                                <h3 className="mt-8 text-center text-3xl font-black">
+                                <h3 className="mt-8 text-center text-2xl sm:text-3xl font-black">
                                     AI Winner
                                 </h3>
 

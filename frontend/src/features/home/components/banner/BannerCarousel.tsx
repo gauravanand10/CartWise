@@ -30,11 +30,14 @@ export default function BannerCarousel() {
             onBlurCapture={resume}
             className="
                 relative
-                h-[380px]
+                h-[300px]
                 overflow-hidden
-                rounded-[32px]
+                rounded-[24px]
                 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.45)]
+                min-[400px]:h-[320px]
                 sm:h-[340px]
+                sm:rounded-[32px]
+                lg:h-[380px]
             "
         >
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
@@ -62,7 +65,7 @@ export default function BannerCarousel() {
 
             {/* Controls */}
 
-            <div className="absolute inset-x-0 bottom-6 z-20 flex items-center justify-between px-8 sm:px-12 lg:px-16">
+            <div className="absolute inset-x-0 bottom-5 z-20 flex items-center justify-between px-6 sm:bottom-6 sm:px-10 lg:px-16">
 
                 {/* Dots double as a progress indicator. */}
 

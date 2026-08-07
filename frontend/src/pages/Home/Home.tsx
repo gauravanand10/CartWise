@@ -10,7 +10,9 @@ import RecommendedProducts from "../../features/home/components/RecommendedProdu
 
 export default function Home() {
     return (
-        <div className="flex flex-col gap-20 md:gap-28">
+        // Section rhythm scales with the viewport: 28rem of air between
+        // sections reads as generous on a desktop and as dead space on a phone.
+        <div className="flex flex-col gap-14 sm:gap-20 md:gap-24 lg:gap-28">
 
             {/* Search + promotions */}
 

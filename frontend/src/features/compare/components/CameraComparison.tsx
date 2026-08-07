@@ -50,7 +50,7 @@ export default function CameraComparison() {
                     Camera Comparison
                 </Badge>
 
-                <h2 className="mt-5 text-4xl font-black">
+                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black">
 
                     Photography & Videography
 
@@ -73,11 +73,11 @@ export default function CameraComparison() {
                         className="rounded-[30px] p-8"
                     >
 
-                        <div className="grid grid-cols-[1fr_220px_1fr] items-center gap-8">
+                        <div className="grid grid-cols-2 items-center gap-x-4 gap-y-3 sm:gap-x-6 lg:grid-cols-[1fr_220px_1fr] lg:gap-8">
 
                             <div>
 
-                                <h3 className="text-2xl font-black">
+                                <h3 className="text-base font-black break-words sm:text-xl lg:text-2xl">
 
                                     {feature.left}
 
@@ -85,9 +85,9 @@ export default function CameraComparison() {
 
                             </div>
 
-                            <div className="text-center">
+                            <div className="order-first col-span-2 text-center lg:order-none lg:col-span-1">
 
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-fuchsia-100 text-fuchsia-600">
+                                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-fuchsia-100 text-fuchsia-600 lg:mb-4 lg:h-16 lg:w-16">
 
                                     {feature.icon}
 
@@ -114,7 +114,7 @@ export default function CameraComparison() {
 
                                     )}
 
-                                    <h3 className="text-2xl font-black text-emerald-600">
+                                    <h3 className="text-base font-black break-words text-emerald-600 sm:text-xl lg:text-2xl">
 
                                         {feature.right}
 
@@ -132,9 +132,9 @@ export default function CameraComparison() {
 
             </div>
 
-            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-fuchsia-600 via-pink-600 to-purple-700 p-10 text-white">
+            <Card className="mt-10 rounded-[32px] bg-gradient-to-r from-fuchsia-600 via-pink-600 to-purple-700 p-5 sm:p-8 lg:p-10 text-white">
 
-                <h3 className="text-3xl font-black">
+                <h3 className="text-lg font-black break-words sm:text-2xl lg:text-3xl">
 
                     AI Camera Verdict
 

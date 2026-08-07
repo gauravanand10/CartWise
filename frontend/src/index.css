@@ -116,6 +116,21 @@ html {
 
     text-size-adjust: 100%;
 
+    /* `clip`, not `hidden`: hidden makes the element a scroll container, which
+       silently breaks `position: sticky` on descendants (the navbar). `clip`
+       contains stray decorative overflow without that side effect. */
+    overflow-x: clip;
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    html {
+
+        scroll-behavior: auto;
+
+    }
+
 }
 
 body {
@@ -136,7 +151,7 @@ body {
 
     line-height: 1.6;
 
-    overflow-x: hidden;
+    overflow-x: clip;
 
     -webkit-font-smoothing: antialiased;
 

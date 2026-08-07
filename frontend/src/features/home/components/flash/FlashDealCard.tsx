@@ -21,14 +21,14 @@ export default function FlashDealCard({ deal }: FlashDealCardProps) {
     } = deal;
 
     return (
-        <article className={`group flex h-full flex-col p-4 ${surfaceCard}`}>
+        <article className={`group flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}>
 
             <div className="relative">
                 <ProductImage
                     src={image}
                     alt={name}
                     category={category}
-                    heightClass="h-40"
+                    heightClass="h-32 sm:h-40"
                 />
 
                 <span
@@ -52,21 +52,21 @@ export default function FlashDealCard({ deal }: FlashDealCardProps) {
                 </span>
             </div>
 
-            <div className="mt-4 flex-1">
-                <h3 className="line-clamp-1 text-[15px] font-semibold text-slate-900">
+            <div className="mt-3 flex-1 sm:mt-4">
+                <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-[15px]">
                     {name}
                 </h3>
 
-                <p className="mt-1 text-[13px] text-slate-500">
+                <p className="mt-1 truncate text-xs text-slate-500 sm:text-[13px]">
                     at <span className="font-medium text-slate-700">{store}</span>
                 </p>
 
-                <div className="mt-3 flex flex-wrap items-baseline gap-2">
-                    <span className="text-xl font-semibold tracking-tight text-slate-900">
+                <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:mt-3">
+                    <span className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
                         {price}
                     </span>
 
-                    <span className="text-[13px] text-slate-400 line-through">
+                    <span className="text-xs text-slate-400 line-through sm:text-[13px]">
                         {originalPrice}
                     </span>
                 </div>
