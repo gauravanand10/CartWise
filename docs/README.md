@@ -1,136 +1,110 @@
-# 🛒 CartWise
+<div align="center">
 
-<p align="center">
+# 🛒 CartWise
 
 ### **AI-Powered Smart Product Comparison Platform**
 
-Compare products, analyze specifications, discover the best prices, and receive AI-powered recommendations — all in one place.
+### *Compare Better. Buy Smarter.*
 
 ---
 
-**Current Development Status:** 🚧 Active Development
+![Status](https://img.shields.io/badge/Status-Under%20Development-orange)
+![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-blue)
+![Backend](https://img.shields.io/badge/Backend-Spring%20Boot-success)
+![Database](https://img.shields.io/badge/Database-PostgreSQL-blueviolet)
+![License](https://img.shields.io/badge/License-Educational-green)
 
-</p>
-
----
-
-# 📖 Table of Contents
-
-- [About CartWise](#-about-cartwise)
-- [Problem Statement](#-problem-statement)
-- [Solution](#-solution)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
-- [Project Architecture](#-project-architecture)
-- [Folder Structure](#-folder-structure)
-- [Documentation Roadmap](#-documentation-roadmap)
-- [Project Status](#-project-status)
-- [Future Roadmap](#-future-roadmap)
-- [How to Run](#-how-to-run)
-- [Project Goals](#-project-goals)
-- [License](#-license)
+</div>
 
 ---
 
-# 🚀 About CartWise
+# 📖 About CartWise
 
-CartWise is an AI-powered product comparison platform designed to help users make better purchasing decisions.
+CartWise is a **production-ready AI-powered product comparison platform** designed to help users make informed purchasing decisions by comparing products across multiple e-commerce platforms.
 
-Instead of visiting multiple shopping websites individually, CartWise allows users to:
+Instead of manually visiting different shopping websites, CartWise enables users to search, compare, analyze, and discover products through a single intelligent platform.
 
-- Compare products side-by-side
-- Track prices across multiple stores
-- View detailed specifications
-- Receive AI-powered recommendations
-- Analyze reviews
-- Discover the best deals
-
-The long-term vision is to build a production-ready platform that supports both web and mobile applications using a shared backend.
+The project is being developed as a **full-stack software engineering project**, following modern industry practices, scalable architecture, and clean code principles.
 
 ---
 
-# ❓ Problem Statement
+# 🎯 Vision
 
-Online shopping has become increasingly fragmented.
+Our vision is to build an intelligent shopping assistant capable of:
 
-Users typically need to:
+- Product Discovery
+- Product Comparison
+- AI-powered Recommendations
+- Price Tracking
+- Store Comparison
+- Review Analysis
+- Wishlist Management
+- Personalized Shopping Experience
 
-- Open multiple shopping websites
-- Compare specifications manually
-- Search for reviews
-- Check different prices
-- Determine the best overall product
-
-This process is time-consuming and often leads to poor purchasing decisions.
-
----
-
-# 💡 Solution
-
-CartWise provides a single platform where users can:
-
-- Search products
-- Compare specifications
-- Compare prices
-- Receive AI-generated recommendations
-- Save products
-- Build wishlists
-- Analyze review summaries
-- Track historical prices
+while maintaining a scalable, maintainable, and production-ready software architecture.
 
 ---
 
-# ✨ Key Features
+# 🚀 Project Objectives
+
+The primary objectives of CartWise are:
+
+- Build a modern production-ready web application.
+- Learn Software Engineering through a real-world project.
+- Apply scalable software architecture.
+- Follow industry-standard development practices.
+- Build reusable and maintainable components.
+- Integrate AI into the shopping experience.
+- Prepare the project for both web and mobile platforms.
+
+---
+
+# ✨ Core Features
 
 ## Product Search
 
-- Intelligent product search
-- Auto suggestions
-- Category filtering
+- Smart Search
+- Auto Suggestions
+- Category Search
+- Brand Search
 
 ---
 
 ## Product Comparison
 
-- Side-by-side comparison
-- Technical specifications
-- Price comparison
-- Store comparison
-- AI-generated summary
+- Side-by-side Comparison
+- Specifications
+- Features
+- Performance
+- Ratings
+- Reviews
+
+---
+
+## Price Analysis
+
+- Compare Prices
+- Best Deals
+- Price History
+- Store Comparison
 
 ---
 
 ## AI Features
 
-- Product recommendations
-- Buying advice
-- Review summarization
-- Smart comparison insights
+- AI Product Recommendation
+- AI Buying Advice
+- Review Summarization
+- Smart Product Suggestions
 
 ---
 
-## Wishlist
+## User Features
 
-- Save products
-- Recently viewed products
-- Compare history
-
----
-
-## Price Tracking
-
-- Lowest price
-- Historical pricing
-- Price drop alerts
-
----
-
-## Authentication
-
-- User accounts
-- Login
-- Signup
-- JWT Authentication
+- Wishlist
+- Recently Viewed
+- Saved Comparisons
+- User Profiles
 
 ---
 
@@ -142,35 +116,35 @@ CartWise provides a single platform where users can:
 - TypeScript
 - Vite
 - Tailwind CSS v4
-- React Router
+- React Router DOM
 - Lucide React
 
 ---
 
-## Backend (Planned)
+## Backend *(Planned)*
 
 - Spring Boot
 - Spring Security
-- JWT
+- JWT Authentication
 - REST APIs
 
 ---
 
-## Database (Planned)
+## Database *(Planned)*
 
 - PostgreSQL
 
 ---
 
-## AI (Planned)
+## AI *(Planned)*
 
 - Gemini API
-- OpenAI
+- OpenAI API
 - Recommendation Engine
 
 ---
 
-## Deployment (Planned)
+## Deployment *(Planned)*
 
 Frontend
 
@@ -186,89 +160,99 @@ Database
 
 ---
 
-# 🏗 Project Architecture
+# 🏗 High-Level Architecture
 
-```
-                User
-                  │
-                  ▼
-          React Frontend
-                  │
-                  ▼
-           REST API Layer
-                  │
-                  ▼
-          Spring Boot Backend
-                  │
-                  ▼
-             PostgreSQL
-                  │
-                  ▼
-          AI Recommendation
-               Services
+```text
+                      User
+                        │
+                        ▼
+                React Frontend
+                        │
+                        ▼
+                 REST API Layer
+                        │
+                        ▼
+              Spring Boot Backend
+                        │
+                        ▼
+                  PostgreSQL
+                        │
+                        ▼
+                 AI Services
 ```
 
 ---
 
-# 📁 Folder Structure
+# 📁 Project Structure
 
-```
+```text
 CartWise/
 
+│
 ├── frontend/
 │
-├── backend/                  (Planned)
+├── backend/                 (Future)
 │
 ├── docs/
 │
-├── datasets/                 (Future)
+├── datasets/                (Future)
 │
-├── models/                   (Future)
+├── models/                  (Future)
 │
 └── README.md
 ```
 
 ---
 
-## Frontend Structure
+# 📂 Frontend Structure
 
-```
+```text
+frontend/
+
 src/
 
-assets/
+│
 
-components/
+├── assets/
 
-constants/
+├── components/
 
-data/
+├── constants/
 
-features/
+├── data/
 
-hooks/
+├── features/
 
-lib/
+├── hooks/
 
-pages/
+├── lib/
 
-routes/
+├── pages/
 
-services/
+├── routes/
 
-types/
+├── services/
 
-utils/
+├── types/
+
+└── utils/
 ```
 
 ---
 
-# 📚 Documentation Roadmap
+# 📚 Software Engineering Handbook
 
-The project documentation is divided into **25 structured chapters**.
+This project is documented through a **25-Chapter Software Engineering Handbook**.
+
+Each chapter explains not only **how** CartWise is built, but also **why** each architectural decision was made.
+
+---
+
+## Documentation Chapters
 
 | Chapter | Topic | Status |
 |----------|-------|--------|
-| 01 | Project Planning & Vision | ⏳ |
+| 01 | Project Planning & Vision | 🚧 |
 | 02 | Project Initialization | ⏳ |
 | 03 | Software Architecture | ⏳ |
 | 04 | Routing & Navigation | ⏳ |
@@ -296,76 +280,84 @@ The project documentation is divided into **25 structured chapters**.
 
 ---
 
-# 📈 Current Project Status
+# 📈 Current Development Status
 
-## Completed
+## ✅ Completed
 
-- Project initialization
-- Folder architecture
-- Routing
-- Layout
-- Homepage development
-- Feature-based architecture
-- Shared component library
-
----
-
-## In Progress
-
-- Homepage UI refinement
-- Responsive design
-- Layout improvements
+- Project Planning
+- Frontend Setup
+- Project Architecture
+- Routing System
+- Layout Architecture
+- Homepage Development
+- Shared Components
+- Feature-based Structure
 
 ---
 
-## Planned
+## 🚧 Currently Working On
 
-- Backend APIs
+- Homepage Refinement
+- Responsive Design
+- Layout Improvements
+
+---
+
+## 📌 Upcoming
+
+- Search System
+- Product Details
+- Product Comparison
+- Backend Development
+- Database Integration
+- AI Features
 - Authentication
-- AI Integration
-- Database
-- Mobile application
-- Production deployment
+- Deployment
+- Mobile Application
 
 ---
 
-# 🗺 Future Roadmap
+# 🗺 Development Roadmap
 
-## Phase 1
+```text
+Planning
 
-Frontend Development
+↓
 
-## Phase 2
+Frontend
 
-Backend Development
+↓
 
-## Phase 3
+Backend
 
-Database Integration
+↓
 
-## Phase 4
+Database
 
-AI Features
-
-## Phase 5
+↓
 
 Authentication
 
-## Phase 6
+↓
+
+AI Integration
+
+↓
 
 Deployment
 
-## Phase 7
+↓
 
-Mobile Application
+Mobile App
 
-## Phase 8
+↓
 
 Production Scaling
+```
 
 ---
 
-# ▶️ How to Run
+# ▶ Getting Started
 
 Clone the repository
 
@@ -393,25 +385,62 @@ npm run dev
 
 ---
 
-# 🎯 Project Goals
+# 🎯 Engineering Principles
 
-- Build a production-ready shopping platform.
-- Learn modern Software Engineering through a real-world project.
-- Follow scalable architecture and clean code principles.
-- Build reusable components and modular features.
-- Support both web and mobile from a shared backend.
-- Integrate AI for smarter shopping decisions.
+This project follows:
+
+- Clean Architecture
+- Feature-Based Folder Structure
+- Component Reusability
+- Separation of Concerns
+- Scalable Design
+- Type Safety
+- Modern React Practices
+- Production-Ready Standards
+
+---
+
+# 🎓 Learning Goals
+
+CartWise is more than just a project.
+
+It is a complete Software Engineering learning journey covering:
+
+- Frontend Development
+- Backend Development
+- Databases
+- APIs
+- Authentication
+- AI Integration
+- DevOps
+- Deployment
+- Mobile Development
+- Production Architecture
+
+---
+
+# 🤝 Contributing
+
+This project is currently under active development.
+
+Contributions, suggestions, and improvements are welcome in the future.
 
 ---
 
 # 📜 License
 
-This project is being developed for educational and portfolio purposes.
+This project is being developed for educational, learning, and portfolio purposes.
 
-Future licensing may change as the project evolves.
+The licensing model may evolve as the project grows.
 
 ---
 
-# ❤️ CartWise
+<div align="center">
 
-**Compare Better. Buy Smarter.**
+## ❤️ CartWise
+
+### Compare Better. Buy Smarter.
+
+**A Complete Software Engineering Journey from Idea to Production.**
+
+</div>
