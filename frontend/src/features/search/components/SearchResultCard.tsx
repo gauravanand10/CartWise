@@ -1,64 +1,33 @@
+import ProductCard from "../../../components/ui/ProductCard";
+import type { ProductCardModel } from "../../../types/product";
 import type { SearchProduct } from "../types/search";
-import SafeImage from "../../../components/ui/SafeImage";
 
 interface SearchResultCardProps {
-  product: SearchProduct;
+    product: SearchProduct;
 }
 
-const SearchResultCard = ({
-  product,
-}: SearchResultCardProps) => {
-  return (
-    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <SafeImage
-        src={product.image}
-        alt={product.title}
-        className="flex h-56 w-full items-center justify-center overflow-hidden bg-slate-50"
-        imgClassName="h-full w-full object-cover"
-        iconClassName="h-12 w-12 text-slate-300"
-      />
+/**
+ * Adapter from the search model to the shared product card.
+ *
+ * The card itself now lives in `components/ui/ProductCard` because Product
+ * Details renders the identical tile in its related-product rails — keeping a
+ * second copy here would mean every future card change had to be made twice.
+ * This file survives as the mapping layer so the search feature keeps its own
+ * component boundary and `SearchProduct` never leaks into shared UI.
+ */
+export default function SearchResultCard({ product }: SearchResultCardProps) {
+    const model: ProductCardModel = {
+        slug: product.slug,
+        name: product.title,
+        brand: product.brand,
+        category: product.category,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        rating: product.rating,
+        reviews: product.reviews,
+        inStock: product.inStock,
+        image: product.image,
+    };
 
-      <div className="space-y-3 p-5">
-        <div className="flex items-center justify-between">
-          <span className="rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold text-purple-700">
-            {product.category}
-          </span>
-
-          <span className="text-sm font-medium text-green-600">
-            ★ {product.rating}
-          </span>
-        </div>
-
-        <h2 className="line-clamp-2 text-lg font-bold">
-          {product.title}
-        </h2>
-
-        <p className="text-gray-500">
-          {product.brand}
-        </p>
-
-        <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold text-fuchsia-600">
-            ₹{product.price.toLocaleString()}
-          </h3>
-
-          <span className="text-sm font-medium text-green-600">
-            In Stock
-          </span>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <button className="flex-1 rounded-lg bg-fuchsia-600 py-2 font-semibold text-white transition hover:bg-purple-700">
-            Compare
-          </button>
-
-          <button className="flex-1 rounded-lg border py-2 font-semibold transition hover:bg-gray-100">
-            Details
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-};
-
-export default SearchResultCard;
+    return <ProductCard product={model} />;
+}

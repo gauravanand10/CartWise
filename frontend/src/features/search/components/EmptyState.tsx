@@ -1,43 +1,49 @@
-const EmptyState = () => {
+import { Search } from "lucide-react";
+
+import { trendingSearches } from "../data/trending";
+
+interface EmptyStateProps {
+    onPickSuggestion: (value: string) => void;
+}
+
+/**
+ * Shown when there is nothing to search over at all — no query, no filters and
+ * an empty catalogue.
+ *
+ * In normal operation the page browses the full catalogue instead of showing
+ * this, so it's the honest fallback for a catalogue that failed to populate
+ * rather than a screen users hit on the way in.
+ */
+export default function EmptyState({ onPickSuggestion }: EmptyStateProps) {
     return (
-        <section className="mt-10 flex flex-col items-center justify-center rounded-[24px] bg-white p-8 text-center shadow-xl sm:mt-16 sm:rounded-[36px] sm:p-14 lg:p-20">
+        <section className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center sm:py-20">
 
-            <div className="text-5xl sm:text-7xl lg:text-8xl">
-                🔍
-            </div>
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <Search size={26} strokeWidth={1.5} aria-hidden="true" />
+            </span>
 
-            <h2 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
-                No Products Found
+            <h2 className="mt-6 text-lg font-semibold text-slate-900 sm:text-xl">
+                Start your search
             </h2>
 
-            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-500">
-                We couldn't find any matching products.
-
-                Try searching with different keywords,
-                categories or brands.
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">
+                Search across every major store at once, or start from one of
+                the popular queries below.
             </p>
 
-            <div className="mt-10 flex flex-wrap justify-center gap-4">
-
-                {[
-                    "iPhone",
-                    "Samsung",
-                    "Laptop",
-                    "Headphones",
-                    "Gaming",
-                ].map((item) => (
-                    <span
-                        key={item}
-                        className="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-600"
+            <div className="mt-7 flex flex-wrap justify-center gap-2">
+                {trendingSearches.map((term) => (
+                    <button
+                        key={term}
+                        type="button"
+                        onClick={() => onPickSuggestion(term)}
+                        className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
-                        {item}
-                    </span>
+                        {term}
+                    </button>
                 ))}
-
             </div>
 
         </section>
     );
-};
-
-export default EmptyState;
+}

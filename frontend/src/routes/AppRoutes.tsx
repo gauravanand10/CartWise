@@ -35,8 +35,12 @@ export default function AppRoutes() {
                     element={<Wishlist />}
                 />
 
+                {/* Slug rather than a numeric id: product URLs are shared and
+                    read by people, and every card in the app already carries
+                    the slug it links to. */}
+
                 <Route
-                    path="/product/:id"
+                    path="/product/:slug"
                     element={<Product />}
                 />
 

@@ -1,113 +1,75 @@
-import { Link } from "react-router-dom";
+import { Layers } from "lucide-react";
 
-import type { Product } from "../types/product";
+import ProductCard from "../../../components/ui/ProductCard";
+import ProductSection from "./ProductSection";
+import type { ProductCardModel, RelatedProducts as Related } from "../types/product";
 
 interface RelatedProductsProps {
-    products: Product[];
+    related: Related;
 }
 
-export default function RelatedProducts({
-    products,
-}: RelatedProductsProps) {
+interface Rail {
+    id: string;
+    title: string;
+    description: string;
+    items: ProductCardModel[];
+}
 
-    if (products.length === 0) {
-        return null;
-    }
+/**
+ * Similar, frequently compared and recommended products.
+ *
+ * Renders through the shared `components/ui/ProductCard`, so these tiles are
+ * literally the same component the search results use — clicking one navigates
+ * to its own details page and the whole section becomes a browsing loop.
+ *
+ * Empty rails are dropped rather than rendered as an empty heading: a product
+ * in a single-item category genuinely has nothing to compare against.
+ */
+export default function RelatedProducts({ related }: RelatedProductsProps) {
+    const rails: Rail[] = [
+        {
+            id: "similar",
+            title: "Similar products",
+            description: "Closest alternatives at around the same price.",
+            items: related.similar,
+        },
+        {
+            id: "compared",
+            title: "Frequently compared",
+            description: "What other shoppers looked at alongside this.",
+            items: related.compared,
+        },
+        {
+            id: "recommended",
+            title: "Recommended for you",
+            description: "Highest-scoring picks from other categories.",
+            items: related.recommended,
+        },
+    ].filter((rail) => rail.items.length > 0);
+
+    if (rails.length === 0) return null;
 
     return (
-
-        <section>
-
-            <div className="mb-10">
-
-                <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
-
-                    Recommendations
-
-                </span>
-
-                <h2 className="mt-5 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
-
-                    Related Products
-
-                </h2>
-
-                <p className="mt-3 text-slate-500">
-
-                    Products you may also be interested in.
-
-                </p>
-
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-
-                {products.map((product) => (
-
-                    <article
-                        key={product.id}
-                        className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
-                    >
-
-                        <div className="relative flex h-60 items-center justify-center bg-slate-100">
-
-                            <div className="text-5xl sm:text-7xl lg:text-8xl transition duration-300 group-hover:scale-110">
-
-                                {product.images[0]}
-
-                            </div>
-
-                            <div className="absolute left-4 top-4 rounded-full bg-fuchsia-600 px-4 py-1 text-xs font-semibold text-white">
-
-                                {product.category}
-
-                            </div>
-
-                        </div>
-
-                        <div className="space-y-5 p-6">
-
-                            <h3 className="text-2xl font-bold text-slate-900">
-
-                                {product.name}
-
-                            </h3>
-
-                            <div className="flex items-center justify-between">
-
-                                <span className="text-2xl sm:text-3xl font-black text-fuchsia-600">
-
-                                    ₹{product.price.toLocaleString()}
-
-                                </span>
-
-                                <span className="rounded-lg bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
-
-                                    ⭐ {product.rating}
-
-                                </span>
-
-                            </div>
-
-                            <Link
-                                to={`/product/${product.id}`}
-                                className="block rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 py-3 text-center font-semibold text-white transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-                            >
-
-                                View Details
-
-                            </Link>
-
-                        </div>
-
-                    </article>
-
-                ))}
-
-            </div>
-
-        </section>
-
+        <div className="space-y-6">
+            {rails.map((rail, index) => (
+                <ProductSection
+                    key={rail.id}
+                    id={`related-${rail.id}`}
+                    title={rail.title}
+                    description={rail.description}
+                    // Only the first rail carries the section icon, so three
+                    // stacked rails do not read as three unrelated sections.
+                    icon={index === 0 ? Layers : undefined}
+                >
+                    <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                        {rail.items.map((item) => (
+                            <li key={item.slug} className="h-full">
+                                <ProductCard product={item} />
+                            </li>
+                        ))}
+                    </ul>
+                </ProductSection>
+            ))}
+        </div>
     );
-
 }

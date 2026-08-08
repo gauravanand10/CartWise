@@ -1,104 +1,88 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { productService } from "../services/productService";
+import { getProductBySlug, getRelatedProducts } from "../services/productService";
+import type {
+    ProductDetail,
+    ProductStatus,
+    RelatedProducts,
+} from "../types/product";
 
-import type { Product } from "../types/product";
+const EMPTY_RELATED: RelatedProducts = {
+    similar: [],
+    compared: [],
+    recommended: [],
+};
 
-interface UseProductReturn {
-    product: Product | null;
-    relatedProducts: Product[];
-    loading: boolean;
-    error: string | null;
+interface UseProduct {
+    slug: string;
+    product: ProductDetail | null;
+    related: RelatedProducts;
+    status: ProductStatus;
+    error: string;
+    retry: () => void;
 }
 
-export function useProduct(): UseProductReturn {
+/**
+ * Loads the product named by the `:slug` route param.
+ *
+ * Distinguishes "not found" from "error": an unknown slug is a normal outcome
+ * that deserves a recovery screen, while a genuine failure deserves a retry
+ * button. Collapsing the two would offer a pointless retry on a URL that will
+ * never resolve.
+ */
+export function useProduct(): UseProduct {
+    const { slug = "" } = useParams<{ slug: string }>();
 
-    const { id } = useParams();
+    const [product, setProduct] = useState<ProductDetail | null>(null);
+    const [related, setRelated] = useState<RelatedProducts>(EMPTY_RELATED);
+    const [status, setStatus] = useState<ProductStatus>("loading");
+    const [error, setError] = useState("");
+    const [attempt, setAttempt] = useState(0);
 
-    const [product, setProduct] =
-        useState<Product | null>(null);
-
-    const [relatedProducts, setRelatedProducts] =
-        useState<Product[]>([]);
-
-    const [loading, setLoading] =
-        useState(true);
-
-    const [error, setError] =
-        useState<string | null>(null);
+    const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
     useEffect(() => {
+        // Guards against a slower earlier request landing after a newer one —
+        // easy to trigger by clicking through two related products quickly.
+        let cancelled = false;
 
-        async function loadProduct() {
+        const load = async () => {
+            setStatus("loading");
+            setError("");
 
             try {
+                const found = await getProductBySlug(slug);
+                if (cancelled) return;
 
-                setLoading(true);
-                setError(null);
-
-                const productId = Number(id);
-
-                if (Number.isNaN(productId)) {
-
-                    setError("Invalid product id.");
-
+                if (!found) {
+                    setProduct(null);
+                    setRelated(EMPTY_RELATED);
+                    setStatus("not-found");
                     return;
-
                 }
 
-                const currentProduct =
-                    await productService.getProductById(
-                        productId
-                    );
+                setProduct(found);
+                setStatus("ready");
 
-                if (!currentProduct) {
+                const rails = await getRelatedProducts(found);
+                if (!cancelled) setRelated(rails);
+            } catch {
+                if (cancelled) return;
 
-                    setError("Product not found.");
-
-                    return;
-
-                }
-
-                setProduct(currentProduct);
-
-                const related =
-                    await productService.getRelatedProducts(
-                        currentProduct
-                    );
-
-                setRelatedProducts(related);
-
-            } catch (err) {
-
-                console.error(err);
-
-                setError(
-                    "Something went wrong while loading the product."
-                );
-
-            } finally {
-
-                setLoading(false);
-
+                setProduct(null);
+                setRelated(EMPTY_RELATED);
+                setError("We couldn't load this product. Please try again.");
+                setStatus("error");
             }
+        };
 
-        }
+        void load();
 
-        loadProduct();
+        return () => {
+            cancelled = true;
+        };
+    }, [slug, attempt]);
 
-    }, [id]);
-
-    return {
-
-        product,
-
-        relatedProducts,
-
-        loading,
-
-        error,
-
-    };
-
+    return { slug, product, related, status, error, retry };
 }

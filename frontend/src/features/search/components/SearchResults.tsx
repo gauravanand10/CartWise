@@ -1,45 +1,34 @@
-import type { SearchProduct } from "../types/search";
 import SearchResultCard from "./SearchResultCard";
+import type { SearchProduct } from "../types/search";
 
 interface SearchResultsProps {
     products: SearchProduct[];
 }
 
-const SearchResults = ({
-    products,
-}: SearchResultsProps) => {
+/**
+ * Responsive result grid: 1 → 2 → 3 columns.
+ *
+ * Two columns start at 400px rather than Tailwind's 640px `sm`, matching the
+ * homepage grid so both pages present products at the same density.
+ */
+export default function SearchResults({ products }: SearchResultsProps) {
     return (
-        <section>
-
-            <div className="mb-8 flex items-center justify-between">
-
-                <div>
-
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-                        Products
-                    </h2>
-
-                    <p className="mt-2 text-slate-500">
-                        Browse available products.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div className="grid gap-4 min-[400px]:grid-cols-2 sm:gap-6 xl:grid-cols-3 xl:gap-8">
-
-                {products.map((product) => (
-                    <SearchResultCard
-                        key={product.id}
-                        product={product}
-                    />
-                ))}
-
-            </div>
-
-        </section>
+        <ul
+            className="
+                grid
+                grid-cols-1
+                gap-3
+                min-[400px]:grid-cols-2
+                sm:gap-4
+                xl:grid-cols-3
+                xl:gap-5
+            "
+        >
+            {products.map((product) => (
+                <li key={product.id} className="h-full">
+                    <SearchResultCard product={product} />
+                </li>
+            ))}
+        </ul>
     );
-};
-
-export default SearchResults;
+}

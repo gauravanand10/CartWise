@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import type { AIPick } from "../../types/home";
 import ProductImage from "../product/ProductImage";
@@ -13,6 +14,7 @@ interface AIPickCardProps {
  */
 export default function AIPickCard({ pick }: AIPickCardProps) {
     const {
+        slug,
         name,
         image,
         category,
@@ -25,9 +27,11 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
     } = pick;
 
     return (
+        // `relative` anchors the stretched link on the title below.
         <article
             className="
                 group
+                relative
                 flex
                 h-full
                 flex-col
@@ -102,7 +106,22 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                 />
 
                 <h3 className="mt-4 text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
-                    {name}
+                    {/* Stretched link: the card opens the product, while the
+                        Compare control below stays its own target. */}
+                    <Link
+                        to={`/product/${slug}`}
+                        className="
+                            rounded
+                            after:absolute
+                            after:inset-0
+                            after:content-['']
+                            focus-visible:outline-none
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-500
+                        "
+                    >
+                        {name}
+                    </Link>
                 </h3>
 
                 <p className="mt-1 text-sm font-medium text-blue-700">
@@ -130,9 +149,15 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                         {price}
                     </span>
 
-                    <button
-                        type="button"
+                    {/* `relative z-10` keeps this above the stretched link so it
+                        stays its own target rather than being swallowed by the
+                        card-wide overlay. */}
+                    <Link
+                        to="/compare"
+                        aria-label={`Compare ${name}`}
                         className="
+                            relative
+                            z-10
                             rounded-full
                             bg-slate-900
                             px-4
@@ -150,7 +175,7 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                         "
                     >
                         Compare
-                    </button>
+                    </Link>
                 </div>
             </div>
         </article>

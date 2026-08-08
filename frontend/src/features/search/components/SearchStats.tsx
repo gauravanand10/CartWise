@@ -1,64 +1,83 @@
+import { IndianRupee, Package, Star } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import { formatPrice } from "../utils/searchUtils";
+import type { SearchProduct } from "../types/search";
+
 interface SearchStatsProps {
-  total: number;
+    results: SearchProduct[];
+    query: string;
 }
 
-const SearchStats = ({
-  total,
-}: SearchStatsProps) => {
-  return (
-    <section className="mt-8 grid gap-4 sm:grid-cols-3 sm:gap-6 lg:mt-10">
-
-      <div className="rounded-3xl bg-white p-8 shadow-lg">
-
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Products
-        </p>
-
-        <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900">
-          {total}
-        </h2>
-
-        <p className="mt-4 text-slate-500">
-          Products currently available.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl bg-gradient-to-br from-fuchsia-600 to-purple-600 p-8 text-white shadow-xl">
-
-        <p className="text-sm uppercase tracking-wide text-fuchsia-100">
-          Engine
-        </p>
-
-        <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black">
-          Search V1
-        </h2>
-
-        <p className="mt-4 text-fuchsia-100">
-          Feature-based architecture with
-          debounced search.
-        </p>
-
-      </div>
-
-      <div className="rounded-3xl bg-white p-8 shadow-lg">
-
-        <p className="text-sm uppercase tracking-wide text-slate-400">
-          Response
-        </p>
-
-        <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black text-green-600">
-          Mock API
-        </h2>
-
-        <p className="mt-4 text-slate-500">
-          Ready for backend integration.
-        </p>
-
-      </div>
-
-    </section>
-  );
+interface Stat {
+    icon: LucideIcon;
+    label: string;
+    value: string;
 }
 
-export default SearchStats;
+/**
+ * Live summary of the current result set.
+ *
+ * Deliberately derived from `results` rather than the catalogue: after
+ * filtering, "what am I actually looking at" is the useful question, and a
+ * static product count would answer a different one.
+ */
+export default function SearchStats({ results, query }: SearchStatsProps) {
+    if (results.length === 0) return null;
+
+    const prices = results.map((p) => p.price);
+    const lowest = Math.min(...prices);
+    const highest = Math.max(...prices);
+
+    const averageRating =
+        results.reduce((sum, p) => sum + p.rating, 0) / results.length;
+
+    const stats: Stat[] = [
+        {
+            icon: Package,
+            label: query.trim() ? `Matches for "${query.trim()}"` : "Products",
+            value: String(results.length),
+        },
+        {
+            icon: IndianRupee,
+            label: "Price range",
+            value:
+                lowest === highest
+                    ? formatPrice(lowest)
+                    : `${formatPrice(lowest)} – ${formatPrice(highest)}`,
+        },
+        {
+            icon: Star,
+            label: "Average rating",
+            value: averageRating.toFixed(1),
+        },
+    ];
+
+    return (
+        <dl className="grid gap-3 sm:grid-cols-3">
+            {stats.map((stat) => {
+                const Icon = stat.icon;
+
+                return (
+                    <div
+                        key={stat.label}
+                        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                    >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <Icon size={16} aria-hidden="true" />
+                        </span>
+
+                        <div className="min-w-0">
+                            <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                                {stat.label}
+                            </dt>
+                            <dd className="truncate text-sm font-semibold text-slate-900">
+                                {stat.value}
+                            </dd>
+                        </div>
+                    </div>
+                );
+            })}
+        </dl>
+    );
+}

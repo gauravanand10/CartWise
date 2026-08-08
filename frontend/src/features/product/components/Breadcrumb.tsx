@@ -1,65 +1,64 @@
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import type {
-    Product,
-} from "../types/product";
-
 interface BreadcrumbProps {
-    product: Product;
+    category: string;
+    name: string;
 }
 
-export default function Breadcrumb({
-    product,
-}: BreadcrumbProps) {
+/**
+ * Trail back to Home and to the category's search results.
+ *
+ * The category crumb deep-links into the existing search page with the category
+ * pre-selected, so "up one level" lands somewhere useful instead of on a route
+ * that does not exist yet.
+ */
+export default function Breadcrumb({ category, name }: BreadcrumbProps) {
+    // `-my-1 py-1` lifts the tap target from 18px to 26px, clearing the WCAG
+    // 2.2 minimum, while the negative margin hands the padding back to the
+    // layout so the trail's spacing is unchanged.
+    const linkClass =
+        "-my-1 inline-block rounded py-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
 
     return (
+        <nav aria-label="Breadcrumb">
+            <ol className="flex flex-wrap items-center gap-1.5 text-sm">
 
-        <nav
-            aria-label="Breadcrumb"
-            className="flex flex-wrap items-center gap-3 border-b border-slate-200 py-6 text-sm"
-        >
+                <li>
+                    <Link to="/" className={linkClass}>
+                        Home
+                    </Link>
+                </li>
 
-            <Link
-                to="/"
-                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
-            >
-                Home
-            </Link>
+                <li aria-hidden="true" className="text-slate-300">
+                    <ChevronRight size={14} />
+                </li>
 
-            <span className="text-slate-300">
-                /
-            </span>
+                <li>
+                    <Link
+                        to={`/search?category=${encodeURIComponent(category)}`}
+                        className={linkClass}
+                    >
+                        {category}
+                    </Link>
+                </li>
 
-            <Link
-                to="/search"
-                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
-            >
-                Search
-            </Link>
+                <li aria-hidden="true" className="text-slate-300">
+                    <ChevronRight size={14} />
+                </li>
 
-            <span className="text-slate-300">
-                /
-            </span>
+                {/* Current page: not a link, and marked as the current location
+                    so a screen reader announces where the trail ends. */}
+                <li>
+                    <span
+                        aria-current="page"
+                        className="font-medium text-slate-900"
+                    >
+                        {name}
+                    </span>
+                </li>
 
-            <Link
-                to={`/search?category=${encodeURIComponent(
-                    product.category
-                )}`}
-                className="font-medium text-slate-500 transition hover:text-fuchsia-600"
-            >
-                {product.category}
-            </Link>
-
-            <span className="text-slate-300">
-                /
-            </span>
-
-            <span className="font-semibold text-slate-900">
-                {product.name}
-            </span>
-
+            </ol>
         </nav>
-
     );
-
 }

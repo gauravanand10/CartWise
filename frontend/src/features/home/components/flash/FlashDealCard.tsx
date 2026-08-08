@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import type { FlashDeal } from "../../types/home";
 import { surfaceCard } from "../../styles";
 import ProductImage from "../product/ProductImage";
@@ -9,6 +11,7 @@ interface FlashDealCardProps {
 
 export default function FlashDealCard({ deal }: FlashDealCardProps) {
     const {
+        slug,
         name,
         image,
         category,
@@ -21,7 +24,11 @@ export default function FlashDealCard({ deal }: FlashDealCardProps) {
     } = deal;
 
     return (
-        <article className={`group flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}>
+        // `relative` anchors the stretched link on the title, making the whole
+        // deal card a single click target for the product page.
+        <article
+            className={`group relative flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}
+        >
 
             <div className="relative">
                 <ProductImage
@@ -53,8 +60,22 @@ export default function FlashDealCard({ deal }: FlashDealCardProps) {
             </div>
 
             <div className="mt-3 flex-1 sm:mt-4">
-                <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 sm:text-[15px]">
-                    {name}
+                <h3 className="text-sm font-semibold text-slate-900 sm:text-[15px]">
+                    <Link
+                        to={`/product/${slug}`}
+                        className="
+                            line-clamp-1
+                            rounded
+                            after:absolute
+                            after:inset-0
+                            after:content-['']
+                            focus-visible:outline-none
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-500
+                        "
+                    >
+                        {name}
+                    </Link>
                 </h3>
 
                 <p className="mt-1 truncate text-xs text-slate-500 sm:text-[13px]">

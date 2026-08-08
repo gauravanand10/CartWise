@@ -1,4 +1,5 @@
 import { Heart, Scale, Sparkles, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import type { HomeProduct } from "../../types/home";
 import { surfaceCard } from "../../styles";
@@ -17,6 +18,7 @@ interface ProductCardProps {
  */
 export default function ProductCard({ product }: ProductCardProps) {
     const {
+        slug,
         name,
         image,
         category,
@@ -31,7 +33,11 @@ export default function ProductCard({ product }: ProductCardProps) {
     } = product;
 
     return (
-        <article className={`group flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}>
+        // `relative` anchors the stretched link on the title below, which makes
+        // the whole tile a single click target for the product page.
+        <article
+            className={`group relative flex h-full flex-col p-3 sm:p-4 ${surfaceCard}`}
+        >
 
             {/* Media + overlay actions */}
 
@@ -78,6 +84,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         absolute
                         right-2
                         top-2
+                        z-10
                         flex
                         flex-col
                         gap-1.5
@@ -152,8 +159,28 @@ export default function ProductCard({ product }: ProductCardProps) {
             {/* Meta */}
 
             <div className="mt-3 flex-1 sm:mt-4">
-                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 sm:text-[15px]">
-                    {name}
+                <h3 className="text-sm font-semibold leading-snug text-slate-900 sm:text-[15px]">
+                    {/*
+                        Stretched link: `after:inset-0` makes the whole card
+                        clickable while keeping exactly one link in the tab
+                        order, and leaves the wishlist and compare buttons as
+                        real buttons rather than anchors nested inside an anchor.
+                    */}
+                    <Link
+                        to={`/product/${slug}`}
+                        className="
+                            line-clamp-2
+                            rounded
+                            after:absolute
+                            after:inset-0
+                            after:content-['']
+                            focus-visible:outline-none
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-500
+                        "
+                    >
+                        {name}
+                    </Link>
                 </h3>
 
                 <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-x-3">
@@ -221,34 +248,38 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </p>
                 )}
 
-                {/* Label shortens on the narrowest cards so it never wraps to
-                    two lines and breaks the shared card height. */}
+                {/*
+                    Presentational, not a control: the stretched link already
+                    owns the card's activation, so a second focusable element
+                    pointing at the same destination would just be a duplicate
+                    stop for keyboard and screen-reader users. Label shortens on
+                    the narrowest cards so it never wraps to two lines and
+                    breaks the shared card height.
+                */}
 
-                <button
-                    type="button"
+                <span
+                    aria-hidden="true"
                     className="
                         mt-3
+                        block
                         w-full
                         rounded-full
                         bg-slate-900
                         py-2.5
+                        text-center
                         text-[13px]
                         font-semibold
                         text-white
                         transition
                         duration-200
-                        hover:bg-blue-600
-                        focus-visible:outline-none
-                        focus-visible:ring-2
-                        focus-visible:ring-blue-500
-                        focus-visible:ring-offset-2
+                        group-hover:bg-blue-600
                         sm:mt-4
                         sm:text-sm
                     "
                 >
-                    <span className="sm:hidden">Compare</span>
-                    <span className="hidden sm:inline">Compare prices</span>
-                </button>
+                    <span className="sm:hidden">Details</span>
+                    <span className="hidden sm:inline">View details</span>
+                </span>
             </div>
 
         </article>

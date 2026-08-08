@@ -8,6 +8,8 @@ export type Gradient = string;
 
 export interface HomeProduct {
     id: string;
+    /** URL identity, matching the Product Details catalogue. Drives `/product/:slug`. */
+    slug: string;
     name: string;
     /** Absolute path under /assets. May 404 until the API supplies real images — always render via <ProductImage>. */
     image: string;
@@ -67,6 +69,8 @@ export interface Brand {
 
 export interface FlashDeal {
     id: string;
+    /** URL identity of the product on offer. */
+    slug: string;
     name: string;
     image: string;
     category: ProductCategory;
@@ -81,6 +85,8 @@ export interface FlashDeal {
 
 export interface AIPick {
     id: string;
+    /** URL identity of the recommended product. */
+    slug: string;
     name: string;
     image: string;
     category: ProductCategory;

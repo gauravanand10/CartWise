@@ -1,93 +1,59 @@
+import { Sparkles } from "lucide-react";
+import type { ReactNode } from "react";
+
 interface SearchHeaderProps {
-  totalResults: number;
+    /** The search bar. Slotted in so the header stays presentational. */
+    children: ReactNode;
 }
 
-const SearchHeader = ({
-  totalResults,
-}: SearchHeaderProps) => {
-  return (
-    <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-fuchsia-600 via-purple-700 to-violet-700 px-6 py-10 text-white shadow-2xl sm:rounded-[32px] sm:px-10 sm:py-14 lg:px-12 lg:py-16">
+/**
+ * Page hero.
+ *
+ * Holds the search bar because search is the page's whole purpose — putting it
+ * anywhere below the fold would bury the primary control. The old hard-coded
+ * "20 products / 50ms / 100% responsive" tiles are gone; SearchStats now
+ * reports that kind of information from the live result set instead.
+ */
+export default function SearchHeader({ children }: SearchHeaderProps) {
+    return (
+        // No `overflow-hidden` on the section itself: it would clip the search
+        // dropdown, which has to escape the hero's bottom edge. The decorative
+        // blooms get their own clipping layer instead.
+        <section className="relative rounded-[24px] bg-gradient-to-br from-fuchsia-600 via-purple-700 to-violet-700 px-6 py-10 text-white shadow-2xl sm:rounded-[32px] sm:px-10 sm:py-12 lg:px-12">
 
-      <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 overflow-hidden rounded-[24px] sm:rounded-[32px]"
+            >
+                <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
-      <div className="pointer-events-none absolute bottom-0 left-0 h-52 w-52 rounded-full bg-violet-400/20 blur-3xl" />
+                <div className="absolute bottom-0 left-0 h-52 w-52 rounded-full bg-violet-400/20 blur-3xl" />
+            </div>
 
-      <div className="relative z-10 max-w-3xl">
+            <div className="relative z-10 mx-auto max-w-3xl text-center">
 
-        <span className="inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold backdrop-blur sm:px-5 sm:py-2 sm:text-sm">
-          🚀 Production Ready Search
-        </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold backdrop-blur sm:text-sm">
+                    <Sparkles size={14} aria-hidden="true" />
+                    Compared across 9 stores
+                </span>
 
-        {/*
-          The line break is `sm`-only. A hard <br /> plus a fixed text-6xl meant
-          "smarter with CartWise" was one unbreakable 60px line, which ran off
-          the panel on any screen under ~640px. Now the words wrap naturally on
-          phones and only take the designed two-line shape once there's room.
-        */}
+                <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+                    Find the best price
+                </h1>
 
-        <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight sm:mt-6 sm:text-4xl lg:text-6xl">
-          Discover products
-          <br className="hidden sm:block" />{" "}
-          smarter with{" "}
-          <span className="bg-gradient-to-r from-cyan-300 to-white bg-clip-text text-transparent">
-            CartWise
-          </span>
-        </h1>
+                <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-fuchsia-100 sm:text-base">
+                    Search once and compare specifications, ratings and live
+                    prices across every major retailer.
+                </p>
 
-        <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-fuchsia-100 sm:mt-6 sm:text-lg sm:leading-8">
-          Compare products, analyze specifications,
-          filter results and make better buying
-          decisions with a fast and intuitive search
-          experience.
-        </p>
+                {/* The dropdown overlays content below, so this wrapper owns a
+                    stacking context above the hero's decorative blooms. */}
+                <div className="relative z-20 mt-7 text-left">
+                    {children}
+                </div>
 
-        {/* A 3-up grid rather than flex-wrap: wrapping left a lone orphan tile
-            on a second row at tablet widths. */}
+            </div>
 
-        <div className="mt-8 grid grid-cols-3 gap-2.5 sm:mt-10 sm:gap-6">
-
-          <div className="rounded-xl bg-white/10 px-2 py-3 backdrop-blur sm:rounded-2xl sm:px-8 sm:py-5">
-
-            <h2 className="text-base font-black sm:text-2xl lg:text-4xl">
-              {totalResults}
-            </h2>
-
-            <p className="mt-1 text-[11px] leading-tight text-fuchsia-100 sm:text-base">
-              Products
-            </p>
-
-          </div>
-
-          <div className="rounded-xl bg-white/10 px-2 py-3 backdrop-blur sm:rounded-2xl sm:px-8 sm:py-5">
-
-            <h2 className="text-base font-black sm:text-2xl lg:text-4xl">
-              50ms
-            </h2>
-
-            <p className="mt-1 text-[11px] leading-tight text-fuchsia-100 sm:text-base">
-              Search Speed
-            </p>
-
-          </div>
-
-          <div className="rounded-xl bg-white/10 px-2 py-3 backdrop-blur sm:rounded-2xl sm:px-8 sm:py-5">
-
-            <h2 className="text-base font-black sm:text-2xl lg:text-4xl">
-              100%
-            </h2>
-
-            <p className="mt-1 text-[11px] leading-tight text-fuchsia-100 sm:text-base">
-              Responsive
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-  );
-};
-
-export default SearchHeader;
+        </section>
+    );
+}

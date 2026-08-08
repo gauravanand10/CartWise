@@ -1,101 +1,84 @@
-import Breadcrumb from "./components/Breadcrumb";
-import ProductGallery from "./components/ProductGallery";
-import ProductInfo from "./components/ProductInfo";
-import ProductSpecs from "./components/ProductSpecs";
-import ProductDescription from "./components/ProductDescription";
-import RelatedProducts from "./components/RelatedProducts";
-import ProductSkeleton from "./components/ProductSkeleton";
-import ProductError from "./components/ProductError";
+import { useEffect, useMemo } from "react";
 
+import AiInsights from "./components/AiInsights";
+import Breadcrumb from "./components/Breadcrumb";
+import ProductDescription from "./components/ProductDescription";
+import ProductHero from "./components/ProductHero";
+import ProductReviews from "./components/ProductReviews";
+import ProductSpecs from "./components/ProductSpecs";
+import RelatedProducts from "./components/RelatedProducts";
+import StoreComparison from "./components/StoreComparison";
+
+import ProductError from "./components/states/ProductError";
+import ProductNotFound from "./components/states/ProductNotFound";
+import ProductSkeleton from "./components/states/ProductSkeleton";
+
+import { getPopularProducts } from "./services/productService";
 import { useProduct } from "./hooks/useProduct";
 
+/**
+ * Product Details.
+ *
+ * MainLayout supplies the `<main>` landmark and the width container, so this
+ * page only owns its own vertical rhythm — the same contract the Search page
+ * follows.
+ */
 export default function ProductPage() {
+    const { slug, product, related, status, error, retry } = useProduct();
 
-    const {
+    // Related products link to other products, so the same component re-renders
+    // with new data while the viewport is halfway down the page. Without this
+    // the user lands in the middle of the next product's reviews.
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+    }, [slug]);
 
-        product,
+    const popular = useMemo(() => getPopularProducts(), []);
 
-        relatedProducts,
-
-        loading,
-
-        error,
-
-    } = useProduct();
-
-    if (loading) {
-
+    if (status === "loading") {
         return <ProductSkeleton />;
-
     }
 
-    if (error || !product) {
+    if (status === "error") {
+        return <ProductError message={error} onRetry={retry} />;
+    }
 
-        return (
-            <ProductError
-                message={
-                    error ??
-                    "Unable to load product."
-                }
-            />
-        );
-
+    if (status === "not-found" || !product) {
+        return <ProductNotFound slug={slug} suggestions={popular} />;
     }
 
     return (
+        <div className="space-y-6 sm:space-y-8">
 
-        // MainLayout supplies the <main> landmark and the width container, so
-        // this page only owns its own vertical rhythm.
-        <div>
+            <Breadcrumb category={product.category} name={product.name} />
 
-            <div>
+            <ProductHero product={product} />
 
-                <Breadcrumb
-                    product={product}
-                />
+            <StoreComparison
+                stores={product.stores}
+                productName={product.name}
+            />
 
-                <section className="mt-10 grid gap-12 lg:grid-cols-2">
+            <ProductSpecs groups={product.specGroups} />
 
-                    <ProductGallery
-                        product={product}
-                    />
+            <ProductDescription
+                overview={product.overview}
+                highlights={product.highlights}
+                features={product.features}
+                boxContents={product.boxContents}
+            />
 
-                    <ProductInfo
-                        product={product}
-                    />
+            <AiInsights ai={product.ai} productName={product.name} />
 
-                </section>
+            <ProductReviews
+                rating={product.rating}
+                reviewCount={product.reviewCount}
+                buckets={product.ratingBuckets}
+                reviews={product.reviews}
+            />
 
-                <section className="mt-16">
-
-                    <ProductSpecs
-                        product={product}
-                    />
-
-                </section>
-
-                <section className="mt-16">
-
-                    <ProductDescription
-                        product={product}
-                    />
-
-                </section>
-
-                <section className="mt-20">
-
-                    <RelatedProducts
-                        products={
-                            relatedProducts
-                        }
-                    />
-
-                </section>
-
-            </div>
+            <RelatedProducts related={related} />
 
         </div>
-
     );
-
 }
