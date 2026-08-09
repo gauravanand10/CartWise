@@ -1,6 +1,7 @@
-import { Heart, Scale, Sparkles, Star } from "lucide-react";
+import { Check, Heart, Scale, Sparkles, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useCompareSelection } from "../../../compare";
 import type { HomeProduct } from "../../types/home";
 import { surfaceCard } from "../../styles";
 import ProductImage from "./ProductImage";
@@ -31,6 +32,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         badge,
         store,
     } = product;
+
+    const { toggle, isComparing, isFull } = useCompareSelection();
+    const comparing = isComparing(slug);
 
     return (
         // `relative` anchors the stretched link on the title below, which makes
@@ -80,7 +84,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 */}
 
                 <div
-                    className="
+                    className={`
                         absolute
                         right-2
                         top-2
@@ -94,9 +98,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                         sm:right-3
                         sm:top-3
                         sm:gap-2
-                        md:opacity-0
-                        md:group-hover:opacity-100
-                    "
+                        ${comparing ? "" : "md:opacity-0 md:group-hover:opacity-100"}
+                    `}
                 >
                     <button
                         type="button"
@@ -128,30 +131,40 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                     <button
                         type="button"
-                        aria-label={`Compare ${name}`}
-                        className="
+                        onClick={() => toggle(slug)}
+                        disabled={isFull && !comparing}
+                        aria-pressed={comparing}
+                        aria-label={
+                            comparing
+                                ? `Remove ${name} from comparison`
+                                : isFull
+                                    ? `Comparison is full — remove a product to add ${name}`
+                                    : `Add ${name} to comparison`
+                        }
+                        className={`
                             flex
                             h-9
                             w-9
                             items-center
                             justify-center
                             rounded-full
-                            bg-white/95
-                            text-slate-600
                             shadow-sm
                             backdrop-blur-sm
                             transition
-                            hover:bg-blue-600
-                            hover:text-white
                             focus-visible:outline-none
                             focus-visible:ring-2
                             focus-visible:ring-blue-500
+                            disabled:cursor-not-allowed
+                            disabled:opacity-60
                             md:h-8
                             md:w-8
-                            md:bg-white
-                        "
+                            ${comparing
+                                ? "bg-blue-600 text-white"
+                                : "bg-white/95 text-slate-600 hover:bg-blue-600 hover:text-white md:bg-white"
+                            }
+                        `}
                     >
-                        <Scale size={15} />
+                        {comparing ? <Check size={15} /> : <Scale size={15} />}
                     </button>
                 </div>
             </div>

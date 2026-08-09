@@ -2,6 +2,8 @@ import { Bell, Heart, Scale, Search, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 
+import { useCompareSelection } from "../../../features/compare";
+
 interface ActionButtonProps {
     icon: ReactNode;
     label: string;
@@ -65,6 +67,10 @@ function ActionButton({ icon, label, badge, to }: ActionButtonProps) {
 }
 
 export default function NavActions() {
+    // Live count, so the badge reflects the real comparison rather than a
+    // placeholder that disagrees with the Compare page.
+    const { count } = useCompareSelection();
+
     return (
         <div className="flex shrink-0 items-center gap-1">
 
@@ -88,7 +94,7 @@ export default function NavActions() {
             <ActionButton
                 icon={<Scale size={19} />}
                 label="Compare"
-                badge={2}
+                badge={count}
                 to="/compare"
             />
 

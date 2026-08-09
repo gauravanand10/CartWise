@@ -1,8 +1,9 @@
-import { Heart, Scale, Sparkles, Star } from "lucide-react";
+import { Check, Heart, Scale, Sparkles, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import SafeImage from "./SafeImage";
 import { discountPercent, formatCount, formatPrice } from "../../lib/currency";
+import { useCompareSelection } from "../../features/compare";
 import type { ProductCardModel } from "../../types/product";
 
 interface ProductCardProps {
@@ -28,6 +29,13 @@ export default function ProductCard({
     className = "",
 }: ProductCardProps) {
     const discount = discountPercent(product.price, product.originalPrice);
+
+    const { toggle, isComparing, isFull } = useCompareSelection();
+    const comparing = isComparing(product.slug);
+
+    // Full *and* not already in the comparison is the only unusable case —
+    // a selected product must stay clickable so it can be removed.
+    const compareDisabled = isFull && !comparing;
 
     return (
         <article
@@ -80,7 +88,7 @@ export default function ProductCard({
                     unreachable on touch.
                 */}
                 <div
-                    className="
+                    className={`
                         absolute
                         right-2
                         top-2
@@ -91,9 +99,8 @@ export default function ProductCard({
                         transition-opacity
                         duration-200
                         focus-within:opacity-100
-                        md:opacity-0
-                        md:group-hover:opacity-100
-                    "
+                        ${comparing ? "" : "md:opacity-0 md:group-hover:opacity-100"}
+                    `}
                 >
                     <button
                         type="button"
@@ -103,12 +110,54 @@ export default function ProductCard({
                         <Heart size={15} />
                     </button>
 
+                    {/*
+                        Stays visible once selected, regardless of hover, so the
+                        card carries its own state — otherwise a product could be
+                        in the comparison with nothing on the card to say so.
+                    */}
                     <button
                         type="button"
-                        aria-label={`Compare ${product.name}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-sm backdrop-blur-sm transition hover:bg-blue-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:h-8 md:w-8"
+                        onClick={() => toggle(product.slug)}
+                        disabled={compareDisabled}
+                        aria-pressed={comparing}
+                        aria-label={
+                            comparing
+                                ? `Remove ${product.name} from comparison`
+                                : compareDisabled
+                                    ? `Comparison is full — remove a product to add ${product.name}`
+                                    : `Add ${product.name} to comparison`
+                        }
+                        title={
+                            compareDisabled
+                                ? "Comparison is full"
+                                : comparing
+                                    ? "Remove from comparison"
+                                    : "Add to comparison"
+                        }
+                        className={`
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            shadow-sm
+                            backdrop-blur-sm
+                            transition
+                            focus-visible:outline-none
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-500
+                            disabled:cursor-not-allowed
+                            disabled:opacity-60
+                            md:h-8
+                            md:w-8
+                            ${comparing
+                                ? "bg-blue-600 text-white"
+                                : "bg-white/95 text-slate-600 hover:bg-blue-600 hover:text-white"
+                            }
+                        `}
                     >
-                        <Scale size={15} />
+                        {comparing ? <Check size={15} /> : <Scale size={15} />}
                     </button>
                 </div>
             </div>

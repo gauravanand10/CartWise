@@ -1,59 +1,59 @@
-import { AlertTriangle, RefreshCcw } from "lucide-react";
-
-import Button from "../../../components/ui/Button";
-import Card from "../../../components/ui/Card";
+import { AlertTriangle, RotateCcw, Trash2 } from "lucide-react";
 
 interface CompareErrorProps {
-    title?: string;
-    description?: string;
-    onRetry?: () => void;
+    message: string;
+    onRetry: () => void;
+    onClear: () => void;
 }
 
+/**
+ * The comparison failed to load.
+ *
+ * Offers "clear" alongside "retry" because a comparison can be broken by its own
+ * saved selection — without a way to empty it, a user whose stored slugs keep
+ * failing would be stuck on this screen every time they open the page.
+ */
 export default function CompareError({
-    title = "Unable to Compare Products",
-    description = "Something went wrong while loading the comparison. Please try again.",
+    message,
     onRetry,
+    onClear,
 }: CompareErrorProps) {
     return (
-        <section className="flex min-h-[500px] items-center justify-center">
+        <section
+            role="alert"
+            className="rounded-2xl border border-red-200 bg-red-50 px-6 py-14 text-center sm:rounded-[24px] sm:py-20"
+        >
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-red-600">
+                <AlertTriangle size={26} strokeWidth={1.5} aria-hidden="true" />
+            </span>
 
-            <Card className="w-full max-w-3xl rounded-[36px] p-6 sm:p-9 lg:p-12 text-center">
+            <h1 className="mt-6 text-lg font-semibold text-red-900 sm:text-xl">
+                Comparison unavailable
+            </h1>
 
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-red-700">
+                {message}
+            </p>
 
-                    <AlertTriangle
-                        size={44}
-                        className="text-red-600"
-                    />
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+                >
+                    <RotateCcw size={15} aria-hidden="true" />
+                    Try again
+                </button>
 
-                </div>
-
-                <h2 className="mt-8 text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900">
-
-                    {title}
-
-                </h2>
-
-                <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-500">
-
-                    {description}
-
-                </p>
-
-                <div className="mt-10 flex justify-center">
-
-                    <Button
-                        size="lg"
-                        leftIcon={<RefreshCcw size={18} />}
-                        onClick={onRetry}
-                    >
-                        Try Again
-                    </Button>
-
-                </div>
-
-            </Card>
-
+                <button
+                    type="button"
+                    onClick={onClear}
+                    className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-5 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                >
+                    <Trash2 size={15} aria-hidden="true" />
+                    Clear comparison
+                </button>
+            </div>
         </section>
     );
 }

@@ -1,54 +1,57 @@
-import Card from "../../../components/ui/Card";
+import Skeleton from "../../../components/ui/Skeleton";
 
-export default function CompareSkeleton() {
+interface CompareSkeletonProps {
+    /** Column count from the saved selection, so the shape matches what loads. */
+    columns: number;
+}
+
+/**
+ * Loading placeholder.
+ *
+ * Sized from the selection that is already known, so it renders the right number
+ * of columns and the grid does not reflow when the products arrive.
+ */
+export default function CompareSkeleton({ columns }: CompareSkeletonProps) {
+    const safeColumns = Math.max(2, Math.min(columns, 4));
+
     return (
-        <div className="space-y-12 animate-pulse">
+        <div
+            aria-busy="true"
+            aria-live="polite"
+            aria-label="Loading comparison"
+            className="space-y-6"
+        >
+            <Skeleton className="h-5 w-72" rounded="sm" />
 
-            <Card className="rounded-[36px] p-5 sm:p-8 lg:p-10">
+            <Skeleton className="h-36 w-full" rounded="lg" />
 
-                <div className="grid gap-10 lg:grid-cols-2">
+            <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <div className="flex gap-3 p-4">
+                    <div className="hidden w-40 shrink-0 sm:block" />
 
-                    <div className="space-y-6">
-
-                        <div className="h-10 w-72 rounded bg-slate-200" />
-
-                        <div className="h-6 w-full rounded bg-slate-200" />
-
-                        <div className="h-6 w-5/6 rounded bg-slate-200" />
-
-                        <div className="mt-10 h-64 rounded-3xl bg-slate-200" />
-
-                    </div>
-
-                    <div className="rounded-3xl bg-slate-200" />
-
+                    {Array.from({ length: safeColumns }).map((_, index) => (
+                        <div key={index} className="flex-1 space-y-2.5">
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-3 w-16" rounded="sm" />
+                            <Skeleton className="h-4 w-full" rounded="sm" />
+                            <Skeleton className="h-5 w-20" rounded="sm" />
+                        </div>
+                    ))}
                 </div>
 
-            </Card>
+                {Array.from({ length: 8 }).map((_, index) => (
+                    <div
+                        key={index}
+                        className="flex gap-3 border-t border-slate-100 px-4 py-3.5"
+                    >
+                        <Skeleton className="h-4 w-28 shrink-0" rounded="sm" />
 
-            {[1, 2, 3].map((item) => (
-
-                <Card
-                    key={item}
-                    className="rounded-[32px] p-8"
-                >
-
-                    <div className="space-y-5">
-
-                        <div className="h-8 w-52 rounded bg-slate-200" />
-
-                        <div className="h-5 rounded bg-slate-200" />
-
-                        <div className="h-5 rounded bg-slate-200" />
-
-                        <div className="h-5 w-3/4 rounded bg-slate-200" />
-
+                        {Array.from({ length: safeColumns }).map((__, cell) => (
+                            <Skeleton key={cell} className="h-4 flex-1" rounded="sm" />
+                        ))}
                     </div>
-
-                </Card>
-
-            ))}
-
+                ))}
+            </div>
         </div>
     );
 }

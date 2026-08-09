@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useCompareSelection } from "../../../compare";
 import type { AIPick } from "../../types/home";
 import ProductImage from "../product/ProductImage";
 
@@ -25,6 +26,10 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
         reasons,
         gradient,
     } = pick;
+
+    // The Compare control adds the product on the way to /compare, so the page
+    // it opens actually contains what the user pressed it for.
+    const { add } = useCompareSelection();
 
     return (
         // `relative` anchors the stretched link on the title below.
@@ -154,7 +159,8 @@ export default function AIPickCard({ pick }: AIPickCardProps) {
                         card-wide overlay. */}
                     <Link
                         to="/compare"
-                        aria-label={`Compare ${name}`}
+                        onClick={() => add(slug)}
+                        aria-label={`Add ${name} to comparison and open compare`}
                         className="
                             relative
                             z-10
