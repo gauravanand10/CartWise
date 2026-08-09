@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 
 import { useCompareSelection } from "../../../features/compare";
+import { useWishlistSelection } from "../../../features/wishlist";
 
 interface ActionButtonProps {
     icon: ReactNode;
@@ -70,6 +71,7 @@ export default function NavActions() {
     // Live count, so the badge reflects the real comparison rather than a
     // placeholder that disagrees with the Compare page.
     const { count } = useCompareSelection();
+    const { count: wishlistCount } = useWishlistSelection();
 
     return (
         <div className="flex shrink-0 items-center gap-1">
@@ -87,7 +89,7 @@ export default function NavActions() {
             <ActionButton
                 icon={<Heart size={19} />}
                 label="Wishlist"
-                badge={2}
+                badge={wishlistCount}
                 to="/wishlist"
             />
 

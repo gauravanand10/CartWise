@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Heart, Scale, Share2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { MAX_COMPARE, useCompareSelection } from "../../compare";
+import { useWishlistSelection } from "../../wishlist";
 
 interface ProductActionsProps {
     name: string;
@@ -12,8 +13,9 @@ interface ProductActionsProps {
 /**
  * Wishlist, Compare and Share.
  *
- * Wishlist stays navigation only — Chapter 12 does not own that behaviour, so it
- * routes to the page that will rather than being a button that does nothing.
+ * Wishlist toggles in place rather than navigating: saving a product is not a
+ * reason to leave the page you are reading, and the button's own label and
+ * `aria-pressed` state report whether it is saved.
  *
  * Compare now adds this product to the comparison and goes there, which is what
  * the button always implied. Once the product is already in the comparison the
@@ -30,6 +32,9 @@ export default function ProductActions({ name, slug }: ProductActionsProps) {
     const navigate = useNavigate();
     const { add, isComparing, isFull, count } = useCompareSelection();
     const comparing = isComparing(slug);
+
+    const { toggle: toggleWishlist, isWishlisted } = useWishlistSelection();
+    const wishlisted = isWishlisted(slug);
 
     const compare = useCallback(() => {
         if (!comparing) add(slug);
@@ -77,10 +82,25 @@ export default function ProductActions({ name, slug }: ProductActionsProps) {
     return (
         <div className="flex flex-wrap gap-2.5">
 
-            <Link to="/wishlist" className={buttonClass}>
-                <Heart size={16} aria-hidden="true" />
-                Add to wishlist
-            </Link>
+            <button
+                type="button"
+                onClick={() => toggleWishlist(slug)}
+                aria-pressed={wishlisted}
+                aria-label={
+                    wishlisted
+                        ? `Remove ${name} from wishlist`
+                        : `Add ${name} to wishlist`
+                }
+                className={buttonClass}
+            >
+                <Heart
+                    size={16}
+                    aria-hidden="true"
+                    fill={wishlisted ? "currentColor" : "none"}
+                    className={wishlisted ? "text-rose-500" : ""}
+                />
+                {wishlisted ? "Saved" : "Add to wishlist"}
+            </button>
 
             <button
                 type="button"

@@ -2,6 +2,7 @@ import { Check, Heart, Scale, Sparkles, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useCompareSelection } from "../../../compare";
+import { useWishlistSelection } from "../../../wishlist";
 import type { HomeProduct } from "../../types/home";
 import { surfaceCard } from "../../styles";
 import ProductImage from "./ProductImage";
@@ -35,6 +36,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     const { toggle, isComparing, isFull } = useCompareSelection();
     const comparing = isComparing(slug);
+
+    const { toggle: toggleWishlist, isWishlisted } = useWishlistSelection();
+    const wishlisted = isWishlisted(slug);
 
     return (
         // `relative` anchors the stretched link on the title below, which makes
@@ -98,35 +102,42 @@ export default function ProductCard({ product }: ProductCardProps) {
                         sm:right-3
                         sm:top-3
                         sm:gap-2
-                        ${comparing ? "" : "md:opacity-0 md:group-hover:opacity-100"}
+                        ${comparing || wishlisted
+                            ? ""
+                            : "md:opacity-0 md:group-hover:opacity-100"}
                     `}
                 >
                     <button
                         type="button"
-                        aria-label={`Add ${name} to wishlist`}
-                        className="
+                        onClick={() => toggleWishlist(slug)}
+                        aria-pressed={wishlisted}
+                        aria-label={
+                            wishlisted
+                                ? `Remove ${name} from wishlist`
+                                : `Add ${name} to wishlist`
+                        }
+                        className={`
                             flex
                             h-9
                             w-9
                             items-center
                             justify-center
                             rounded-full
-                            bg-white/95
-                            text-slate-600
                             shadow-sm
                             backdrop-blur-sm
                             transition
-                            hover:bg-rose-500
-                            hover:text-white
                             focus-visible:outline-none
                             focus-visible:ring-2
                             focus-visible:ring-blue-500
                             md:h-8
                             md:w-8
-                            md:bg-white
-                        "
+                            ${wishlisted
+                                ? "bg-rose-500 text-white"
+                                : "bg-white/95 text-slate-600 hover:bg-rose-500 hover:text-white md:bg-white"
+                            }
+                        `}
                     >
-                        <Heart size={15} />
+                        <Heart size={15} fill={wishlisted ? "currentColor" : "none"} />
                     </button>
 
                     <button

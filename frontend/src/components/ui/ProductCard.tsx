@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import SafeImage from "./SafeImage";
 import { discountPercent, formatCount, formatPrice } from "../../lib/currency";
 import { useCompareSelection } from "../../features/compare";
+import { useWishlistSelection } from "../../features/wishlist";
 import type { ProductCardModel } from "../../types/product";
 
 interface ProductCardProps {
@@ -32,6 +33,9 @@ export default function ProductCard({
 
     const { toggle, isComparing, isFull } = useCompareSelection();
     const comparing = isComparing(product.slug);
+
+    const { toggle: toggleWishlist, isWishlisted } = useWishlistSelection();
+    const wishlisted = isWishlisted(product.slug);
 
     // Full *and* not already in the comparison is the only unusable case —
     // a selected product must stay clickable so it can be removed.
@@ -99,15 +103,45 @@ export default function ProductCard({
                         transition-opacity
                         duration-200
                         focus-within:opacity-100
-                        ${comparing ? "" : "md:opacity-0 md:group-hover:opacity-100"}
+                        ${comparing || wishlisted
+                            ? ""
+                            : "md:opacity-0 md:group-hover:opacity-100"}
                     `}
                 >
+                    {/* Filled heart plus `aria-pressed` so the saved state is
+                        conveyed both visually and to assistive technology. */}
                     <button
                         type="button"
-                        aria-label={`Add ${product.name} to wishlist`}
-                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-sm backdrop-blur-sm transition hover:bg-rose-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:h-8 md:w-8"
+                        onClick={() => toggleWishlist(product.slug)}
+                        aria-pressed={wishlisted}
+                        aria-label={
+                            wishlisted
+                                ? `Remove ${product.name} from wishlist`
+                                : `Add ${product.name} to wishlist`
+                        }
+                        title={wishlisted ? "Saved to wishlist" : "Save to wishlist"}
+                        className={`
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-full
+                            shadow-sm
+                            backdrop-blur-sm
+                            transition
+                            focus-visible:outline-none
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-500
+                            md:h-8
+                            md:w-8
+                            ${wishlisted
+                                ? "bg-rose-500 text-white"
+                                : "bg-white/95 text-slate-600 hover:bg-rose-500 hover:text-white"
+                            }
+                        `}
                     >
-                        <Heart size={15} />
+                        <Heart size={15} fill={wishlisted ? "currentColor" : "none"} />
                     </button>
 
                     {/*
