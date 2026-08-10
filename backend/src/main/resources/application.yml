@@ -1,0 +1,20 @@
+# Settings shared by every profile.
+# Profile-specific overrides live in application-dev.yml / application-prod.yml.
+spring:
+  application:
+    name: cartwise-backend
+  profiles:
+    # Running the app with no explicit profile is a developer on a laptop, so dev is the
+    # default. Production must opt in via SPRING_PROFILES_ACTIVE=prod, which means an
+    # unconfigured deployment fails loudly rather than silently serving dev settings.
+    default: dev
+
+server:
+  port: 8080
+
+# CartWise-owned configuration. Bound by com.cartwise.config.CorsProperties.
+# Deliberately no value here: each profile must name its own frontend origins, and an
+# unset list registers no CORS mapping at all rather than falling back to something permissive.
+cartwise:
+  cors:
+    allowed-origins: []

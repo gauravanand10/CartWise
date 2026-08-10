@@ -1,0 +1,20 @@
+# Production profile — structure only. No real values are committed here, and none should be.
+#
+# Everything environment-specific is read from environment variables so that secrets and hosts
+# live in the deployment platform, not in Git. Datasource and security settings are absent
+# because those subsystems do not exist yet (Chapters 16 and 18).
+
+server:
+  port: ${PORT:8080}
+
+cartwise:
+  cors:
+    # Comma-separated list of deployed frontend origins, e.g.
+    # CARTWISE_ALLOWED_ORIGINS=https://cartwise.example.com
+    # Unset means no CORS mapping is registered — a misconfigured deploy fails visibly.
+    allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:}
+
+logging:
+  level:
+    root: INFO
+    com.cartwise: INFO
