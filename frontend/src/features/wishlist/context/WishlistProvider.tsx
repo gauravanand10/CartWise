@@ -1,46 +1,20 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { WishlistContext } from "./wishlistContext";
 import type { WishlistSelection } from "./wishlistContext";
 import { WISHLIST_STORAGE_KEY } from "../constants";
 import type { WishlistToggleResult } from "../types/wishlist";
+import { createPersistedList, isSameList } from "../../../lib/persistedList";
 
 /**
- * Reads the saved wishlist.
- *
- * Every access is guarded: `localStorage` throws outright in private-mode
- * Safari and is absent during server rendering, and a wishlist failing to load
- * must never take the page down with it.
+ * Guarded, de-duplicated, versioned persistence. The store owns the mechanics;
+ * this provider owns what the wishlist means — ordering, toggling, and the
+ * public contract in `wishlistContext`.
  */
-function read(): string[] {
-    try {
-        const raw = window.localStorage.getItem(WISHLIST_STORAGE_KEY);
-        if (!raw) return [];
+const store = createPersistedList(WISHLIST_STORAGE_KEY);
 
-        const parsed: unknown = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-
-        // De-duplicated on read as well as on write, so a hand-edited or
-        // partially-migrated value can never produce two identical cards.
-        return [
-            ...new Set(
-                parsed.filter((value): value is string => typeof value === "string"),
-            ),
-        ];
-    } catch {
-        return [];
-    }
-}
-
-function write(slugs: string[]): void {
-    try {
-        window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(slugs));
-    } catch {
-        // Storage full or blocked. The wishlist still works for this session;
-        // it just will not survive a reload, which is not worth failing over.
-    }
-}
+const { read, write } = store;
 
 /**
  * Provides the wishlist selection to the whole app.
@@ -58,6 +32,24 @@ export default function WishlistProvider({
     children: ReactNode;
 }) {
     const [slugs, setSlugs] = useState<string[]>(read);
+
+    // Cross-tab sync. Saving a product in one tab used to leave every other
+    // open tab showing a stale badge until it was reloaded.
+    //
+    // This path only ever *reads*, which is what keeps it loop-free: the
+    // browser does not deliver `storage` to the tab that performed the write,
+    // so a tab reacting by reading cannot bounce the event back. Bailing out
+    // when the value is unchanged also keeps the context value referentially
+    // stable, so an unrelated key changing costs no re-render.
+    useEffect(
+        () =>
+            store.subscribe((incoming) => {
+                setSlugs((current) =>
+                    isSameList(current, incoming) ? current : incoming,
+                );
+            }),
+        [],
+    );
 
     const add = useCallback((slug: string) => {
         setSlugs((current) => {

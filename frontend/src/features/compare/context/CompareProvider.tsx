@@ -1,35 +1,29 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { CompareContext } from "./compareContext";
 import type { CompareSelection } from "./compareContext";
 import { COMPARE_STORAGE_KEY, MAX_COMPARE } from "../constants";
 import type { AddResult } from "../types/compare";
+import { createPersistedList, isSameList } from "../../../lib/persistedList";
 
-/** Reads the saved selection. Guarded — localStorage throws in private mode. */
+/**
+ * Guarded, de-duplicated, versioned persistence. The store owns the mechanics;
+ * the cap below is Compare's own rule and stays here.
+ */
+const store = createPersistedList(COMPARE_STORAGE_KEY);
+
+const { write } = store;
+
+/**
+ * The stored list, held to the comparison's own limit.
+ *
+ * The cap is applied on the way in rather than inside the shared store: a
+ * hand-edited value or one written by an older build with a different limit
+ * must not be able to render a fifth column.
+ */
 function read(): string[] {
-    try {
-        const raw = window.localStorage.getItem(COMPARE_STORAGE_KEY);
-        if (!raw) return [];
-
-        const parsed: unknown = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-
-        return parsed
-            .filter((value): value is string => typeof value === "string")
-            .slice(0, MAX_COMPARE);
-    } catch {
-        return [];
-    }
-}
-
-function write(slugs: string[]): void {
-    try {
-        window.localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(slugs));
-    } catch {
-        // Storage full or blocked. The comparison still works for this session;
-        // it just will not survive a reload, which is not worth failing over.
-    }
+    return store.read().slice(0, MAX_COMPARE);
 }
 
 /**
@@ -46,6 +40,20 @@ export default function CompareProvider({
     children: ReactNode;
 }) {
     const [slugs, setSlugs] = useState<string[]>(read);
+
+    // Cross-tab sync — same contract as the wishlist: read-only in response to
+    // another tab's write, so the two tabs converge instead of ping-ponging.
+    // The incoming value goes through `read`, so the cap applies to it too.
+    useEffect(
+        () =>
+            store.subscribe(() => {
+                const incoming = read();
+                setSlugs((current) =>
+                    isSameList(current, incoming) ? current : incoming,
+                );
+            }),
+        [],
+    );
 
     const add = useCallback((slug: string): AddResult => {
         let result: AddResult = "added";
