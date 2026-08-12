@@ -1,11 +1,37 @@
 # Production profile — structure only. No real values are committed here, and none should be.
 #
 # Everything environment-specific is read from environment variables so that secrets and hosts
-# live in the deployment platform, not in Git. Datasource and security settings are absent
-# because those subsystems do not exist yet (Chapters 16 and 18).
+# live in the deployment platform, not in Git. Security settings are absent because that
+# subsystem does not exist yet (Chapter 18).
 
 server:
   port: ${PORT:8080}
+
+spring:
+  datasource:
+    # No default value on purpose. An unset DB_URL must fail the boot, not fall back to a
+    # localhost database that happens to be reachable — a production process quietly writing to
+    # someone's laptop is a worse failure than not starting.
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # Never `create-drop`, never `update`. `validate` checks the deployed schema matches the
+      # entities and refuses to start on a mismatch, so a schema drift is caught at deploy time
+      # instead of on the first query that touches the missing column. It changes nothing itself:
+      # applying schema changes is a migration tool's job, and that is a later chapter.
+      ddl-auto: validate
+
+    show-sql: false
+    open-in-view: false
+
+  sql:
+    init:
+      # Sample data is a development convenience. Seeding a production database from a file
+      # committed to the repository is not.
+      mode: never
 
 cartwise:
   cors:

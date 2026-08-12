@@ -1,11 +1,16 @@
 /**
  * Data access — the boundary behind which persistence is hidden.
  *
- * <p>Intentionally empty in Chapter 15. The package exists because the layering decision is made
- * here even though the storage decision is not: services will depend on interfaces declared in
- * this package, so swapping the implementation never reaches upward.
+ * <p>Chapter 15 created this package empty to fix the layering decision before the storage
+ * decision. Chapter 16 fills it in: three Spring Data JPA interfaces over a real PostgreSQL
+ * datasource, one per persisted entity.
  *
- * <p>Spring Data JPA repositories and the PostgreSQL datasource arrive in Chapter 16. Creating
- * them now would mean wiring a database connection that no code in this chapter reads from.
+ * <p>They are interfaces with no implementations by design — Spring Data derives the SQL from each
+ * method name and supplies the proxy at startup. That also means a method naming a property that
+ * does not exist fails the application context, not a request in production.
+ *
+ * <p>Only the queries the application actually performs are declared. No pagination, no
+ * specifications, no {@code @Query} strings: those arrive with the endpoints that need them in
+ * Chapter 17, where there is something real to measure them against.
  */
 package com.cartwise.repository;

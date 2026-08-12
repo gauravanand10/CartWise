@@ -1,4 +1,43 @@
 # Local development profile. Active by default (see spring.profiles.default).
+spring:
+  datasource:
+    # PostgreSQL, not H2. An in-memory database that "works on my machine" is exactly how
+    # dialect-specific bugs reach production — a generated-key strategy or a check constraint
+    # that H2 accepts and PostgreSQL rejects. Dev runs the same engine as prod.
+    url: jdbc:postgresql://localhost:5432/cartwise_dev
+    username: cartwise
+    password: cartwise
+
+  jpa:
+    hibernate:
+      # Schema is dropped and recreated on every boot. Correct for this chapter: the entities are
+      # the source of truth and are still moving, so a stale local schema is worse than no schema.
+      # It also means every start re-proves that the entity mappings can actually be realised as
+      # DDL. Prod uses `validate` instead — see application-prod.yml.
+      ddl-auto: create-drop
+
+    # Log the generated DDL and SQL. On in dev because seeing the statements Hibernate emits is
+    # the whole point of owning a schema you did not hand-write.
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+    # Keeps a session open for the whole request. Off deliberately: it hides lazy-loading mistakes
+    # behind a still-open session in dev and then fails in any other context.
+    open-in-view: false
+
+    # Required for data.sql to work alongside ddl-auto. Without it Spring runs the SQL scripts
+    # *before* Hibernate creates the tables, and the seed fails with "relation products does not
+    # exist". This one line is the difference between a seeded database and a confusing crash.
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      # data.sql only runs automatically for embedded databases by default, and PostgreSQL is not
+      # embedded — without `always` the seed script is silently skipped.
+      mode: always
+
 cartwise:
   cors:
     # The Vite dev server origin. 5173 is Vite's default and the port this repo's frontend

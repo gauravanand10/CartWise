@@ -19,18 +19,39 @@
 	</properties>
 
 	<!--
-		Chapter 15 deliberately keeps the dependency set minimal.
+		Chapter 16 adds persistence and nothing else.
 
 		Not present, and why:
-		  - No spring-boot-starter-data-jpa / PostgreSQL driver  -> Chapter 16 (Database Design)
-		  - No spring-boot-starter-security                      -> Chapter 18 (Authentication)
-		Adding either now would mean configuring a datasource or a filter chain that
-		nothing in this chapter actually uses.
+		  - No spring-boot-starter-security  -> Chapter 18 (Authentication)
+		  - No Flyway/Liquibase              -> schema is generated from the entities for now;
+		                                        a migration tool only earns its place once a
+		                                        deployed schema exists that must be evolved.
 	-->
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+
+		<!--
+			Brings in Spring Data JPA, Hibernate 7.4.1.Final and HikariCP. The artifact id is
+			NOT renamed in Boot 4 the way the web starter was (web -> webmvc); verified against
+			repo.maven.apache.org before adding.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!--
+			Version is managed by spring-boot-dependencies (42.7.11 for Boot 4.1.0), so it is
+			deliberately not pinned here — the parent and the driver stay in step on upgrade.
+			Runtime scope: nothing compiles against the driver, it is looked up by JDBC URL.
+		-->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
