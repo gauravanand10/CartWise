@@ -1,10 +1,11 @@
 /**
  * The HTTP client for the CartWise backend.
  *
- * Chapter 17's five endpoints and nothing else. This file is deliberately the
- * only place in the frontend that knows the API's URLs, status codes and wire
- * shapes — everything above it works in domain terms, so a route change or a
- * renamed field is a change here alone.
+ * Chapter 17's five endpoints, plus Chapter 18's two auth endpoints and the
+ * token handling they require. This file is deliberately the only place in the
+ * frontend that knows the API's URLs, status codes and wire shapes — everything
+ * above it works in domain terms, so a route change or a renamed field is a
+ * change here alone.
  *
  * Nothing renders from this yet. The feature services still read their mock
  * data, and swapping them over is Chapter 19's job, done screen by screen with
@@ -21,6 +22,104 @@
  */
 const API_BASE_URL =
     import.meta.env.VITE_API_URL ?? "http://localhost:8080/api";
+
+/**
+ * Where the signed-in session is kept between page loads.
+ *
+ * Namespaced like the wishlist and compare keys so one application's storage is
+ * recognisable in a browser that holds several.
+ */
+const SESSION_STORAGE_KEY = "cartwise.auth.session";
+
+/** Who is signed in, and the token that proves it. Mirrors the API's AuthResponse. */
+export interface AuthSession {
+    userId: number;
+    email: string;
+    token: string;
+}
+
+/**
+ * The in-memory copy of the session, and the one every request reads.
+ *
+ * Held in a module variable rather than read from storage per request: a request
+ * should not depend on `localStorage` being readable, and this way a browser
+ * that blocks storage still gets a working session for as long as the tab lives.
+ * Storage is the durable copy; this is the authoritative one.
+ */
+let session: AuthSession | null = readStoredSession();
+
+function isSession(value: unknown): value is AuthSession {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        typeof (value as AuthSession).userId === "number" &&
+        typeof (value as AuthSession).email === "string" &&
+        typeof (value as AuthSession).token === "string"
+    );
+}
+
+/**
+ * Reads the persisted session, tolerating every way that can fail.
+ *
+ * Guarded for the same reasons as `lib/persistedList`: `localStorage` throws
+ * outright in private-mode Safari and is absent during server rendering, and a
+ * session that will not load must degrade to signed-out rather than take the
+ * page down.
+ */
+function readStoredSession(): AuthSession | null {
+    try {
+        const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+        if (!raw) return null;
+
+        const parsed: unknown = JSON.parse(raw);
+        return isSession(parsed) ? parsed : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Stores the session, or clears it when passed null.
+ *
+ * A token in `localStorage` is readable by any script running on this page,
+ * which makes any cross-site-scripting flaw a credential theft — the trade-off
+ * the backend's `AuthResponse` documents from the other side. It is the price of
+ * a bearer token the app must attach itself; the alternative, an HttpOnly
+ * cookie, is unreadable by script but brings CSRF and its own defences.
+ */
+export function setSession(next: AuthSession | null): void {
+    session = next;
+
+    try {
+        if (next) {
+            window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(next));
+        } else {
+            window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+    } catch {
+        // Storage full or blocked. The session still works for this tab; it just
+        // will not survive a reload, which is not worth failing a login over.
+    }
+}
+
+/** The current session, or null when signed out. */
+export function getSession(): AuthSession | null {
+    return session;
+}
+
+/**
+ * Signs out locally.
+ *
+ * There is no server call to make. The token is stateless — the backend keeps no
+ * record of it and has no way to revoke it — so signing out means forgetting it
+ * here, and the token remains technically valid until it expires. That is the
+ * honest consequence of stateless authentication, and the reason the lifetime is
+ * short. A real revocation endpoint needs server-side token state, which the
+ * backend deliberately does not have yet.
+ */
+export function logout(): void {
+    setSession(null);
+}
 
 /** A product as the API returns it. */
 export interface ApiProduct {
@@ -92,15 +191,46 @@ export class ApiRequestError extends Error {
  * and a proxy or a dead server can return HTML.
  */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    // A 401 from /auth/* is a rejected *submission* — the password just typed was
+    // wrong. A 401 from anywhere else is a rejected *token*. Only the second says
+    // anything about the stored session, and conflating them had a visible
+    // consequence: signing in as someone else and mistyping the password logged
+    // the current user out, because their perfectly good token was discarded on
+    // the strength of an unrelated failure.
+    const isAuthEndpoint = path.startsWith("/auth/");
+
     const response = await fetch(`${API_BASE_URL}${path}`, {
-        headers: { "Content-Type": "application/json" },
         ...init,
+        // Spread first, then set headers, so a caller's `init` cannot drop the
+        // Authorization header by supplying headers of its own.
+        headers: {
+            "Content-Type": "application/json",
+            // Attached to every request, including the ones that do not need it.
+            // The alternative — each call site deciding whether this endpoint is
+            // protected — duplicates the backend's access rules in the client,
+            // where they would drift out of step the first time one changed.
+            ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
+            ...(init?.headers as Record<string, string> | undefined),
+        },
     });
 
     if (!response.ok) {
         const body = (await response.json().catch(() => null)) as
             | ApiErrorBody
             | null;
+
+        // A 401 on a normal endpoint means the token is no longer usable —
+        // expired, or signed with a key the server has since rotated. Discarding
+        // it here means the app learns it is signed out at the moment the server
+        // says so, instead of retrying with a credential that cannot start
+        // working again.
+        //
+        // Deliberately not done for 403: that response means the token is fine
+        // and the request was not. Clearing the session there would sign a user
+        // out for asking about someone else's data.
+        if (response.status === 401 && !isAuthEndpoint) {
+            setSession(null);
+        }
 
         throw new ApiRequestError(
             response.status,
@@ -116,6 +246,50 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     return (await response.json()) as T;
+}
+
+/**
+ * `POST /api/auth/signup` — register, and sign in as the new account.
+ *
+ * Stores the session on success, so the caller does not have to remember to.
+ * Forgetting that step would leave the app holding a token it never sends, which
+ * looks exactly like a broken login.
+ *
+ * Throws `ApiRequestError` with status 400 (invalid email, password shorter than
+ * 8 characters or longer than 72 bytes) or 409 (email already registered).
+ */
+export async function signup(
+    email: string,
+    password: string,
+): Promise<AuthSession> {
+    const created = await request<AuthSession>("/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+    });
+
+    setSession(created);
+    return created;
+}
+
+/**
+ * `POST /api/auth/login` — exchange credentials for a token.
+ *
+ * Throws `ApiRequestError` with status 401 for any credential failure. The
+ * server does not distinguish an unknown email from a wrong password, so neither
+ * can this — and a UI built on it must not claim to either, however tempting
+ * "no account with that email" is as a message.
+ */
+export async function login(
+    email: string,
+    password: string,
+): Promise<AuthSession> {
+    const authenticated = await request<AuthSession>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+    });
+
+    setSession(authenticated);
+    return authenticated;
 }
 
 /** `GET /api/products` — the whole catalogue. */
@@ -141,7 +315,15 @@ export async function fetchProductBySlug(
     }
 }
 
-/** `GET /api/users/:userId/wishlist` — saved products, newest first. */
+/**
+ * `GET /api/users/:userId/wishlist` — saved products, newest first.
+ *
+ * The three wishlist calls still take `userId` explicitly, though the session
+ * already knows it. Keeping the parameter means these signatures are unchanged
+ * from Chapter 17 and the URL still says whose wishlist is meant — but note that
+ * passing anyone other than the signed-in user now returns 403, and no token at
+ * all returns 401.
+ */
 export function fetchWishlist(userId: number): Promise<ApiWishlistItem[]> {
     return request<ApiWishlistItem[]>(`/users/${userId}/wishlist`);
 }
