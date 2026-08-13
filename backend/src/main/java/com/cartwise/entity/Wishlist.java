@@ -75,6 +75,23 @@ public class Wishlist {
     /** Required by JPA. Not for application use. */
     protected Wishlist() {}
 
+    /**
+     * Saves a product for a user.
+     *
+     * <p>Added in Chapter 17: Chapter 16 modelled the table but nothing could create a row, because
+     * the only constructor was JPA's. Both arguments are required and there are no setters, so a
+     * {@code Wishlist} cannot exist in a half-built state where one of its foreign keys is null —
+     * the invariant the {@code optional = false} associations declare is enforced at construction
+     * too, not only at flush time.
+     *
+     * <p>{@code createdAt} is not a parameter: when a product was saved is a fact about the save,
+     * decided by {@link #onCreate()}, not something a caller gets to assert.
+     */
+    public Wishlist(User user, Product product) {
+        this.user = user;
+        this.product = product;
+    }
+
     @PrePersist
     void onCreate() {
         this.createdAt = Instant.now();

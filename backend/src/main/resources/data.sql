@@ -32,3 +32,20 @@ VALUES
     ('sony-wh-1000xm6',          'Sony WH-1000XM6',          'Sony',    'Headphones',  32999.00,  39990.00, 4.9, 11640, true,  'https://placehold.co/300x300?text=Sony%20WH-1000XM6',            NOW(), NOW()),
     ('lg-oled-c5',               'LG OLED C5',               'LG',      'Television', 189999.00, 219990.00, 4.9,  4471, true,  'https://placehold.co/300x300?text=LG%20OLED%20C5',               NOW(), NOW())
 ON CONFLICT (slug) DO NOTHING;
+
+-- One development user, added by Chapter 17.
+--
+-- The wishlist endpoints are per-user and every wishlist row carries a real foreign key, so
+-- without a user there is literally nothing to POST against — the seed would have left the three
+-- wishlist endpoints untestable. This is the smallest thing that makes them exercisable.
+--
+-- It is a seed row, not a user model: the users table is still Chapter 16's stub (id + email), and
+-- registration, credentials and sessions are Chapter 18's. Because ddl-auto is create-drop in dev,
+-- this row is recreated on every boot and reliably lands at id 1, which is the userId used in this
+-- chapter's requests.
+--
+-- The prod profile never runs this file (spring.sql.init.mode: never), so no environment that
+-- matters gets a hardcoded account out of it.
+INSERT INTO users (email)
+VALUES ('demo@cartwise.dev')
+ON CONFLICT (email) DO NOTHING;
