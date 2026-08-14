@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -25,8 +26,36 @@ import java.time.Instant;
  * products as {@code /product/:slug}, and the wishlist and comparison both persist slugs, so the
  * numeric {@code id} is a database concern that never needs to reach a URL or the client.
  */
+/*
+ * Indexes added in Chapter 20, when category and price became filterable and sortable.
+ *
+ * They are not a speedup today and this comment will not pretend otherwise: the table holds eight
+ * rows, and PostgreSQL's planner will sequentially scan eight rows in preference to any index every
+ * single time — reading the whole table costs one page, and an index lookup costs more. Nothing
+ * measurable was gained by adding these, and a benchmark against this seed data would show noise.
+ *
+ * They are here because the query shapes they serve are now permanent parts of the API contract, and
+ * an index is cheapest to add before the table it covers is large. Their value is entirely at a size
+ * this database has never reached.
+ *
+ * What each one actually serves:
+ *   idx_products_category — the GROUP BY in findCategoryCounts, and any exact-match category
+ *                           predicate. NOT the ?category= filter, which compares lower(category)
+ *                           and needs a functional index a JPA @Index cannot declare. See
+ *                           ProductSpecifications.
+ *   idx_products_price    — the ?minPrice/?maxPrice range predicates and ORDER BY price, both of
+ *                           which a B-tree serves directly since neither wraps the column in a
+ *                           function.
+ *
+ * No index on brand, rating or in_stock. brand has the same lower() problem as category; rating and
+ * in_stock have too few distinct values for an index to beat a scan. Adding indexes that cannot be
+ * used costs write throughput and buys nothing.
+ */
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+        @Index(name = "idx_products_category", columnList = "category"),
+        @Index(name = "idx_products_price", columnList = "price")
+})
 public class Product {
 
     @Id

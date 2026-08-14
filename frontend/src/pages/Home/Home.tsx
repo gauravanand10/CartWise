@@ -1,5 +1,6 @@
 import Hero from "../../features/home/components/hero/Hero";
-import CategoryGrid from "../../features/home/components/category/CategoryGrid";
+import CategoryTileGrid from "../../features/discovery/components/CategoryTileGrid";
+import PromoRow from "../../features/discovery/components/PromoRow";
 import TrendingProducts from "../../features/home/components/TrendingProducts";
 import FlashDeals from "../../features/home/components/FlashDeals";
 import PriceDrops from "../../features/home/components/PriceDrops";
@@ -18,9 +19,20 @@ export default function Home() {
 
             <Hero />
 
-            {/* Start browsing */}
+            {/* Start browsing. Chapter 20 replaced the mock-data CategoryGrid
+                with one driven by GET /api/categories, so the tiles reflect the
+                catalogue rather than a hardcoded list that drifts from it. */}
 
-            <CategoryGrid />
+            <div className="section !py-0">
+                <CategoryTileGrid />
+            </div>
+
+            {/* What the product is for. Original CartWise copy, routed to real
+                screens — no card claims a capability the app does not have. */}
+
+            <div className="section !py-0">
+                <PromoRow />
+            </div>
 
             {/* Social proof */}
 

@@ -1,12 +1,16 @@
 package com.cartwise.controller;
 
+import com.cartwise.common.dto.PageResponse;
 import com.cartwise.common.dto.ProductDto;
+import com.cartwise.common.dto.ProductQuery;
+import com.cartwise.common.dto.ProductSort;
 import com.cartwise.service.ProductService;
-import java.util.List;
+import java.math.BigDecimal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -22,6 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Read-only. Create, update and delete are administrative operations that need authentication
  * and an audit trail before they need routes; they are not in this chapter.
+ *
+ * <p>Both routes are public, and remain so after Chapter 19 added role-based authorization —
+ * {@code SecurityConfig} still permits {@code GET /api/products} and {@code /api/products/*} by
+ * name. Shoppers browse before they have accounts, and a catalogue behind a login is not a
+ * catalogue. The query parameters added in Chapter 20 do not change that: filtering discloses
+ * nothing that listing everything did not already.
  */
 @RestController
 @RequestMapping("/api/products")
@@ -34,15 +44,58 @@ public class ProductController {
     }
 
     /**
-     * {@code GET /api/products} — the whole catalogue.
+     * {@code GET /api/products} — a filtered, sorted, paged slice of the catalogue.
      *
-     * <p>Always 200, with {@code []} when the catalogue is empty. An empty collection is a
-     * successful answer to "what do you have", not a 404: the resource is the list, and the list
-     * exists.
+     * <p><strong>The response shape changed in Chapter 20 and this is a breaking change.</strong>
+     * Chapter 17 returned a bare JSON array; this returns a {@link PageResponse} envelope. Any
+     * client calling {@code .map()} on the response body breaks. There is deliberately no second
+     * endpoint serving the old shape — see {@link PageResponse} for why a compatibility route would
+     * have been the worse choice.
+     *
+     * <p>Every parameter is optional and every one of them ends up in the SQL rather than in a Java
+     * filter. Unset parameters contribute no predicate at all.
+     *
+     * <p>Always 200 for a well-formed request, including when nothing matches — {@code content} is
+     * then {@code []}. <strong>An unknown category is emphatically not a 404.</strong> The resource
+     * being addressed is the catalogue, and the catalogue exists; a filter that selects nothing from
+     * it has succeeded at selecting nothing. Answering 404 would also make this endpoint a probe for
+     * which category names exist.
+     *
+     * <p>400 for a request that cannot be interpreted: a negative page, a negative price, an
+     * inverted price range, or an unrecognised {@code sort}. The rules and the reasoning behind
+     * clamping {@code size} instead of rejecting it are in {@link ProductQuery#of}.
+     *
+     * <p>{@code BigDecimal} for the price bounds, matching the column. Binding these as
+     * {@code double} would reintroduce, at the API boundary, exactly the precision problem the
+     * {@code numeric(12,2)} column exists to avoid. A price that is not a number fails to bind and
+     * Spring MVC's own handling answers 400.
+     *
+     * @param category one category slug, e.g. {@code smartphone}; matched case-insensitively
+     * @param brand    one brand name, matched case-insensitively
+     * @param minPrice inclusive lower bound
+     * @param maxPrice inclusive upper bound
+     * @param inStock  {@code true} to exclude out-of-stock products; {@code false} and absent are
+     *                 both "no filter"
+     * @param sort     one of {@code price-asc}, {@code price-desc}, {@code rating-desc},
+     *                 {@code name-asc}; defaults to {@code name-asc}
+     * @param page     zero-indexed, defaults to 0
+     * @param size     defaults to 20, clamped to 100
      */
     @GetMapping
-    public ResponseEntity<List<ProductDto>> getAllProducts() {
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<PageResponse<ProductDto>> getProducts(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean inStock,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+
+        ProductQuery query = ProductQuery.of(
+                category, brand, minPrice, maxPrice, inStock, sort, page, size);
+
+        return ResponseEntity.ok(productService.getProducts(query));
     }
 
     /**

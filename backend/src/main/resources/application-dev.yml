@@ -39,6 +39,23 @@ spring:
       mode: always
 
 cartwise:
+  jwt:
+    # DEVELOPMENT KEY. Committed on purpose, and safe to commit only because it is worthless:
+    # it signs tokens for a database that lives on one laptop and is dropped on every boot.
+    # Anything that reaches a real user must read its key from the environment — see
+    # application-prod.yml, where there is no default at all.
+    #
+    # The length is not padding. Tokens are signed with HS512, whose key must be at least 64
+    # bytes; jjwt refuses a shorter one with WeakKeyException rather than signing something it
+    # cannot sign safely, and JwtProperties checks the same thing at startup so the failure names
+    # the property instead of surfacing at the first login.
+    secret: "cartwise-dev-only-signing-key-not-for-any-deployed-environment-0123456789"
+    # 24 hours. Long enough not to interrupt a day of development, short enough that a token
+    # copied out of a log or a browser's storage does not stay useful indefinitely. There are no
+    # refresh tokens in this chapter, so this value is also exactly how long a session lasts
+    # before the user has to sign in again.
+    expiration: 24h
+
   cors:
     # The Vite dev server origin. 5173 is Vite's default and the port this repo's frontend
     # was observed serving on; 5174 is the fallback Vite picks when 5173 is already taken.

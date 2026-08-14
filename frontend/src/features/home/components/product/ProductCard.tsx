@@ -64,12 +64,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                             left-3
                             top-3
                             rounded-full
-                            bg-white/90
+                            bg-card/90
                             px-2.5
                             py-1
                             text-[11px]
                             font-semibold
-                            text-slate-700
+                            text-ink-muted
                             shadow-sm
                             backdrop-blur-sm
                         "
@@ -128,12 +128,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                             transition
                             focus-visible:outline-none
                             focus-visible:ring-2
-                            focus-visible:ring-blue-500
+                            focus-visible:ring-ink
                             md:h-8
                             md:w-8
                             ${wishlisted
-                                ? "bg-rose-500 text-white"
-                                : "bg-white/95 text-slate-600 hover:bg-rose-500 hover:text-white md:bg-white"
+                                ? "bg-danger text-white"
+                                : "bg-card/95 text-ink-muted hover:bg-danger hover:text-white md:bg-card"
                             }
                         `}
                     >
@@ -164,14 +164,14 @@ export default function ProductCard({ product }: ProductCardProps) {
                             transition
                             focus-visible:outline-none
                             focus-visible:ring-2
-                            focus-visible:ring-blue-500
+                            focus-visible:ring-ink
                             disabled:cursor-not-allowed
                             disabled:opacity-60
                             md:h-8
                             md:w-8
                             ${comparing
-                                ? "bg-blue-600 text-white"
-                                : "bg-white/95 text-slate-600 hover:bg-blue-600 hover:text-white md:bg-white"
+                                ? "bg-accent-primary text-white"
+                                : "bg-card/95 text-ink-muted hover:bg-accent-primary hover:text-white md:bg-card"
                             }
                         `}
                     >
@@ -183,7 +183,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             {/* Meta */}
 
             <div className="mt-3 flex-1 sm:mt-4">
-                <h3 className="text-sm font-semibold leading-snug text-slate-900 sm:text-[15px]">
+                <h3 className="text-sm font-semibold leading-snug text-ink sm:text-[15px]">
                     {/*
                         Stretched link: `after:inset-0` makes the whole card
                         clickable while keeping exactly one link in the tab
@@ -200,7 +200,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             after:content-['']
                             focus-visible:outline-none
                             focus-visible:ring-2
-                            focus-visible:ring-blue-500
+                            focus-visible:ring-ink
                         "
                     >
                         {name}
@@ -211,13 +211,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <span className="inline-flex items-center gap-1 text-[13px]">
                         <Star
                             size={13}
-                            className="fill-amber-400 text-amber-400"
+                            className="fill-rating text-rating"
                             aria-hidden="true"
                         />
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-semibold text-ink">
                             {rating}
                         </span>
-                        <span className="text-slate-400">({reviews})</span>
+                        <span className="text-ink-muted">({reviews})</span>
                     </span>
 
                     {aiScore !== undefined && (
@@ -227,12 +227,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                                 items-center
                                 gap-1
                                 rounded-full
-                                bg-violet-50
+                                bg-tile-lilac
                                 px-2
                                 py-0.5
                                 text-[11px]
                                 font-semibold
-                                text-violet-700
+                                text-ink
                             "
                         >
                             <Sparkles size={11} aria-hidden="true" />
@@ -242,9 +242,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </div>
 
                 {store && (
-                    <p className="mt-2 truncate text-xs text-slate-500 sm:text-[13px]">
+                    <p className="mt-2 truncate text-xs text-ink-muted sm:text-[13px]">
                         Lowest at{" "}
-                        <span className="font-medium text-slate-700">
+                        <span className="font-medium text-ink-muted">
                             {store}
                         </span>
                     </p>
@@ -255,19 +255,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             <div className="mt-3 sm:mt-4">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                    <span className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                    <span className="text-lg font-semibold tracking-tight text-ink sm:text-xl">
                         {price}
                     </span>
 
                     {originalPrice && (
-                        <span className="text-xs text-slate-400 line-through sm:text-[13px]">
+                        <span className="text-xs text-ink-muted line-through sm:text-[13px]">
                             {originalPrice}
                         </span>
                     )}
                 </div>
 
                 {discount && (
-                    <p className="mt-1 text-xs font-medium text-emerald-600 sm:text-[13px]">
+                    <p className="mt-1 text-xs font-medium text-success sm:text-[13px]">
                         {discount}
                     </p>
                 )}
@@ -288,7 +288,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         block
                         w-full
                         rounded-full
-                        bg-slate-900
+                        bg-ink
                         py-2.5
                         text-center
                         text-[13px]
@@ -296,7 +296,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         text-white
                         transition
                         duration-200
-                        group-hover:bg-blue-600
+                        group-hover:bg-accent-primary
                         sm:mt-4
                         sm:text-sm
                     "

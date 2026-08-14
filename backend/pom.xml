@@ -16,16 +16,23 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!--
+			jjwt is not managed by spring-boot-dependencies, so the version is pinned here.
+			It is the one third-party version this project owns, which is why it gets a property
+			rather than being repeated across the three artifacts below.
+		-->
+		<jjwt.version>0.12.3</jjwt.version>
 	</properties>
 
 	<!--
-		Chapter 16 adds persistence and nothing else.
+		Chapter 18 adds authentication. Spring Security and jjwt are new.
 
 		Not present, and why:
-		  - No spring-boot-starter-security  -> Chapter 18 (Authentication)
 		  - No Flyway/Liquibase              -> schema is generated from the entities for now;
 		                                        a migration tool only earns its place once a
 		                                        deployed schema exists that must be evolved.
+		  - No OAuth2 client/resource-server -> social login is a later chapter; this one issues
+		                                        its own tokens for its own users.
 	-->
 	<dependencies>
 		<dependency>
@@ -54,9 +61,66 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!--
+			The whole starter, not just spring-security-crypto.
+
+			Crypto alone would supply BCryptPasswordEncoder and nothing else — no SecurityFilterChain,
+			no HttpSecurity, no filter chain to register a JWT filter into, which is most of what this
+			chapter needs. The starter brings spring-security-config and spring-security-web as well,
+			and crypto comes along inside it.
+
+			Version is managed by the parent: Boot 4.1.0 pins Spring Security 7.1.0. That matters more
+			than it sounds — Security 7 removed the chained DSL (`.csrf().disable()`), so only the
+			lambda form in SecurityConfig compiles.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!--
+			jjwt, split the way its authors intend: the API is compiled against, the implementation
+			and the JSON binding are runtime-only. Nothing in this codebase should be able to import
+			an io.jsonwebtoken.impl class by accident, and the scopes are what enforce that.
+
+			jjwt-jackson pulls in Jackson 2 (com.fasterxml.jackson.core:jackson-databind) for
+			serialising claims. Spring Boot 4 uses Jackson 3 (tools.jackson) for HTTP bodies, so two
+			Jackson generations end up on the classpath. They do not collide — the package names are
+			entirely different — and each is used by exactly one thing: Jackson 3 for the API's JSON,
+			Jackson 2 for the inside of a token. Worth knowing before it looks like an accident.
+		-->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!--
+			Test support for authentication. Not strictly required by this chapter's tests, but it is
+			the artifact that makes an authenticated request testable without hand-building a token,
+			and it belongs next to the starter it supports rather than being remembered later.
+		-->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

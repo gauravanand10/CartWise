@@ -8,11 +8,11 @@
 
 /** The standard card shell: 28px radius, hairline border, soft shadow, hover lift. */
 export const surfaceCard =
-    "rounded-[28px] border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-12px_rgba(15,23,42,0.12)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1.5 hover:border-slate-300/70 hover:shadow-[0_1px_2px_rgba(15,23,42,0.04),0_28px_56px_-16px_rgba(15,23,42,0.22)]";
+    "rounded-[28px] border border-ink-muted/15 bg-card shadow-[0_1px_2px_rgba(31,26,46,0.04),0_12px_32px_-12px_rgba(31,26,46,0.12)] transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1.5 hover:border-ink-muted/30 hover:shadow-[0_1px_2px_rgba(31,26,46,0.04),0_28px_56px_-16px_rgba(31,26,46,0.22)] motion-reduce:transition-none motion-reduce:hover:translate-y-0";
 
 /** Same shell without the hover lift — for cards that aren't themselves clickable. */
 export const surfaceCardStatic =
-    "rounded-[28px] border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_-12px_rgba(15,23,42,0.12)]";
+    "rounded-[28px] border border-ink-muted/15 bg-card shadow-[0_1px_2px_rgba(31,26,46,0.04),0_12px_32px_-12px_rgba(31,26,46,0.12)]";
 
 /**
  * Horizontal snap-scrolling rail. Pair with `railItem` on each child.

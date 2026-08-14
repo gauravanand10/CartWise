@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -28,7 +29,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * <p>Chapter 17 adds the domain handlers the Chapter 15 version promised: not-found, bad input and
  * constraint conflicts. The reason each exists is the same — without it, an ordinary outcome
  * reaches the catch-all and is reported as a 500, which tells the client to retry something that
- * will never succeed.
+ * will never succeed. Chapter 18 adds the three authentication outcomes on the same principle.
+ *
+ * <p>This class handles failures that occur <em>after</em> a request has reached a controller.
+ * Failures inside the filter chain — no token, expired token — never get that far and are rendered
+ * into the same {@link ApiError} shape by
+ * {@link com.cartwise.security.ApiErrorSecurityHandler}. Two classes, one error format.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -89,6 +95,57 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         "CONFLICT",
                         "The request conflicts with the current state of the resource.",
                         Instant.now(clock)));
+    }
+
+    /**
+     * A valid caller asked for something that is not theirs → 403.
+     *
+     * <p>Thrown by {@code WishlistController.requireSelf}. This handler is not optional: an
+     * {@code AccessDeniedException} raised inside a controller is caught by this advice before it
+     * can reach Spring Security's own translation filter, so without an entry for it the catch-all
+     * below would report a correctly-refused request as a 500 server error.
+     *
+     * <p>The message is fixed rather than taken from the exception, and says nothing about who the
+     * resource belongs to or whether it exists. Logged at debug, because a client hitting a stale
+     * user id is a client problem, not a server fault.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+        log.debug("Access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiError("FORBIDDEN",
+                        "You do not have permission to access this resource.", Instant.now(clock)));
+    }
+
+    /**
+     * Login was attempted with credentials that do not match an account → 401.
+     *
+     * <p>401, not 403: the caller failed to establish who they are, which is precisely what 401
+     * means. A 403 would imply CartWise knew who they were and had decided against them.
+     *
+     * <p>The message comes from the exception, which is safe here only because that exception
+     * carries a single constant message by construction — see {@link InvalidCredentialsException}.
+     * Whether the email was unknown or the password was wrong must not be inferable from this
+     * response.
+     */
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiError("INVALID_CREDENTIALS", ex.getMessage(), Instant.now(clock)));
+    }
+
+    /**
+     * Signup used an address that already has an account → 409.
+     *
+     * <p>The same status as the constraint-violation handler below, and for the same reason: the
+     * request was valid but conflicts with state that already exists. This handler exists so the
+     * ordinary case gets a message a signup form can display, rather than the deliberately vague
+     * one a raw constraint violation produces.
+     */
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<ApiError> handleEmailTaken(EmailAlreadyRegisteredException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("EMAIL_ALREADY_REGISTERED", ex.getMessage(), Instant.now(clock)));
     }
 
     /**

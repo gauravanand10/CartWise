@@ -1,4 +1,4 @@
-import BannerCarousel from "../banner/BannerCarousel";
+import HeroBanner from "../../../discovery/components/HeroBanner";
 import Reveal from "../motion/Reveal";
 import HeroSearch from "./HeroSearch";
 
@@ -8,6 +8,12 @@ import HeroSearch from "./HeroSearch";
  * Intentionally minimal — no statistics, comparison widgets or AI cards. Those
  * live further down the page so the first screen stays calm and the search
  * field is unmistakably the primary action.
+ *
+ * Chapter 20 swapped `BannerCarousel` for `HeroBanner`. The old component
+ * auto-advanced on a timer, which moves content out from under a reader and
+ * fails WCAG 2.2.2 without a pause control; the replacement is a scroll-snap
+ * rail the user drives with gestures, dots or arrow keys. Nothing on this page
+ * moves unless someone moves it.
  */
 export default function Hero() {
     return (
@@ -33,7 +39,7 @@ export default function Hero() {
                 </Reveal>
 
                 <Reveal delay={0.1}>
-                    <BannerCarousel />
+                    <HeroBanner />
                 </Reveal>
 
             </div>

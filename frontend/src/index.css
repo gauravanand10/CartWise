@@ -1,7 +1,140 @@
 @import "tailwindcss";
 
 /* =========================================================
-   CARTWISE DESIGN SYSTEM
+   CARTWISE DESIGN TOKENS  (Chapter 20)
+
+   The palette, defined once, in Tailwind v4's @theme block.
+
+   @theme is not the same thing as the :root block further down, and the
+   difference is the entire reason this exists. Custom properties in :root
+   are values CSS can read; Tailwind knows nothing about them, so using one
+   means writing `style={{ background: "var(--primary)" }}` or a bespoke
+   class. Names declared in @theme become part of Tailwind's own scale, so
+   `--color-tile-mint` generates `bg-tile-mint`, `text-tile-mint`,
+   `border-tile-mint` and the rest — usable exactly like `bg-blue-500`, but
+   pointing at a value this project owns.
+
+   That is what makes the rule "no colour outside the token set" enforceable
+   rather than aspirational: a component asking for a colour has to name one
+   of these, because the utilities for anything else do not exist unless it
+   is a stock Tailwind palette class.
+
+   Contrast is measured, not assumed. Every ratio below was computed with
+   the WCAG 2.1 relative-luminance formula against the actual hex pairs, and
+   is reproduced here so a future change can be re-checked rather than
+   re-guessed. WCAG AA for normal text is 4.5:1.
+   ========================================================= */
+
+@theme {
+
+    /* ---- Surfaces: pastel tiles for the DISCOVERY zone ----
+       High lightness, low saturation. These are backgrounds for category
+       tiles and promo cards — areas that carry text, never large fields of
+       flat colour, which is why every one is checked against ink.
+
+       Measured against --color-ink (#1F1A2E) and --color-ink-muted (#5A5270):
+
+           tile          vs ink      vs ink-muted
+           mint          13.55:1     5.87:1
+           butter        14.51:1     6.29:1
+           blush         12.88:1     5.58:1
+           sky           12.83:1     5.56:1
+           lilac         12.24:1     5.30:1
+           peach         13.00:1     5.63:1
+
+       All six clear 4.5:1 against both, so a tile can carry a heading in
+       ink and a product count in ink-muted without either failing. The
+       margin is deliberate: these are the values most likely to be nudged
+       later for aesthetic reasons, and starting at 12:1 means a nudge has
+       room before it becomes an accessibility regression. */
+
+    --color-tile-mint: #C6F0DA;
+    --color-tile-butter: #FBEEBE;
+    --color-tile-blush: #FBD8E4;
+    --color-tile-sky: #CDE3FB;
+    --color-tile-lilac: #DFD7FB;
+    --color-tile-peach: #FCDCC6;
+
+    /* ---- Accents: saturated. Buttons, badges, active states, prices ----
+       Each is dark enough to carry WHITE text, which is the constraint that
+       set the lightness. Measured against #FFFFFF:
+
+           accent-primary    6.22:1     (vs ink 2.71:1 — do NOT put ink on it)
+           accent-secondary  5.01:1     (vs ink 3.36:1 — likewise)
+
+       The "vs ink" figures are recorded precisely because they fail. An
+       accent is a white-text surface here and nothing else; pairing one
+       with ink would land at 2.7:1 and be unreadable. */
+
+    --color-accent-primary: #7A3BD1;
+    --color-accent-secondary: #0E7C7B;
+
+    /* ---- Semantic: same meanings as before, new values ----
+       success and danger are also white-text surfaces, and both are darker
+       than the emerald/rose they replace for exactly that reason — the old
+       `bg-emerald-500` + white sat at 2.9:1.
+
+           success  vs white  5.35:1
+           danger   vs white  5.44:1
+
+       Meaning is unchanged and must stay unchanged: success is in-stock and
+       price drops, danger is out-of-stock and destructive actions. A colour
+       that means something in the DECISION zone cannot also be decorative
+       in the DISCOVERY zone, which is the whole point of the two-zone rule. */
+
+    --color-success: #1E7A46;
+    --color-danger: #C62E3E;
+
+    /* Rating. Its own token rather than reuse of an accent, because a filled
+       star is a convention strong enough that recolouring it to the brand
+       purple reads as a different symbol — and because it encodes meaning
+       ("this is a rating"), which is what makes it semantic rather than
+       decorative and therefore allowed in the DECISION zone.
+
+       Judged against the non-text threshold, WCAG 1.4.11, which is 3:1 — the
+       star is a graphic marked aria-hidden, and the number beside it carries
+       the actual information:
+
+           rating  vs card     4.15:1
+           rating  vs surface  4.02:1
+
+       Both clear 3:1 with room, and in fact clear 4.5:1 against neither by
+       much — worth knowing, because it means this value must not be used for
+       small text without re-checking. */
+
+    --color-rating: #B8690E;
+
+    /* ---- Text and page ----
+       ink on card = 16.86:1, ink on surface = 16.36:1
+       ink-muted on card = 7.30:1, ink-muted on surface = 7.09:1
+
+       ink is a very dark violet-grey rather than black. Against six pastels
+       it reads as belonging to them, where pure #000 reads as printed on
+       top of them — and it costs nothing in contrast at these ratios.
+
+       surface is a barely-warm off-white. On a page whose energy comes from
+       pastel blocks, a pure-white ground makes the tiles look like stickers;
+       a warm ground lets them sit in it. */
+
+    --color-ink: #1F1A2E;
+    --color-ink-muted: #5A5270;
+    --color-surface: #FFFBF6;
+    --color-card: #FFFFFF;
+}
+
+/* =========================================================
+   CARTWISE DESIGN SYSTEM  (Chapters 8–15, superseded in part)
+
+   The :root block below predates the token layer above and still backs the
+   ~1200 lines of @layer components utilities beneath it, which the whole
+   pre-Chapter-20 component tree uses. It is deliberately left in place:
+   Chapter 20 restyles the discovery surface onto @theme tokens and does not
+   re-plumb the compare, product-detail, search or wishlist screens, so
+   removing these would break every one of them.
+
+   Two palettes coexisting is a real cost and this comment is where it is
+   admitted rather than hidden. New work uses @theme; these values are
+   frozen and should shrink as screens migrate.
    ========================================================= */
 
 :root {

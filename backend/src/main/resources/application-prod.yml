@@ -34,6 +34,22 @@ spring:
       mode: never
 
 cartwise:
+  jwt:
+    # No default, exactly like DB_URL above and for a stronger reason. A fallback value here would
+    # be a signing key published in this repository: anyone who could read it could mint a valid
+    # token for any user id and would be, as far as the API could tell, that user. An unset
+    # JWT_SECRET must stop the boot.
+    #
+    # Generate at least 64 random bytes, e.g.
+    #   openssl rand -base64 64
+    # and set it in the deployment platform's secret store, never in a file that is committed.
+    #
+    # Rotating this key invalidates every token signed with the old one, so users are signed out.
+    # That is the intended behaviour of a rotation and the reason it is worth doing after any
+    # suspected exposure.
+    secret: ${JWT_SECRET}
+    expiration: 24h
+
   cors:
     # Comma-separated list of deployed frontend origins, e.g.
     # CARTWISE_ALLOWED_ORIGINS=https://cartwise.example.com

@@ -121,6 +121,65 @@ export function logout(): void {
     setSession(null);
 }
 
+/**
+ * One page of results, as every list endpoint now returns them.
+ *
+ * Chapter 20 changed `GET /api/products` from a bare array to this envelope, and
+ * that is a breaking change rather than an addition — `(await fetchProducts())
+ * .map(...)` no longer compiles, which is the point. There is deliberately no
+ * legacy array endpoint to fall back to.
+ */
+export interface ApiPage<T> {
+    content: T[];
+    /** Zero-indexed, echoed back by the server after any clamping. */
+    page: number;
+    /** The size actually applied — may be lower than requested; the server caps it at 100. */
+    size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
+/** One catalogue category with its product count, from `GET /api/categories`. */
+export interface ApiCategory {
+    /** Display form, e.g. `"Smartphone"`. */
+    name: string;
+    /** URL form, e.g. `"smartphone"`. This is what `?category=` expects. */
+    slug: string;
+    productCount: number;
+}
+
+/**
+ * The catalogue query, mirroring the server's parameters one-for-one.
+ *
+ * Every field optional, because every parameter is. Deliberately not a
+ * `Record<string, string>`: naming them here means a typo is a compile error
+ * rather than a filter that silently does nothing, which is the failure mode
+ * that makes query-string bugs hard to see.
+ */
+export interface ProductQueryParams {
+    category?: string;
+    brand?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    /** Only `true` filters; `false` and `undefined` both mean "no filter". */
+    inStock?: boolean;
+    sort?: ProductSortValue;
+    page?: number;
+    size?: number;
+}
+
+/**
+ * The orderings the API accepts. Anything else is a 400.
+ *
+ * A union rather than `string`, so an invalid sort is caught at compile time
+ * instead of arriving as a runtime error the user sees.
+ */
+export type ProductSortValue =
+    | "price-asc"
+    | "price-desc"
+    | "rating-desc"
+    | "name-asc";
+
 /** A product as the API returns it. */
 export interface ApiProduct {
     id: number;
@@ -292,9 +351,51 @@ export async function login(
     return authenticated;
 }
 
-/** `GET /api/products` — the whole catalogue. */
-export function fetchProducts(): Promise<ApiProduct[]> {
-    return request<ApiProduct[]>("/products");
+/**
+ * `GET /api/products` — one page of the catalogue, filtered and sorted.
+ *
+ * **The return type changed in Chapter 20** from `ApiProduct[]` to
+ * `ApiPage<ApiProduct>`. Callers read `.content` for the rows and the remaining
+ * fields for pagination.
+ *
+ * Throws `ApiRequestError` with status 400 for an incoherent query — a negative
+ * page, an inverted price range, an unknown sort. An unknown *category* is not
+ * an error: it comes back 200 with an empty `content`, because a filter that
+ * matches nothing has succeeded at matching nothing.
+ *
+ * Undefined parameters are omitted from the query string entirely rather than
+ * sent as empty values. `?category=` would otherwise reach the server as a
+ * present-but-blank filter, and the two are only equivalent because the server
+ * happens to treat blank as absent — relying on that would make this client
+ * depend on a detail it should not know.
+ */
+export function fetchProducts(
+    params: ProductQueryParams = {},
+): Promise<ApiPage<ApiProduct>> {
+    const search = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined && value !== "") {
+            search.set(key, String(value));
+        }
+    }
+
+    const query = search.toString();
+    return request<ApiPage<ApiProduct>>(`/products${query ? `?${query}` : ""}`);
+}
+
+/**
+ * `GET /api/categories` — every category that has at least one product.
+ *
+ * Public, like the catalogue. The counts sum to the catalogue's
+ * `totalElements`, since every product carries exactly one category — which
+ * makes the two endpoints checkable against each other.
+ *
+ * A category with no products cannot appear here; the server derives this list
+ * by grouping the products table and has no categories table to read from.
+ */
+export function fetchCategories(): Promise<ApiCategory[]> {
+    return request<ApiCategory[]>("/categories");
 }
 
 /**

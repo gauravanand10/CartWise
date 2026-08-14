@@ -9,6 +9,7 @@ import NotFound from "../pages/NotFound/NotFound";
 
 import { SearchPage } from "../features/search";
 import { ComparePage } from "../features/compare";
+import CataloguePage from "../features/discovery/CataloguePage";
 
 export default function AppRoutes() {
     return (
@@ -23,6 +24,15 @@ export default function AppRoutes() {
                 <Route
                     path="/search"
                     element={<SearchPage />}
+                />
+
+                {/* The catalogue, filtered by query string. Every filter, sort
+                    and page lives in the URL, so this route is shareable and
+                    survives a reload — see useCatalogueParams. */}
+
+                <Route
+                    path="/browse"
+                    element={<CataloguePage />}
                 />
 
                 <Route
