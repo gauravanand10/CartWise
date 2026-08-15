@@ -8,13 +8,42 @@ spring:
     username: cartwise
     password: cartwise
 
+  # Chapter 22. Flyway owns the schema now, in dev exactly as in prod.
+  #
+  # Boot auto-configures Flyway from the classpath alone, so `enabled` and `locations` below are
+  # both the defaults restated. They are written out because this is the setting a reader comes
+  # looking for when a migration did not run, and "it is the default" is a much harder answer to
+  # find than a line in a file.
+  #
+  # The ordering that matters is not configured here and cannot be: Boot runs Flyway before it
+  # creates the EntityManagerFactory, which is what allows `ddl-auto: validate` below to work
+  # against a database that was empty a second earlier. Migrations build the schema, then Hibernate
+  # checks it. There is no property to get this wrong, which is the reason it is reliable.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
   jpa:
     hibernate:
-      # Schema is dropped and recreated on every boot. Correct for this chapter: the entities are
-      # the source of truth and are still moving, so a stale local schema is worse than no schema.
-      # It also means every start re-proves that the entity mappings can actually be realised as
-      # DDL. Prod uses `validate` instead — see application-prod.yml.
-      ddl-auto: create-drop
+      # Was `create-drop` until Chapter 22, and the change is the point of that chapter.
+      #
+      # `create-drop` meant the entities were the schema: every boot rebuilt the tables from the
+      # annotations and every shutdown destroyed them. That was defensible while the entities were
+      # still moving and there was nothing in the database worth keeping. It also made a whole class
+      # of change invisible — a column rename was a boot away from being "applied", with no record
+      # that anything had happened and no way to apply the same change to a database that already
+      # held data.
+      #
+      # `validate` means the opposite: Hibernate compares the entities against the schema Flyway
+      # built and refuses to start if they disagree. It creates nothing and alters nothing. An
+      # entity change with no matching migration is now a startup failure on a developer's laptop
+      # rather than a deployment failure later, which is the whole trade — the same check prod has
+      # always run (application-prod.yml), moved to where it is cheap to fail.
+      #
+      # The practical consequence, stated because it will be met on the first day: adding a field to
+      # an entity no longer "just works" in dev. It needs a migration. That is the cost, and it is
+      # the same cost the deployed environment was always going to charge.
+      ddl-auto: validate
 
     # Log the generated DDL and SQL. On in dev because seeing the statements Hibernate emits is
     # the whole point of owning a schema you did not hand-write.
@@ -27,21 +56,74 @@ spring:
     # behind a still-open session in dev and then fails in any other context.
     open-in-view: false
 
-    # Required for data.sql to work alongside ddl-auto. Without it Spring runs the SQL scripts
-    # *before* Hibernate creates the tables, and the seed fails with "relation products does not
-    # exist". This one line is the difference between a seeded database and a confusing crash.
-    defer-datasource-initialization: true
+    # FALSE as of Chapter 22, and this is the single line that decides whether the application
+    # starts at all. It was `true` and had to change.
+    #
+    # It used to be load-bearing: it is what made data.sql run AFTER Hibernate had created the
+    # tables, rather than before them against nothing. Hibernate no longer creates tables, so that
+    # job is gone — but leaving the flag on is not merely redundant, it actively breaks the
+    # ordering this chapter depends on, and it does so silently.
+    #
+    # What it actually does, from org.springframework.boot.jpa.JpaDatabaseInitializerDetector:
+    #
+    #     getDatabaseInitializerBeanTypes() returns EntityManagerFactory.class when
+    #     spring.jpa.defer-datasource-initialization is true, and an empty set when it is false;
+    #     detectionComplete() then calls configureOtherInitializersToDependOnJpaInitializers().
+    #
+    # Read that carefully. With the flag on, the EntityManagerFactory is itself registered as a
+    # database initializer, and EVERY OTHER initializer — Flyway's included — is made to depend on
+    # it. The order inverts: Hibernate runs first, Flyway second. That is exactly what
+    # `defer-datasource-initialization` is for and exactly wrong here, because Hibernate running
+    # first now means `validate` running first, against a database Flyway has not migrated yet.
+    #
+    # The symptom is nothing like the cause. Flyway's auto-configuration matches, its beans are
+    # created, `spring.flyway.*` binds, and the log contains not one Flyway line before the boot
+    # dies with
+    #
+    #     Schema validation: missing table [comparisons]
+    #
+    # which points at the entity mapping. Observed on a fresh database, diagnosed from the
+    # condition-evaluation report plus the detector's bytecode, and recorded here because nothing
+    # in the failure names this property.
+    #
+    # With it false, JpaDatabaseInitializerDetector detects nothing,
+    # JpaDependsOnDatabaseInitializationDetector makes the EntityManagerFactory depend on the
+    # database initializers instead, and Flyway runs first — which is the normal, documented
+    # behaviour, available only once this flag stops overriding it.
+    defer-datasource-initialization: false
 
   sql:
     init:
-      # data.sql only runs automatically for embedded databases by default, and PostgreSQL is not
-      # embedded — without `always` the seed script is silently skipped.
+      # Chapter 22 narrowed what spring.sql.init is for.
+      #
+      # It used to load data.sql, which held the catalogue AND the two development accounts. The
+      # catalogue moved to db/migration/V3__seed_products.sql, where Flyway applies it once in every
+      # environment. The accounts did not, and could not: one of them is an ADMIN whose password is
+      # printed in the source, and the only thing that has ever kept it out of production is
+      # `spring.sql.init.mode: never` in application-prod.yml. A migration would have ignored that
+      # and deployed it. See db/dev-seed/dev-users.sql for the full reasoning.
+      #
+      # So this mechanism survives, holding exactly the rows that must never leave a laptop.
+      #
+      # `always` because data.sql-style initialisation is skipped for non-embedded databases by
+      # default, and PostgreSQL is not embedded — without it the script is silently not run.
       mode: always
+      # Named explicitly rather than relying on the classpath:data.sql default. The default filename
+      # is what made the old arrangement dangerous: any file called data.sql is picked up
+      # automatically, so the admin row was one profile misconfiguration away from being seeded
+      # anywhere. A path nobody loads by accident is the point.
+      #
+      # The former data.sql is kept at data.sql.bak — same directory, no longer a name Spring
+      # recognises — as the record of what this file was split out of.
+      data-locations: classpath:db/dev-seed/dev-users.sql
 
 cartwise:
   jwt:
     # DEVELOPMENT KEY. Committed on purpose, and safe to commit only because it is worthless:
-    # it signs tokens for a database that lives on one laptop and is dropped on every boot.
+    # it signs tokens for a database that lives on one laptop and is reachable from nowhere else.
+    # (Until Chapter 22 that sentence also said "and is dropped on every boot", which was a second
+    # reason and is no longer true — the schema now survives restarts. The first reason was always
+    # the load-bearing one.)
     # Anything that reaches a real user must read its key from the environment — see
     # application-prod.yml, where there is no default at all.
     #

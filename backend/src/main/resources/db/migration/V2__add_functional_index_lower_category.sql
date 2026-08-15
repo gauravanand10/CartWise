@@ -1,0 +1,33 @@
+-- V2 — The functional index Chapter 20 could not add.
+--
+-- ProductSpecifications.hasCategorySlug builds `lower(category) = ?`, and its Javadoc records the
+-- consequence in as many words:
+--
+--     A plain B-tree index on category cannot satisfy lower(category) = ?: PostgreSQL will not use
+--     it, because the indexed value and the compared value are different expressions. Making this
+--     predicate index-backed needs a functional index — CREATE INDEX … ON products
+--     (lower(category)) — which JPA's @Index cannot express. This is recorded as a known limitation
+--     rather than left to be discovered from a query plan.
+--
+-- That limitation was never about PostgreSQL. `idx_products_category` exists and is useless to this
+-- particular predicate, and the reason the fix was deferred is that @Index takes a `columnList` —
+-- a list of column names — and `lower(category)` is an expression, not a column name. There was no
+-- place to put this statement, because the entity annotations were the only thing that produced
+-- DDL. V1 changed that. This is the first schema change in CartWise's history that exists because
+-- someone wrote SQL rather than because Hibernate inferred it, which is the concrete thing
+-- migrations buy.
+--
+-- Why lower() and not citext or a case-insensitive collation: both would change the behaviour of
+-- every comparison on the column, including the exact-match ones and the GROUP BY that
+-- findCategoryCounts relies on. A functional index changes nothing about the column and adds a
+-- second sorted representation of it that one specific predicate can use. It is the narrower tool
+-- and the reversible one.
+--
+-- The cost is honest and is a write-path cost: every INSERT and every UPDATE that touches
+-- `category` now maintains a second index entry, and lower() is evaluated to do it. On a catalogue
+-- that is read far more than written, that is the trade worth making.
+--
+-- IMMUTABLE-ness is what makes this legal at all. PostgreSQL only permits an expression index when
+-- the expression is deterministic for a given input, and the single-argument `lower(text)` is
+-- marked IMMUTABLE. The two-argument collation-aware form is not, and would be rejected here.
+CREATE INDEX idx_products_lower_category ON products (lower(category));

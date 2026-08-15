@@ -1,14 +1,30 @@
 # Test profile.
 #
-# This file is the ONE place the test suite's schema strategy is declared. Chapter 22 replaces
-# `ddl-auto: create-drop` here with Flyway and nothing else in the suite has to change — that is
-# the reason the setting lives in a profile file rather than being repeated per test class.
+# This file is the ONE place the test suite's schema strategy is declared.
 #
-# Read that as a stated limitation, not a design: until Chapter 22 lands, repository tests run
-# against a schema Hibernate generated from the entities, NOT against the schema a deployment
-# actually gets. Anything those tests assert about DDL Hibernate does not emit — a functional
-# index, an explicit column collation — is asserting about a schema that exists nowhere else,
-# and is marked in the test that makes the claim.
+# Chapter 22 arrived and did NOT make the swap this header used to promise. That is a decision, and
+# reversing a written prediction deserves the reasoning rather than a quiet edit.
+#
+# The suite keeps `ddl-auto: create-drop` and turns Flyway OFF. Migrations are pure DDL against a
+# schema that is already correct by construction here: @DataJpaTest builds the schema from the
+# entities, which is the same thing V1 transcribes, and running both would mean the tests exercise
+# a code path (Flyway) that has nothing to do with what they assert while adding a migration replay
+# to every context that is not shared. Speed is the smaller half of that; the larger half is that a
+# repository test failing because a seed migration inserted fifty products it did not ask for is a
+# test that has stopped being about its own subject. V3 seeds a catalogue, and this suite's stated
+# rule (below) is that fixture data belongs to the test that needs it.
+#
+# The limitation the old header described therefore still stands, and is now permanent rather than
+# pending: repository tests run against a schema Hibernate generated from the entities, NOT the
+# schema a deployment gets from db/migration. Concretely, `idx_products_lower_category` — the
+# functional index V2 adds — does not exist in the test database, because @Index cannot express it
+# and Hibernate is what builds this schema. Any test asserting on that index would be asserting
+# about something that exists nowhere in this profile, and is marked in the test that makes the
+# claim.
+#
+# What guards the gap instead: `ddl-auto: validate` in dev and prod. If V1 and the entities ever
+# disagree, the application fails to start on a developer's laptop — which is a louder signal than
+# a test would give, and it is checked on every single dev boot rather than once per CI run.
 #
 # There is no `spring.datasource.*` block. The URL, username and password of the PostgreSQL
 # container are discovered at runtime by @ServiceConnection (see PostgresTestContainerConfig).
@@ -16,6 +32,15 @@
 # picks a different ephemeral port, which it does on every run.
 
 spring:
+  # OFF, explicitly. This is not a default being restated — Boot's default is `true`, and
+  # flyway-core is `runtime` scope, which Maven puts on the test classpath. Leaving this out means
+  # Flyway auto-configures itself in every test context: V1 creates the tables, then Hibernate's
+  # `create-drop` drops and recreates them underneath it, leaving a flyway_schema_history claiming
+  # migrations are applied to a schema Flyway no longer built. The failure that produces is
+  # confusing out of proportion to its cause, and one line prevents it.
+  flyway:
+    enabled: false
+
   jpa:
     hibernate:
       # See the note above. `create-drop` per context, not per test method: Spring's context cache

@@ -16,12 +16,34 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+  # Chapter 22. The migration tool the ddl-auto note below used to defer to.
+  #
+  # Identical to application-dev.yml, and that is the property worth having rather than a
+  # duplication worth removing: the migrations that ran on a laptop are the migrations that run
+  # here, in the same order, from the same folder. A prod-only location or a prod-only flag would
+  # mean the deployed schema had a code path nobody exercises until the deploy.
+  #
+  # No `baseline-on-migrate`. It tells Flyway to accept a database that already has tables and
+  # pretend they are the baseline, which is exactly what you want during a one-off adoption and
+  # exactly what you do not want left switched on: it converts "this database is not in the state I
+  # think it is" from a failed deploy into a silent success. CartWise has no deployed database yet,
+  # so V1 runs on an empty schema and there is nothing to baseline. If that changes, it is a
+  # deliberate one-time `-Dflyway.baselineOnMigrate=true` on the command line, not a line in a file.
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
   jpa:
     hibernate:
       # Never `create-drop`, never `update`. `validate` checks the deployed schema matches the
       # entities and refuses to start on a mismatch, so a schema drift is caught at deploy time
       # instead of on the first query that touches the missing column. It changes nothing itself:
-      # applying schema changes is a migration tool's job, and that is a later chapter.
+      # applying schema changes is a migration tool's job.
+      #
+      # As of Chapter 22 that job has an owner. Flyway runs above, before the EntityManagerFactory
+      # exists, so this check now runs against a schema that was just brought up to date rather than
+      # against whatever a human last applied by hand. Unchanged setting, considerably stronger
+      # guarantee — and dev runs the same one now, so a mismatch is found on a laptop first.
       ddl-auto: validate
 
     show-sql: false
@@ -31,6 +53,13 @@ spring:
     init:
       # Sample data is a development convenience. Seeding a production database from a file
       # committed to the repository is not.
+      #
+      # This line carries more weight after Chapter 22, not less. spring.sql.init now loads exactly
+      # one file — db/dev-seed/dev-users.sql — and that file contains an ADMIN account with a real
+      # BCrypt hash whose plaintext is written in the comment beside it. `never` is the only thing
+      # standing between that row and a deployed database. It is why those accounts stayed under
+      # spring.sql.init instead of moving into db/migration with the catalogue: a Flyway migration
+      # runs in every environment by design and would have ignored this setting entirely.
       mode: never
 
 cartwise:

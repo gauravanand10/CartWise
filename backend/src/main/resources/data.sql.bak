@@ -1,3 +1,29 @@
+-- SUPERSEDED BY CHAPTER 22. This file is no longer loaded by anything.
+--
+-- It was `data.sql`, and the rename to `data.sql.bak` is the whole mechanism: Spring loads
+-- `classpath:data.sql` by filename convention, and a name it does not recognise is a file it does
+-- not run. Nothing else about it changed.
+--
+-- Where its contents went:
+--   * the catalogue INSERT  -> db/migration/V3__seed_products.sql, applied once by Flyway in every
+--                              environment, and grown from 8 products to 50 there.
+--   * the two user INSERTs  -> db/dev-seed/dev-users.sql, still loaded by spring.sql.init and still
+--                              only under the dev profile, because one of them is an ADMIN whose
+--                              password is written in its own comment and `spring.sql.init.mode:
+--                              never` in application-prod.yml is what keeps it off a deployment.
+--                              A migration would have run it everywhere.
+--
+-- Kept rather than deleted for one boot: it is the source the two files above were split from, and
+-- until someone has run both against a fresh database this is the only intact copy of what the
+-- seed used to be. It can be deleted once that is no longer interesting.
+--
+-- The original header follows, unedited. Note that two of the things it asserts are no longer true
+-- — the schema is not created by Hibernate any more, and `defer-datasource-initialization` is now
+-- false because leaving it true makes Flyway run AFTER Hibernate's validation. See
+-- application-dev.yml.
+--
+-- ---------------------------------------------------------------------------------------------
+--
 -- Sample catalogue for local development.
 --
 -- Runs on every dev boot, after Hibernate has created the schema. Two settings in

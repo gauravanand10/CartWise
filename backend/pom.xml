@@ -29,15 +29,63 @@
 			release and is pinned rather than floated for the same reason the container image is.
 		-->
 		<jacoco.version>0.8.15</jacoco.version>
+		<!--
+			Chapter 22. spring-boot-dependencies manages the Flyway *artifacts* (4.1.0 pins
+			flyway-core 12.4.0), but it does not manage the flyway-maven-plugin, so the plugin
+			version is this project's to own.
+
+			It is pinned to the same 12.4.0 the parent resolves for the runtime, and that is not
+			cosmetic. The plugin runs migrations from its own bundled copy of Flyway; if that copy
+			were a different major version from the one inside the application, `mvn flyway:migrate`
+			and the application's own startup migration would be two different engines writing the
+			same `flyway_schema_history` table. Keeping them equal is what makes the command line
+			and the boot path interchangeable.
+
+			`mvn dependency:list` was used to read 12.4.0 off the resolved tree rather than the
+			number being copied from documentation.
+
+			The property is named `flyway-plugin.version` and NOT `flyway.plugin.version`, which is
+			the obvious spelling and does not work. The plugin treats every Maven property under the
+			`flyway.` prefix as one of its own configuration keys, so `flyway.plugin.version` is read
+			as a Flyway setting and the build dies with
+
+			    Unknown configuration property: flyway.plugin.version
+
+			before it does anything else. Verified by hitting it. The hyphen takes the property out
+			of that namespace; the three below stay in it deliberately, because they ARE Flyway keys.
+		-->
+		<flyway-plugin.version>12.4.0</flyway-plugin.version>
+
+		<!--
+			The dev database the flyway-maven-plugin talks to.
+
+			These exist because the plugin is NOT a Spring component: it never reads
+			application-dev.yml, so `mvn flyway:info` with no JDBC coordinates fails with
+			"Unable to connect to the database. Configure the url, user and password!". The values
+			duplicate application-dev.yml deliberately and are overridable on the command line
+			(-Dflyway.url=...) so the same goals can be pointed at another database without editing
+			the pom.
+
+			Only the dev credentials are here, and only because they are the same worthless
+			laptop-local pair already committed in application-dev.yml. A production migration is run
+			by passing -Dflyway.url/-Dflyway.user/-Dflyway.password from the deployment platform's
+			secret store, or by letting the application migrate itself on boot — which is the normal
+			path and needs none of this.
+		-->
+		<flyway.url>jdbc:postgresql://localhost:5432/cartwise_dev</flyway.url>
+		<flyway.user>cartwise</flyway.user>
+		<flyway.password>cartwise</flyway.password>
 	</properties>
 
 	<!--
-		Chapter 18 adds authentication. Spring Security and jjwt are new.
+		Chapter 22 adds Flyway. The note that used to stand here said a migration tool "only earns
+		its place once a deployed schema exists that must be evolved" — that is now true, so the
+		dependency is below rather than in this list.
 
-		Not present, and why:
-		  - No Flyway/Liquibase              -> schema is generated from the entities for now;
-		                                        a migration tool only earns its place once a
-		                                        deployed schema exists that must be evolved.
+		Still not present, and why:
+		  - No Liquibase                     -> Flyway is the choice. Two migration tools pointed at
+		                                        one schema is not redundancy, it is two histories
+		                                        that disagree.
 		  - No OAuth2 client/resource-server -> social login is a later chapter; this one issues
 		                                        its own tokens for its own users.
 	-->
@@ -83,6 +131,59 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!--
+			Chapter 22: versioned schema migrations.
+
+			THE STARTER, NOT flyway-core. This is a Boot 4 change and it fails silently, which is the
+			worst way for a change like this to fail.
+
+			Every Flyway guide, and this chapter's own brief, says to add org.flywaydb:flyway-core and
+			that Boot picks it up from the classpath. That was true through Boot 3, where
+			FlywayAutoConfiguration lived inside spring-boot-autoconfigure and activated on
+			@ConditionalOnClass(Flyway.class). Boot 4 split auto-configuration into per-technology
+			modules, and the Flyway one moved to org.springframework.boot:spring-boot-flyway — which
+			nothing drags in transitively.
+
+			So flyway-core on its own gets you the library and no Spring wiring at all. Not a warning,
+			not a "Flyway disabled" line: no Flyway output whatsoever, `spring.flyway.*` properties
+			read and ignored, and then the first symptom is Hibernate refusing to start with
+
+			    Schema validation: missing table [comparisons]
+
+			which points at the entity mapping and says nothing about migrations. That is exactly what
+			happened here on the first boot against the fresh database, and it is why this dependency
+			is the starter: spring-boot-starter-flyway brings spring-boot-flyway (the
+			auto-configuration) along with flyway-core, so the wiring cannot be missing while the
+			library is present.
+
+			With the starter in place, Boot orders Flyway BEFORE the EntityManagerFactory is created.
+			That ordering is the whole reason `ddl-auto: validate` can work on an empty database:
+			migrations build the schema, and only then does Hibernate compare the entities against it.
+
+			Versions managed by spring-boot-dependencies (Boot 4.1.0 pins Flyway 12.4.0), so neither
+			is pinned here — same reasoning as the PostgreSQL driver above.
+
+			flyway-database-postgresql is separate and required. Flyway 10 split every database
+			implementation out of the core jar, so the core knows no dialects by itself and fails with
+
+			    Unsupported Database: PostgreSQL 17.11
+
+			which reads like a version-support problem and is actually a missing-module problem. Most
+			Flyway examples still show only flyway-core, from before the split.
+
+			Runtime scope on the database module: nothing in src/main/java imports a Flyway class.
+			Migrations are SQL files, and the only thing that "calls" Flyway is the auto-configuration.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 
 		<!--
@@ -181,6 +282,69 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!--
+				Chapter 22. The plugin is NOT how migrations are applied in normal operation — the
+				application runs them itself on boot, on every machine and every environment, which
+				is the property that makes a deployment self-sufficient.
+
+				What the plugin adds is the ability to ask questions without starting an application:
+				`flyway:info` prints the applied/pending state of a database, `flyway:validate`
+				re-checks committed migrations against their recorded checksums, and `flyway:repair`
+				fixes a history row after a failed migration. Those are the operations you want when
+				the application is the thing that will not start.
+
+				Note the artifact id: `flyway-maven-plugin`. The name `maven-flyway-plugin` reads more
+				naturally and does not exist — Maven's own plugins are `maven-*-plugin` and
+				third-party ones are `*-maven-plugin`, and getting it backwards produces a plugin
+				resolution error rather than an obviously wrong name.
+
+				No <executions>. Binding `migrate` to a lifecycle phase would mean `mvn test` or
+				`mvn package` silently writes to a database, which is a build that has side effects
+				on something outside the build. These goals are run deliberately or not at all.
+
+				`cleanDisabled` is Flyway's default and is restated here as a decision rather than
+				an inheritance: `flyway:clean` drops every object in the schema, and this chapter
+				exists precisely to stop schema destruction from being one command away. Dropping the
+				dev database is still possible, it just has to be spelled out in psql where it cannot
+				be reached by a mistyped Maven goal.
+			-->
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>${flyway-plugin.version}</version>
+				<configuration>
+					<url>${flyway.url}</url>
+					<user>${flyway.user}</user>
+					<password>${flyway.password}</password>
+					<cleanDisabled>true</cleanDisabled>
+					<locations>
+						<location>classpath:db/migration</location>
+					</locations>
+				</configuration>
+				<!--
+					The plugin resolves `classpath:` locations against ITS OWN classpath, not the
+					project's, so without these two dependencies it reports "Skipping filesystem
+					location" / finds zero migrations even though the files are plainly there. The
+					driver is needed for the same reason: the plugin runs outside the application, so
+					nothing else puts a PostgreSQL driver in front of it.
+
+					Versions are not pinned; they are inherited from the same dependencyManagement
+					that pins the runtime artifacts, so the plugin and the application cannot drift.
+				-->
+				<dependencies>
+					<dependency>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-database-postgresql</artifactId>
+						<version>${flyway-plugin.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>42.7.11</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<!--
