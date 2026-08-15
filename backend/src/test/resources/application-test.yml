@@ -1,0 +1,69 @@
+# Test profile.
+#
+# This file is the ONE place the test suite's schema strategy is declared. Chapter 22 replaces
+# `ddl-auto: create-drop` here with Flyway and nothing else in the suite has to change — that is
+# the reason the setting lives in a profile file rather than being repeated per test class.
+#
+# Read that as a stated limitation, not a design: until Chapter 22 lands, repository tests run
+# against a schema Hibernate generated from the entities, NOT against the schema a deployment
+# actually gets. Anything those tests assert about DDL Hibernate does not emit — a functional
+# index, an explicit column collation — is asserting about a schema that exists nowhere else,
+# and is marked in the test that makes the claim.
+#
+# There is no `spring.datasource.*` block. The URL, username and password of the PostgreSQL
+# container are discovered at runtime by @ServiceConnection (see PostgresTestContainerConfig).
+# Hard-coding them here would be a second source of truth that is wrong the moment the container
+# picks a different ephemeral port, which it does on every run.
+
+spring:
+  jpa:
+    hibernate:
+      # See the note above. `create-drop` per context, not per test method: Spring's context cache
+      # keeps one container and one schema alive across every class sharing this configuration,
+      # and each test is isolated by transaction rollback instead (@DataJpaTest does this by
+      # default). Recreating the schema per class would be slower and would not isolate anything
+      # that a rollback does not already isolate.
+      ddl-auto: create-drop
+
+    # Off. A passing test run should be readable; a failing one is diagnosed from the assertion
+    # message and the stack trace, not by scrolling past several thousand INSERT statements.
+    # Turn it on locally with -Dspring.jpa.show-sql=true when a query is the thing under suspicion.
+    show-sql: false
+
+    # Same reason as dev and prod: a session held open for the whole request hides lazy-loading
+    # mistakes. A test that only passes because the session was still open is a test that will
+    # not reproduce the bug it was written to catch.
+    open-in-view: false
+
+    # No data.sql in tests. Seed data belongs to the test that needs it, built by that test, so
+    # a failure names the rows it was actually about. A shared fixture file is how tests start
+    # depending on each other's data without saying so.
+    defer-datasource-initialization: false
+
+  sql:
+    init:
+      mode: never
+
+cartwise:
+  jwt:
+    # A signing key that exists only to satisfy JwtProperties' startup validation and to sign
+    # tokens that never leave the JVM. It is >= 64 bytes because HS512 requires it and jjwt
+    # throws WeakKeyException rather than sign with a short key — the same constraint dev has,
+    # for the same reason, so a test cannot accidentally pass under weaker rules than dev.
+    secret: "cartwise-test-only-signing-key-never-deployed-anywhere-0123456789abcdef"
+    expiration: 24h
+
+  cors:
+    # A single concrete origin. Not a wildcard: the CORS tests need something to assert against,
+    # and an empty list registers no mapping at all, which would make those assertions vacuous.
+    allowed-origins:
+      - http://localhost:5173
+
+logging:
+  level:
+    root: WARN
+    com.cartwise: INFO
+    # Testcontainers narrates image pulls and container startup at INFO. Useful the first time,
+    # noise on every run after that.
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN

@@ -22,6 +22,13 @@
 			rather than being repeated across the three artifacts below.
 		-->
 		<jjwt.version>0.12.3</jjwt.version>
+		<!--
+			JaCoCo is a build plugin, not a dependency, so spring-boot-dependencies does not manage
+			it and the version is this project's to own. 0.8.13 is the floor for Java 21 class files
+			(0.8.10 and earlier reject class file major version 65 outright); 0.8.15 is the current
+			release and is pinned rather than floated for the same reason the container image is.
+		-->
+		<jacoco.version>0.8.15</jacoco.version>
 	</properties>
 
 	<!--
@@ -123,6 +130,50 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!--
+			Chapter 21 adds tests. Three artifacts, all test-scoped, none of them versioned here
+			because spring-boot-dependencies imports the Testcontainers BOM and pins them in step
+			with the Boot version.
+
+			spring-boot-testcontainers is the Spring-side glue: @ServiceConnection, which reads a
+			started container's host/port/credentials and registers them as the DataSource before
+			the context refreshes. Without it the alternative is @DynamicPropertySource and three
+			lines of string-building per test class, which is the same thing written by hand and
+			wrong more often.
+
+			Why a container at all, rather than H2: application-dev.yml already refuses H2 on the
+			grounds that a dialect-compatible fake is how PostgreSQL-specific bugs survive to
+			production. A repository test run against H2 would assert that the *fake* behaves —
+			the exact thing that is not worth asserting. Container tests run PostgreSQL 17.6, the
+			deployed version.
+
+			The cost is honest: these tests need a Docker daemon, so they are guarded (see
+			com.cartwise.testsupport.RequiresDocker) and skip rather than fail where none exists.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!--
+			Note the artifact ids: `testcontainers-junit-jupiter` and `testcontainers-postgresql`,
+			NOT `junit-jupiter` and `postgresql`. Testcontainers 2.x renamed every module to carry
+			the `testcontainers-` prefix, and Boot 4.1.0 imports testcontainers-bom 2.0.5. The 1.x
+			coordinates that most tutorials still show resolve to nothing here, and the error Maven
+			gives is "'dependencies.dependency.version' ... is missing" — which reads like a missing
+			BOM rather than a wrong artifact id, and sends you looking in the wrong place.
+		-->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -130,6 +181,97 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<!--
+				The test JVM runs in UTC, and this is not a style preference.
+
+				The PostgreSQL JDBC driver sends the client JVM's default time zone to the server as
+				the connection's `TimeZone` parameter. This machine's JVM reports `Asia/Calcutta` —
+				the legacy alias the JDK still uses for India Standard Time — and the Debian-based
+				postgres:17.6 image does not recognise it: `pg_timezone_names` has `Asia/Kolkata` and
+				no `Asia/Calcutta`, so every connection is refused with
+
+				    FATAL: invalid value for parameter "TimeZone": "Asia/Calcutta"
+
+				and every container-backed test dies at "Unable to determine Dialect without JDBC
+				metadata", which names nothing to do with the actual cause.
+
+				Verified rather than assumed: `SELECT count(*) FROM pg_timezone_names WHERE
+				name='Asia/Calcutta'` returns 0 inside that image and 1 for 'Asia/Kolkata'. The
+				PostgreSQL 17.11 installed natively on this machine accepts both, which is why the
+				pre-chapter baseline run against the dev database passed and only the container path
+				fails — a difference between two PostgreSQL builds, not between two versions.
+
+				Fixing it by naming Asia/Kolkata would work here and leave the next machine to
+				rediscover it. UTC is the setting that makes the suite independent of where it runs,
+				which is the property actually wanted: CartWise stores `Instant` everywhere and
+				`timestamp with time zone` in every table, so nothing under test has an opinion about
+				the local zone.
+
+				@{argLine} is late evaluation of the property JaCoCo's prepare-agent sets. Writing a
+				plain <argLine> here would replace it and silently produce an empty coverage report —
+				the agent would never be attached, and the build would stay green while measuring
+				nothing.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} -Duser.timezone=UTC</argLine>
+				</configuration>
+			</plugin>
+
+			<!--
+				JaCoCo measures which bytecode branches the tests actually executed.
+
+				`prepare-agent` binds to initialize and puts a Java agent on the surefire JVM's
+				command line; `report` turns the resulting jacoco.exec into HTML at
+				target/site/jacoco/index.html.
+
+				`report` is bound to `test`, not to JaCoCo's own default of `verify`. The default is
+				the right one for a project whose pipeline runs `mvn verify`; this one is driven by
+				`mvn clean test`, and a report goal bound to a phase that never executes produces no
+				report at all while the build still goes green — the worst of both, because it looks
+				like coverage is being measured. The binding follows the command that is actually run.
+
+				Deliberately NOT bound: the `check` goal, which fails the build below a coverage
+				threshold. A threshold is only meaningful once there is a measured baseline to set
+				it from — wiring it before the first report would either pick a number out of the
+				air or fail every build until it happened to be met.
+
+				The exclusions are types with no behaviour to cover. Counting a record's generated
+				accessors as "uncovered lines" does not describe a risk, it just moves the
+				percentage, and a coverage number that can be moved without writing a test is a
+				number that stops meaning anything.
+			-->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<configuration>
+					<excludes>
+						<exclude>com/cartwise/CartwiseBackendApplication.class</exclude>
+						<exclude>com/cartwise/**/dto/**</exclude>
+						<exclude>com/cartwise/config/*Properties.class</exclude>
+						<exclude>com/cartwise/**/package-info.class</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<execution>
+						<id>jacoco-prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>jacoco-report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
