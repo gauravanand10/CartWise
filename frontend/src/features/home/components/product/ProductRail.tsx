@@ -1,7 +1,9 @@
 import type { HomeProduct } from "../../types/home";
 import Rail from "../rail/Rail";
 import { railItem } from "../../styles";
-import ProductCard from "./ProductCard";
+// Chapter 23: the shared card, not the homepage's own copy.
+import ProductCard from "../../../../components/ui/ProductCard";
+import { glyphFor, toCardModel } from "../../utils/toCardModel";
 
 interface ProductRailProps {
     products: HomeProduct[];
@@ -18,7 +20,13 @@ export default function ProductRail({ products, label }: ProductRailProps) {
                     key={product.id}
                     className={railItem}
                 >
-                    <ProductCard product={product} />
+                    <ProductCard
+                        product={toCardModel(product)}
+                        badge={product.badge}
+                        store={product.store}
+                        fallbackIcon={glyphFor(product.category)}
+                        className="h-full"
+                    />
                 </div>
             ))}
         </Rail>

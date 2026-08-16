@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 
+import { fakeSelectionFetch } from "./fakeBackend";
 import type { ApiCategory, ApiPage, ApiProduct } from "../services/api";
 
 /**
@@ -85,7 +86,7 @@ export function mockApi(routes: Record<string, Handler>): MockApi {
     const calls: string[] = [];
     const keys = Object.keys(routes).sort((a, b) => b.length - a.length);
 
-    const fetchStub = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchStub = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         const url = typeof input === "string" ? input : input.toString();
         calls.push(url);
 
@@ -93,6 +94,25 @@ export function mockApi(routes: Record<string, Handler>): MockApi {
         const key = keys.find((candidate) => path.endsWith(candidate));
 
         if (!key) {
+            /*
+             * Chapter 23.5: the wishlist and comparison routes fall through to
+             * the in-memory fake rather than failing.
+             *
+             * Any page rendering a ProductCard now has providers that fetch
+             * user-scoped selections. Those requests are not what an integration
+             * test about the catalogue is asserting, and making each such test
+             * register four routes it does not care about would be noise that
+             * obscures the routes it does.
+             *
+             * The "fail loudly for an unregistered route" rule is kept for
+             * everything else, which is where it earns its place — a `/products`
+             * request that silently returned nothing is exactly the bug this
+             * stub exists to catch.
+             */
+            if (/\/users\/\d+\/(wishlist|comparison)/.test(path)) {
+                return fakeSelectionFetch(input, init);
+            }
+
             throw new Error(
                 `mockApi: no route registered for ${url}. Registered: ${keys.join(", ") || "(none)"}`,
             );

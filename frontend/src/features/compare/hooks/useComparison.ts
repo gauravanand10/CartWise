@@ -69,9 +69,25 @@ export function useComparison(): UseComparison {
 
                 setProducts(loaded);
 
-                // Prune slugs that no longer resolve, so a stale entry cannot
-                // sit in the selection forever inflating the navbar badge.
-                for (const slug of missing) remove(slug);
+                /*
+                 * Pruning removed in Chapter 23.5, for the same reason as the
+                 * wishlist's — see the long note in `useWishlist`.
+                 *
+                 * In short: `remove` now DELETEs a real comparison row, and
+                 * `missing` means "the mock catalogue could not resolve it", not
+                 * "the server does not have it". Those stopped being the same
+                 * thing when the database became the source of truth, and the
+                 * old line would have silently dropped columns for any of the 27
+                 * seeded products that exist only in PostgreSQL.
+                 *
+                 * It bites harder here than on the wishlist: this hook feeds the
+                 * comparison grid, whose specifications and verdicts come from
+                 * the mock catalogue and have no backend equivalent at all, so
+                 * database-only products cannot be compared today regardless.
+                 * They now stay in the selection unrendered instead of being
+                 * deleted from it.
+                 */
+                void missing;
             } catch {
                 if (!cancelled) {
                     setError("We couldn't load this comparison. Please try again.");

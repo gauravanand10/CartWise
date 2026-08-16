@@ -8,7 +8,7 @@
    @theme is not the same thing as the :root block further down, and the
    difference is the entire reason this exists. Custom properties in :root
    are values CSS can read; Tailwind knows nothing about them, so using one
-   means writing `style={{ background: "var(--primary)" }}` or a bespoke
+   means writing `style={{ background: "var(--whatever)" }}` or a bespoke
    class. Names declared in @theme become part of Tailwind's own scale, so
    `--color-tile-mint` generates `bg-tile-mint`, `text-tile-mint`,
    `border-tile-mint` and the rest — usable exactly like `bg-blue-500`, but
@@ -120,54 +120,99 @@
     --color-ink-muted: #5A5270;
     --color-surface: #FFFBF6;
     --color-card: #FFFFFF;
+
+    /* =====================================================================
+       LEGACY PALETTE  (Chapters 8–15, moved here in Chapter 23)
+
+       These were `:root` custom properties in the block that used to sit
+       below this one. Every value is byte-identical to what it was; only the
+       declaration site moved. Nothing was redesigned, and this is a structural
+       change with no visual one.
+
+       WHY MOVE THEM AT ALL, given they are frozen?
+
+       Because until now the project had colour in two systems with two rules.
+       @theme names are part of Tailwind's scale and generate utilities;
+       :root names are invisible to Tailwind and can only be reached through
+       `var()`. "No colour outside the token set" was therefore enforceable for
+       one half of the palette and unenforceable for the other. With everything
+       in @theme there is one place a colour can come from, and `bg-primary`
+       either exists or it does not.
+
+       WHY THREE OF THEM ARE PREFIXED
+
+       Three legacy names collide with Chapter 20 tokens that already own the
+       plain name and hold a *different* value. Renaming the Chapter 20 token
+       would change what `bg-success` means across the live component tree;
+       renaming the legacy one changes nothing, because it has no callers. So
+       the legacy copy takes the prefix:
+
+           legacy-success  #16a34a   (--color-success is #1E7A46)
+           legacy-danger   #ef4444   (--color-danger  is #C62E3E)
+           legacy-surface  #ffffff   (--color-surface is #FFFBF6)
+
+       The Chapter 20 values are the darker ones deliberately: the legacy
+       emerald and rose fail WCAG AA against white text at 2.9:1, which is the
+       whole reason Chapter 20 replaced them. The prefix is a marker that these
+       are the superseded pair, not an alternative to choose between.
+
+       WHAT USES THEM TODAY
+
+       Nothing under `src` — verified by grep: there is not one `var(--)`
+       reference in any component, and not one use of the `.btn-*`, `.badge-*`,
+       `.gradient-*`, `.card`, `.input` or `.glass` classes these back. What is
+       genuinely live is the `@layer base` block further down: `body`,
+       `::selection`, `p`, `small`, `strong` and the input focus ring all read
+       these, and they style every page. That is why they are migrated rather
+       than deleted — deleting them would change the rendered page, which is
+       exactly what this chapter is not for.
+       ===================================================================== */
+
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-secondary: #7c3aed;
+    --color-accent: #f59e0b;
+
+    --color-legacy-success: #16a34a;
+    --color-warning: #f59e0b;
+    --color-legacy-danger: #ef4444;
+
+    --color-background: #ffffff;
+    --color-legacy-surface: #ffffff;
+    --color-surface-soft: #f8fafc;
+
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94a3b8;
+
+    --color-border: #e2e8f0;
 }
 
 /* =========================================================
    CARTWISE DESIGN SYSTEM  (Chapters 8–15, superseded in part)
 
-   The :root block below predates the token layer above and still backs the
-   ~1200 lines of @layer components utilities beneath it, which the whole
-   pre-Chapter-20 component tree uses. It is deliberately left in place:
-   Chapter 20 restyles the discovery surface onto @theme tokens and does not
-   re-plumb the compare, product-detail, search or wishlist screens, so
-   removing these would break every one of them.
+   THE COLOURS THAT USED TO BE DECLARED HERE ARE NOW IN @theme, ABOVE.
 
-   Two palettes coexisting is a real cost and this comment is where it is
-   admitted rather than hidden. New work uses @theme; these values are
-   frozen and should shrink as screens migrate.
+   Chapter 23 moved every colour out of this block and changed none of their
+   values. What is left below is everything that is *not* a colour — radii,
+   shadows and gradients — and it stays in :root deliberately rather than
+   being swept along with them:
+
+     - Radii and shadows would be a second migration with its own decisions
+       (Tailwind v4 has `--radius-*` and `--shadow-*` namespaces, and this
+       project's `--radius-sm: 16px` disagrees with Tailwind's own `sm`, so
+       adopting the namespace would silently redefine stock utilities). That
+       is a separate change and this chapter's brief is the colour palette.
+
+     - The gradients are composite `linear-gradient(...)` values, not colours.
+       Tailwind has no theme namespace that would generate anything useful
+       from them, so moving them would gain nothing but churn.
+
+   The classes in the @layer components block beneath this still reference
+   these, and now reference the migrated colours by their @theme names.
    ========================================================= */
 
 :root {
-
-    /* ================= Brand Colors =================
-       Primary is blue → violet. Warm hues (orange/rose/amber) are
-       reserved for deal urgency and ratings, so a flash of orange on
-       the page always means "act now" rather than just "decoration". */
-
-    --primary: #2563eb;
-    --primary-dark: #1d4ed8;
-    --secondary: #7c3aed;
-    --accent: #f59e0b;
-
-    --success: #16a34a;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-
-    /* ================= Backgrounds ================= */
-
-    --background: #ffffff;
-    --surface: #ffffff;
-    --surface-soft: #f8fafc;
-
-    /* ================= Text ================= */
-
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-
-    /* ================= Borders ================= */
-
-    --border: #e2e8f0;
 
     /* ================= Radius ================= */
 
@@ -272,9 +317,9 @@ body {
 
     /* Flat white. Sections that want colour bring their own panel, which keeps
        the page calm and lets product imagery carry the visual weight. */
-    background: var(--background);
+    background: var(--color-background);
 
-    color: var(--text-primary);
+    color: var(--color-text-primary);
 
     font-family:
         Inter,
@@ -342,7 +387,7 @@ input:focus,
 textarea:focus,
 select:focus {
 
-    border-color: var(--primary);
+    border-color: var(--color-primary);
 
     box-shadow:
         0 0 0 4px rgba(37, 99, 235, .12);
@@ -355,7 +400,7 @@ select:focus {
 
 ::selection {
 
-    background: var(--primary);
+    background: var(--color-primary);
 
     color: white;
 
@@ -423,7 +468,7 @@ h6 {
 
 p {
 
-    color: var(--text-secondary);
+    color: var(--color-text-secondary);
 
     line-height: 1.8;
 
@@ -431,13 +476,13 @@ p {
 
 small {
 
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 
 }
 
 strong {
 
-    color: var(--text-primary);
+    color: var(--color-text-primary);
 
 }
 
@@ -482,7 +527,7 @@ strong {
 
 .card {
 
-    background: var(--surface);
+    background: var(--color-legacy-surface);
 
     border-radius: var(--radius-lg);
 
@@ -592,7 +637,7 @@ strong {
 
 .surface-soft {
 
-    background: var(--surface-soft);
+    background: var(--color-surface-soft);
 
 }
 
@@ -735,17 +780,17 @@ strong {
 
     background: white;
 
-    border: 2px solid var(--border);
+    border: 2px solid var(--color-border);
 
-    color: var(--text-primary);
+    color: var(--color-text-primary);
 
 }
 
 .btn-outline:hover {
 
-    border-color: var(--primary);
+    border-color: var(--color-primary);
 
-    color: var(--primary);
+    color: var(--color-primary);
 
 }
 
@@ -823,11 +868,11 @@ strong {
 
     border-radius: 18px;
 
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
 
     background: white;
 
-    color: var(--text-primary);
+    color: var(--color-text-primary);
 
     font-size: .96rem;
 
@@ -835,13 +880,13 @@ strong {
 
 .input::placeholder {
 
-    color: var(--text-muted);
+    color: var(--color-text-muted);
 
 }
 
 .input:focus {
 
-    border-color: var(--primary);
+    border-color: var(--color-primary);
 
     box-shadow:
 
@@ -931,7 +976,7 @@ strong {
 
     height: 1px;
 
-    background: var(--border);
+    background: var(--color-border);
 
 }
 

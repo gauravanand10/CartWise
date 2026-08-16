@@ -24,7 +24,15 @@ import { useCompareSelection } from "./hooks/useCompareSelection";
  * genuinely local UI state (the picker and the differences filter).
  */
 export default function ComparePage() {
-    const { slugs, add, remove, clear, isFull } = useCompareSelection();
+    const {
+        slugs,
+        add,
+        remove,
+        clear,
+        isFull,
+        error: selectionError,
+        retry: retrySelection,
+    } = useCompareSelection();
     const {
         products,
         sections,
@@ -43,8 +51,12 @@ export default function ComparePage() {
     const closePicker = useCallback(() => setPickerOpen(false), []);
 
     const pick = useCallback(
-        (slug: string) => {
-            const result = add(slug);
+        async (slug: string) => {
+            // `add` became async in Chapter 23.5 — the comparison is a server
+            // resource now, so whether the product was accepted is not knowable
+            // until it answers. The three result values are unchanged, and this
+            // still branches on exactly the same one.
+            const result = await add(slug);
             // Keep the dialog open when the add was rejected, so the user can see
             // why and choose differently instead of the sheet just vanishing.
             if (result === "added") setPickerOpen(false);
@@ -54,6 +66,23 @@ export default function ComparePage() {
 
     if (status === "loading") {
         return <CompareSkeleton columns={slugs.length} />;
+    }
+
+    /*
+     * The selection's own error, new in Chapter 23.5 — the comparison could not
+     * be read from or written to the server. Checked before `status`, because a
+     * selection that failed to load has no slugs and therefore reports
+     * `status === "empty"`, which would show "nothing to compare" to a user
+     * whose request had just failed. See the equivalent note in `WishlistPage`.
+     */
+    if (selectionError) {
+        return (
+            <CompareError
+                message={selectionError}
+                onRetry={retrySelection}
+                onClear={clear}
+            />
+        );
     }
 
     if (status === "error") {

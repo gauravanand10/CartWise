@@ -207,6 +207,27 @@ export interface ApiWishlistItem {
     savedAt: string;
 }
 
+/**
+ * One column of a comparison, with the product embedded.
+ *
+ * Shaped like `ApiWishlistItem` because the backend's `ComparisonItemDto` is
+ * shaped like its `WishlistItemDto` — same "the id is the entry, not the
+ * product" rule, same embedded product, same ISO-8601 instant. The one addition
+ * is `position`, and it is the reason a comparison is not a wishlist with a
+ * smaller cap: the grid renders columns left to right, and which column a
+ * product occupies survives a removal in the middle. Remove the second of four
+ * and the rest keep positions 0, 2 and 3 rather than shuffling left.
+ */
+export interface ApiComparisonItem {
+    /** The comparison entry's id — the selection, not the product. */
+    id: number;
+    product: ApiProduct;
+    /** Zero-based column, 0 to 3. Constrained by a check constraint server-side. */
+    position: number;
+    /** ISO-8601 UTC instant. */
+    addedAt: string;
+}
+
 /** The body every failed call returns. Matches the backend's `ApiError`. */
 export interface ApiErrorBody {
     code: string;
@@ -459,4 +480,84 @@ export function removeFromWishlist(
         `/users/${userId}/wishlist/${encodeURIComponent(productSlug)}`,
         { method: "DELETE" },
     );
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * COMPARISON  (Chapter 23.5)
+ *
+ * The backend gained these endpoints in Chapter 23 and nothing on this side
+ * ever called them — the controller, service and tests shipped with no client.
+ * The comparison lived entirely in localStorage while an empty `comparisons`
+ * table sat beside the wishlist.
+ *
+ * Deliberately shaped like the three wishlist calls above: same `userId`-first
+ * signature, same slug identity, same "returns nothing because the API returns
+ * nothing" on the writes. The two resources are independent by design and share
+ * no state, but they are the same *kind* of thing, and a caller that has learned
+ * one should not have to learn a second convention for the other.
+ * ---------------------------------------------------------------------------
+ */
+
+/**
+ * `GET /api/users/:userId/comparison` — compared products, in column order.
+ *
+ * Ordered by the server's stored `position`, not by when each was added, so the
+ * array index is the column the user sees.
+ */
+export function fetchComparison(userId: number): Promise<ApiComparisonItem[]> {
+    return request<ApiComparisonItem[]>(`/users/${userId}/comparison`);
+}
+
+/**
+ * `POST /api/users/:userId/comparison` — add a product to the comparison.
+ *
+ * Returns nothing: the endpoint answers 201 when a column was created and 200
+ * when the product was already there, and both are successes the UI treats
+ * identically.
+ *
+ * Throws `ApiRequestError` with **status 409 and code `COMPARISON_FULL`** when
+ * the comparison already holds four products. That is the one failure a caller
+ * is expected to branch on rather than merely report — it is the server's
+ * version of the disabled fifth toggle, and it is why the code is checked rather
+ * than the status alone: 409 is also what a concurrent duplicate insert
+ * produces, and those two conflicts want different messages.
+ */
+export function addToComparison(
+    userId: number,
+    productSlug: string,
+): Promise<void> {
+    return request<void>(`/users/${userId}/comparison`, {
+        method: "POST",
+        body: JSON.stringify({ productSlug }),
+    });
+}
+
+/**
+ * `DELETE /api/users/:userId/comparison/:slug` — remove one product.
+ *
+ * Throws `ApiRequestError` with status 404 if the product was not being
+ * compared. Not swallowed here: it means the caller's view is stale, which is
+ * worth knowing even though the caller may well decide to ignore it.
+ */
+export function removeFromComparison(
+    userId: number,
+    productSlug: string,
+): Promise<void> {
+    return request<void>(
+        `/users/${userId}/comparison/${encodeURIComponent(productSlug)}`,
+        { method: "DELETE" },
+    );
+}
+
+/**
+ * `DELETE /api/users/:userId/comparison` — empty the comparison.
+ *
+ * One request rather than four, because "start over" is one intention and the UI
+ * offers it as one button; expressing it as N deletes would make a partial
+ * failure a state the user never asked for. Idempotent — clearing an already
+ * empty comparison succeeds.
+ */
+export function clearComparison(userId: number): Promise<void> {
+    return request<void>(`/users/${userId}/comparison`, { method: "DELETE" });
 }

@@ -98,6 +98,31 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * The comparison is already full → 409.
+     *
+     * <p>409 rather than 400, and the distinction is worth stating because it is easy to get wrong:
+     * the request was well-formed, the slug named a real product and the caller was entitled to the
+     * resource. Nothing about the message was invalid. What refused it was the current state of the
+     * comparison — and the identical request would succeed after one removal, which is precisely the
+     * situation 409 describes and 400 does not.
+     *
+     * <p>The message comes from the exception, which is safe here because {@link
+     * ComparisonFullException} builds it from its own limit and never carries caller input or
+     * internals. It names the number so the client can say "you can compare up to 4 products"
+     * without hardcoding a 4 that could drift from the server's.
+     *
+     * <p>Logged at debug: hitting the cap is ordinary use, not a fault. It is what the UI's disabled
+     * fifth toggle is there to prevent, so a request that reaches here is usually a second tab or a
+     * client that had not caught up.
+     */
+    @ExceptionHandler(ComparisonFullException.class)
+    public ResponseEntity<ApiError> handleComparisonFull(ComparisonFullException ex) {
+        log.debug("Comparison cap reached: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("COMPARISON_FULL", ex.getMessage(), Instant.now(clock)));
+    }
+
+    /**
      * A valid caller asked for something that is not theirs → 403.
      *
      * <p>Thrown by {@code WishlistController.requireSelf}. This handler is not optional: an

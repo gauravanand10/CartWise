@@ -18,12 +18,42 @@ import { useWishlistSelection } from "./hooks/useWishlistSelection";
  * only picks which state to render.
  */
 export default function WishlistPage() {
-    const { slugs, clear } = useWishlistSelection();
+    const {
+        slugs,
+        clear,
+        error: selectionError,
+        retry: retrySelection,
+    } = useWishlistSelection();
     const { products, suggestions, status, error, retry, sort, setSort } =
         useWishlist();
 
     if (status === "loading") {
         return <WishlistSkeleton count={slugs.length} />;
+    }
+
+    /*
+     * Two error sources now, and they fail at different layers.
+     *
+     * `useWishlist`'s error means the saved slugs could not be resolved into
+     * products. The selection's error is new in Chapter 23.5 and means the
+     * wishlist itself could not be read from or written to the server — which,
+     * since the selection is what the resolution reads, is the more fundamental
+     * of the two and the one worth showing first.
+     *
+     * Checked before `status`, because a selection that failed to load reports
+     * `status === "empty"`: there are no slugs, so there is nothing to resolve
+     * and nothing went wrong downstream. Rendering the empty state there would
+     * tell a user whose request had just failed that they have saved nothing —
+     * confidently, and wrongly.
+     */
+    if (selectionError) {
+        return (
+            <WishlistError
+                message={selectionError}
+                onRetry={retrySelection}
+                onClear={clear}
+            />
+        );
     }
 
     if (status === "error") {

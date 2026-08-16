@@ -2,10 +2,32 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
+import type { ReactElement } from "react";
+
 import ProductCard from "./ProductCard";
 import { MAX_COMPARE } from "../../features/compare/constants";
-import { renderWithProviders } from "../../test/renderWithProviders";
+import { renderWithProviders as baseRender } from "../../test/renderWithProviders";
+import { TEST_USER_ID } from "../../test/fakeBackend";
 import type { ProductCardModel } from "../../types/product";
+
+/**
+ * Renders a card as a signed-in user.
+ *
+ * Chapter 23.5 made both toggles user-scoped API calls. Signed out they are
+ * no-ops by design — the correct behaviour for a guest, and useless for a suite
+ * whose subject is what the toggles do. Every test below therefore needs a
+ * session, so it is supplied here rather than repeated at twenty-three call
+ * sites, and the tests themselves are unchanged.
+ *
+ * The requests land on the in-memory fake installed by `test/setup.ts`, so a
+ * click still ends in a durable "pressed" rather than an optimistic flip that
+ * rolls back when an unstubbed `fetch` rejects. That the assertions below still
+ * pass unmodified is the point: the behaviour they describe did not change, only
+ * what it costs to produce it.
+ */
+function renderWithProviders(ui: ReactElement) {
+    return baseRender(ui, { signedInAs: TEST_USER_ID });
+}
 
 /**
  * The shared product tile — the one component that appears on the browse grid, in search results,
@@ -117,6 +139,91 @@ describe("ProductCard", () => {
             renderWithProviders(<ProductCard product={make()} />);
 
             expect(screen.queryByText(/^\d+$/)).not.toBeInTheDocument();
+        });
+    });
+
+    /**
+     * Chapter 23 merged the homepage's own near-duplicate card into this one. These are the
+     * behaviours that card had and this one did not, so they are the ones a future edit is most
+     * likely to drop — nothing else in the suite would notice, because the six pre-existing call
+     * sites pass none of these props.
+     *
+     * The absence cases matter as much as the presence ones: every prop here is optional, and
+     * "renders nothing when not given" is what made the merge safe for callers that never opt in.
+     */
+    describe("the merged homepage behaviours", () => {
+
+        it("renders a section badge when one is given", () => {
+            renderWithProviders(<ProductCard product={make()} badge="Trending" />);
+
+            expect(screen.getByText("Trending")).toBeInTheDocument();
+        });
+
+        it("renders no badge by default", () => {
+            renderWithProviders(<ProductCard product={make()} />);
+
+            expect(screen.queryByText("Trending")).not.toBeInTheDocument();
+        });
+
+        /**
+         * The reason the two badges are stacked in a column rather than sharing a corner. Before the
+         * merge neither component could produce this state: the homepage card had no computed
+         * discount, and this one had no section label.
+         */
+        it("shows the discount and the section badge together", () => {
+            renderWithProviders(
+                <ProductCard
+                    product={make({ price: 100, originalPrice: 125 })}
+                    badge="Bestseller"
+                />,
+            );
+
+            expect(screen.getByText("20% off")).toBeInTheDocument();
+            expect(screen.getByText("Bestseller")).toBeInTheDocument();
+        });
+
+        it("renders the cheapest store when one is given", () => {
+            renderWithProviders(<ProductCard product={make()} store="Amazon" />);
+
+            expect(screen.getByText(/Lowest at/)).toBeInTheDocument();
+            expect(screen.getByText("Amazon")).toBeInTheDocument();
+        });
+
+        it("renders no store line by default", () => {
+            renderWithProviders(<ProductCard product={make()} />);
+
+            expect(screen.queryByText(/Lowest at/)).not.toBeInTheDocument();
+        });
+
+        /**
+         * The homepage supplies no brand, so the adapter passes an empty string. Rendering it
+         * unguarded printed an empty accent-coloured line above every homepage title — invisible in
+         * a screenshot, and a stray gap in the layout.
+         */
+        it("omits the brand line when the brand is empty", () => {
+            const { container } = renderWithProviders(
+                <ProductCard product={make({ brand: "" })} />,
+            );
+
+            expect(screen.queryByText("Apple")).not.toBeInTheDocument();
+            // No empty paragraph left behind where the brand used to be.
+            expect(
+                Array.from(container.querySelectorAll("p")).filter(
+                    (node) => node.textContent === "",
+                ),
+            ).toHaveLength(0);
+        });
+
+        /**
+         * With no brand to sit beside, the score must still sit at the end of its row rather than
+         * sliding to the start — which is what `justify-between` alone would have done.
+         */
+        it("still shows the AI score when there is no brand", () => {
+            renderWithProviders(
+                <ProductCard product={make({ brand: "", aiScore: 96 })} />,
+            );
+
+            expect(screen.getByText("96")).toBeInTheDocument();
         });
     });
 

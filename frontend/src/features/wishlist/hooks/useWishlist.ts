@@ -64,9 +64,43 @@ export function useWishlist(): UseWishlist {
 
                 setProducts(loaded);
 
-                // Drop slugs that no longer resolve, so a delisted product
-                // cannot sit in storage forever inflating the navbar badge.
-                for (const slug of missing) remove(slug);
+                /*
+                 * SELF-HEALING, ADAPTED IN CHAPTER 23.5 — AND NARROWED.
+                 *
+                 * This used to read: `for (const slug of missing) remove(slug)`.
+                 * A slug that no longer resolved was dropped from the selection,
+                 * so a delisted product could not sit in localStorage forever
+                 * inflating the navbar badge. Against localStorage that was free
+                 * — the list was the only record, and pruning it cost nothing
+                 * that was not already broken.
+                 *
+                 * Against the API it is destructive, and quietly so. `remove`
+                 * now issues a DELETE against the user's real wishlist, and
+                 * `missing` does not mean "the server forgot this product" — it
+                 * means "this frontend's mock catalogue could not resolve it".
+                 * Those came apart the moment the database became the source of
+                 * truth: V3 seeded 50 products, of which 27 exist only in
+                 * PostgreSQL and have no entry in the mock catalogue the product
+                 * service reads. Saving any of those and opening this page would
+                 * have deleted the row — a real saved product, erased by a
+                 * client-side lookup miss, with nothing on screen to say so.
+                 *
+                 * So the pruning is gone and the products that did resolve are
+                 * rendered. The server is authoritative about what is saved; a
+                 * slug it returned is saved, whether or not this build can draw
+                 * a card for it.
+                 *
+                 * The cost is the problem the original code solved: the badge
+                 * counts what the server holds while the grid shows only what
+                 * resolved, so the two can disagree by exactly the number of
+                 * database-only products saved. That is a visible inconsistency
+                 * and it is the lesser one — the alternative is silent data
+                 * loss. The real repair is for this hook to build its cards from
+                 * the wishlist response, which already embeds every product in
+                 * full; that is a larger change than unblocking the wiring and
+                 * is recorded rather than smuggled in here.
+                 */
+                void missing;
             } catch {
                 if (!cancelled) {
                     setError("We couldn't load your wishlist. Please try again.");

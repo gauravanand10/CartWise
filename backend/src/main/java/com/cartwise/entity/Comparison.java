@@ -85,6 +85,34 @@ public class Comparison {
     /** Required by JPA. Not for application use. */
     protected Comparison() {}
 
+    /**
+     * Puts a product in one of a user's comparison columns.
+     *
+     * <p>Added in Chapter 23, and until then this entity had no public constructor at all: Chapter
+     * 16 modelled the table and Chapter 17 gave it a read query, but nothing in the application
+     * could create a row. The comparison was a schema and a repository with no writer.
+     *
+     * <p>All three arguments are required and there are no setters, so a {@code Comparison} cannot
+     * exist half-built with a null foreign key or a default position — the invariants the
+     * {@code optional = false} associations declare are enforced at construction as well as at
+     * flush.
+     *
+     * <p>{@code position} is a parameter where {@link Wishlist} has no equivalent, because a
+     * wishlist is a set and a comparison is an ordered row of columns. Which column is chosen is
+     * {@code ComparisonService}'s decision — it is the only thing that can see the other rows — so
+     * this constructor takes the answer rather than computing it. It does not validate the range:
+     * {@code ck_comparison_position_range} does that at the database, where it also holds for a row
+     * written by anything that is not this constructor.
+     *
+     * <p>{@code createdAt} is not a parameter, for the same reason as on {@code Wishlist}: when a
+     * product was added is a fact about the adding, decided by {@link #onCreate()}.
+     */
+    public Comparison(User user, Product product, int position) {
+        this.user = user;
+        this.product = product;
+        this.position = position;
+    }
+
     @PrePersist
     void onCreate() {
         this.createdAt = Instant.now();

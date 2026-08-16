@@ -3,6 +3,9 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 
+import { installFakeBackend, resetFakeBackend } from "./fakeBackend";
+import { setSession } from "../services/api";
+
 /**
  * What every test in this suite can assume about its environment.
  *
@@ -64,6 +67,27 @@ beforeEach(() => {
     // The persisted-list singletons read this at module load and write on every change.
     window.localStorage.clear();
     window.sessionStorage.clear();
+
+    /*
+     * Chapter 23.5. Two things follow from the wishlist and comparison moving
+     * off localStorage and onto the API.
+     *
+     * First, `setSession(null)`: clearing localStorage above is no longer enough
+     * to sign a test out. `api.ts` caches the session in a module variable read
+     * once at load, deliberately so that a browser blocking storage still gets a
+     * working session — which means a test that signed in leaves the *next* test
+     * signed in as that user, through a variable no `localStorage.clear()` can
+     * reach. This resets the real thing.
+     *
+     * Second, the fake backend becomes the default `fetch`. Any component that
+     * renders a ProductCard now has providers that fetch, and leaving that
+     * unstubbed would make every such test depend on a request failing in
+     * exactly the right way. Tests with their own routing needs replace it with
+     * `stubFetch` from `mockApi.ts`, which is installed after this runs.
+     */
+    setSession(null);
+    resetFakeBackend();
+    installFakeBackend();
 });
 
 afterEach(() => {

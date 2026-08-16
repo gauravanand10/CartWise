@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import CataloguePage from "./CataloguePage";
 import { apiCategory, apiPage, apiProduct, mockApi } from "../../test/mockApi";
 import { currentSearchParams, renderWithProviders } from "../../test/renderWithProviders";
+import { TEST_USER_ID } from "../../test/fakeBackend";
 
 /**
  * The browse screen end to end, with only the network faked.
@@ -47,7 +48,19 @@ function renderCatalogue(
         "/categories": { json: categories },
     });
 
-    renderWithProviders(<CataloguePage />, { route });
+    /*
+     * Signed in as of Chapter 23.5.
+     *
+     * The wishlist heart on a result card is a user-scoped API call now, and a
+     * signed-out visitor's toggle is a deliberate no-op — so the integration
+     * test below, which is precisely about the card and the provider meeting,
+     * would assert against a guest and see nothing happen.
+     *
+     * The selection requests fall through `mockApi` to the in-memory fake, so
+     * this helper still only registers the two catalogue routes it is actually
+     * about.
+     */
+    renderWithProviders(<CataloguePage />, { route, signedInAs: TEST_USER_ID });
     return api;
 }
 

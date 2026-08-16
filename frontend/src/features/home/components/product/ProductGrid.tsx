@@ -1,6 +1,9 @@
 import type { HomeProduct } from "../../types/home";
 import Reveal from "../motion/Reveal";
-import ProductCard from "./ProductCard";
+// Chapter 23: the shared card, not the homepage's own copy. See
+// features/home/utils/toCardModel for why an adapter stands between them.
+import ProductCard from "../../../../components/ui/ProductCard";
+import { glyphFor, toCardModel } from "../../utils/toCardModel";
 
 interface ProductGridProps {
     products: HomeProduct[];
@@ -31,7 +34,12 @@ export default function ProductGrid({ products }: ProductGridProps) {
                     delay={Math.min(index * 0.05, 0.3)}
                     className="h-full"
                 >
-                    <ProductCard product={product} />
+                    <ProductCard
+                        product={toCardModel(product)}
+                        badge={product.badge}
+                        store={product.store}
+                        fallbackIcon={glyphFor(product.category)}
+                    />
                 </Reveal>
             ))}
         </div>

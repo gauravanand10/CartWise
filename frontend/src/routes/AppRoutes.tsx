@@ -9,6 +9,7 @@ import NotFound from "../pages/NotFound/NotFound";
 
 import { SearchPage } from "../features/search";
 import { ComparePage } from "../features/compare";
+import { LoginPage, ProtectedRoute, SignupPage } from "../features/auth";
 import CataloguePage from "../features/discovery/CataloguePage";
 
 export default function AppRoutes() {
@@ -35,15 +36,42 @@ export default function AppRoutes() {
                     element={<CataloguePage />}
                 />
 
+                {/* Public: getting a token cannot itself require one. */}
+
                 <Route
-                    path="/compare"
-                    element={<ComparePage />}
+                    path="/login"
+                    element={<LoginPage />}
                 />
 
                 <Route
-                    path="/wishlist"
-                    element={<Wishlist />}
+                    path="/signup"
+                    element={<SignupPage />}
                 />
+
+                {/*
+                    Chapter 23.5. Both of these read user-scoped endpoints that
+                    answer 401 without a token, so there is nothing to render for
+                    a guest — the gate matches what the API already enforces
+                    rather than adding a rule of its own.
+
+                    Grouped under one layout route so the protection is visible
+                    here, in the route table, instead of being a wrapper each
+                    page has to remember to apply.
+                */}
+
+                <Route element={<ProtectedRoute />}>
+
+                    <Route
+                        path="/compare"
+                        element={<ComparePage />}
+                    />
+
+                    <Route
+                        path="/wishlist"
+                        element={<Wishlist />}
+                    />
+
+                </Route>
 
                 {/* Slug rather than a numeric id: product URLs are shared and
                     read by people, and every card in the app already carries

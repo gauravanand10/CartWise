@@ -1,4 +1,5 @@
 import { Check, Heart, Scale, Sparkles, Star } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import SafeImage from "./SafeImage";
@@ -11,6 +12,51 @@ interface ProductCardProps {
     product: ProductCardModel;
     /** Rendered by the search results grid and the related-product rails. */
     className?: string;
+
+    /*
+     * ---------------------------------------------------------------------
+     * The three props below arrived in Chapter 23, when the homepage's own
+     * near-duplicate card was merged into this one.
+     *
+     * They are all optional and all default to "render nothing", which is the
+     * property that made the merge safe: the six call sites that already used
+     * this component pass none of them and render exactly as before. Only the
+     * homepage grid and rail pass them, and they are the behaviours that card
+     * had which this one did not.
+     *
+     * They are deliberately separate props rather than new fields on
+     * ProductCardModel. That model is the cross-feature product contract —
+     * search results, the wishlist and the compare picker all build one — and
+     * `badge` is not a fact about a product. It is a fact about the *section
+     * rendering* it: the same iPhone is "Trending" in one rail and "Viewed" in
+     * another. Putting it on the model would invite it to be persisted.
+     * ---------------------------------------------------------------------
+     */
+
+    /**
+     * Section label, e.g. "Trending" or "Best match".
+     *
+     * Stacked *below* the computed discount badge rather than sharing its
+     * corner, because a product can legitimately have both and the homepage's
+     * card could never show them together — it had no computed discount badge
+     * at all.
+     */
+    badge?: string;
+
+    /** Cheapest retailer, rendered as "Lowest at {store}". */
+    store?: string;
+
+    /**
+     * Glyph shown when the image is missing or fails to load.
+     *
+     * The homepage wrapped SafeImage in a `ProductImage` that mapped a category
+     * to a phone/laptop/TV glyph, so an absent asset read as the kind of thing
+     * it was. Passing the icon in keeps that behaviour without this component
+     * having to know the homepage's category union — which is a different
+     * vocabulary ("phones", "tvs") from ProductCardModel.category ("Smartphone",
+     * "Television") and must not leak in here.
+     */
+    fallbackIcon?: LucideIcon;
 }
 
 /**
@@ -60,6 +106,9 @@ interface ProductCardProps {
 export default function ProductCard({
     product,
     className = "",
+    badge,
+    store,
+    fallbackIcon,
 }: ProductCardProps) {
     const discount = discountPercent(product.price, product.originalPrice);
 
@@ -105,16 +154,41 @@ export default function ProductCard({
                     alt={product.name}
                     className="flex h-40 w-full items-center justify-center overflow-hidden bg-surface sm:h-48"
                     imgClassName="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                    icon={fallbackIcon}
                     iconClassName="h-10 w-10 text-ink-muted/40"
                 />
 
-                {/* Semantic, not decorative: success means "this costs less than
-                    it did". The same green cannot be used ornamentally anywhere
-                    else on the card, or it stops carrying that meaning. */}
-                {discount > 0 && (
-                    <span className="absolute left-3 top-3 rounded-full bg-success px-2 py-1 text-[11px] font-bold text-white">
-                        {discount}% off
-                    </span>
+                {/*
+                    Stacked rather than overlaid. The discount badge is computed
+                    and semantic; `badge` is a caller-supplied section label and
+                    neutral. Before the Chapter 23 merge these two lived in the
+                    same corner of two different components and could never
+                    collide; now that one component renders both, a column with
+                    a gap is what keeps a discounted "Trending" product from
+                    printing one on top of the other.
+                */}
+                {(discount > 0 || badge) && (
+                    <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
+                        {/* Semantic, not decorative: success means "this costs
+                            less than it did". The same green cannot be used
+                            ornamentally anywhere else on the card, or it stops
+                            carrying that meaning. */}
+                        {discount > 0 && (
+                            <span className="rounded-full bg-success px-2 py-1 text-[11px] font-bold text-white">
+                                {discount}% off
+                            </span>
+                        )}
+
+                        {/* Neutral by design. A section label is not a claim
+                            about the product, so it must not borrow success or
+                            danger — "Bestseller" in green would read as a price
+                            drop. */}
+                        {badge && (
+                            <span className="rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold text-ink-muted shadow-sm backdrop-blur-sm">
+                                {badge}
+                            </span>
+                        )}
+                    </div>
                 )}
 
                 {!product.inStock && (
@@ -238,18 +312,34 @@ export default function ProductCard({
 
             <div className="flex flex-1 flex-col p-4">
 
-                <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-accent-primary">
-                        {product.brand}
-                    </p>
+                {/*
+                    `product.brand` is guarded rather than assumed. Every model
+                    built from the API or the mock catalogue carries one, but the
+                    homepage's card never rendered a brand and its data has no
+                    such field — so the adapter that feeds it here supplies an
+                    empty string. Rendering that unguarded printed an empty
+                    accent-coloured line and a stray gap above every homepage
+                    title. An empty brand is a real state now, so it is handled.
+                */}
+                {(product.brand || product.aiScore !== undefined) && (
+                    <div className="flex items-center justify-between gap-2">
+                        {product.brand && (
+                            <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-accent-primary">
+                                {product.brand}
+                            </p>
+                        )}
 
-                    {product.aiScore !== undefined && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-tile-lilac px-2 py-0.5 text-[11px] font-semibold text-ink">
-                            <Sparkles size={11} aria-hidden="true" />
-                            {product.aiScore}
-                        </span>
-                    )}
-                </div>
+                        {/* `ml-auto` rather than relying on justify-between,
+                            which would park the score on the *left* when there
+                            is no brand beside it to push it over. */}
+                        {product.aiScore !== undefined && (
+                            <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-tile-lilac px-2 py-0.5 text-[11px] font-semibold text-ink">
+                                <Sparkles size={11} aria-hidden="true" />
+                                {product.aiScore}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 <h3 className="mt-1 text-sm font-semibold leading-snug text-ink sm:text-[15px]">
                     <Link
@@ -290,6 +380,16 @@ export default function ProductCard({
                         ({formatCount(product.reviews)})
                     </span>
                 </div>
+
+                {/* Homepage-only today. `ink-muted` on both halves rather than
+                    an accent on the retailer name: which shop is cheapest is
+                    context, not a recommendation, and colouring it would make
+                    it compete with the price directly below. */}
+                {store && (
+                    <p className="mt-2 truncate text-xs text-ink-muted sm:text-[13px]">
+                        Lowest at <span className="font-medium">{store}</span>
+                    </p>
+                )}
 
                 <div className="mt-auto pt-4">
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
