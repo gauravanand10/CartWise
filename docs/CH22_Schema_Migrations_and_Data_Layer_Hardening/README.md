@@ -1,120 +1,289 @@
-# Chapter 22: Schema Migrations & Data Layer Hardening
+# 🗄️ CH22 — Schema Migrations & Data Layer Hardening
 
-## Overview
+> **Project:** CartWise  
+> **Chapter:** Schema Migrations  
+> **Feature:** Flyway, Versioned Database Schema
 
-Chapter 22 introduces Flyway for schema versioning and freezes the database contract. Until now, Hibernate's `ddl-auto: create-drop` regenerated the schema on every boot from the JPA entities — convenient for development, but incompatible with real deployments where schema evolution must be audited and reversible.
+---
 
-This chapter moves schema ownership from code (entities) to migrations (SQL), introduces seed data as versioned migrations rather than fixtures, and hardens the layer against schema drift by validating rather than auto-generating on boot.
+# 👋 Welcome
 
-**What changes:**
-- Flyway 12.4.0 wired into `pom.xml` and enabled in dev/prod profiles
-- `V1__baseline.sql` — schema extracted from entities
-- `V2__add_functional_index_lower_category.sql` — the functional index ProductSpecifications.java deferred
-- `V3__seed_products.sql` — 50 products (mirrored from frontend catalogue, plus 27 invented)
-- `application-dev.yml` and `application-prod.yml` — `ddl-auto: validate` (fails on mismatch)
-- `db/dev-seed/dev-users.sql` — demo@cartwise.dev (USER) and admin@example.com (ADMIN), loaded dev-only
-- Test profile keeps `create-drop` and disables Flyway (schema built by Hibernate per-context, not migrated)
+Chapter 21 proved the test suite works — every test passes, the Docker guard is verified, and 95.4% of the backend is covered.
 
-## Why This Matters
+But there is a contract the test suite alone cannot enforce:
 
-### The Problem with `create-drop`
+> **"Does the deployed schema match what the code expects?"**
 
-In development, `ddl-auto: create-drop` feels safe — every boot is a clean slate. But it masks three classes of bugs:
+A developer adds a field to the `Product` entity on their laptop. Hibernate's `ddl-auto: create-drop` regenerates the schema on every boot, so it just works — silently, automatically, invisibly. They commit and push. On a server where the schema is frozen, that same field has nowhere to live. The application starts, a query runs, and it fails on a column that was never created.
 
-1. **Schema drift.** An entity change without a migration means the deployed schema never sees it. Queries work on dev (where Hibernate applied the change) but fail in prod (where the schema is frozen). The mismatch is invisible until production.
+That is the problem this chapter solves.
 
-2. **Data loss on deployment.** Schema migrations can be destructive — renaming a column means old data is lost. `create-drop` hides this cost; real migrations force you to think about it.
+The journey becomes:
 
-3. **Deployment ordering.** When the application starts, which happens first: Hibernate or Flyway? If Flyway runs first and creates tables, then Hibernate tries to regenerate them, you have a conflict. The test profile demonstrates the correct resolution.
+```text
+🧬 Entity Change
+   ↓
+📜 Write a Migration
+   ↓
+✅ Commit Both Together
+   ↓
+🚀 Deploy
+   ↓
+🗄️ Schema Applies
+   ↓
+🟢 Code Works
+```
 
-### The Solution
+The database stops being something Hibernate infers on the fly, and becomes something the team builds deliberately.
 
-Freeze the schema in version control. Every change — adding a column, creating an index, seeding data — lives in a migration. The schema is now:
-- Auditable (every change has a timestamp and description)
-- Reversible (down migrations, if needed, undo changes)
-- Deployable (prod starts with `ddl-auto: validate`, failing fast if an entity doesn't match the schema)
-- Testable (dev boots with fresh migrations, proving they work)
+---
 
-## Architecture
+# 🎯 Learning Objectives
 
-### Flyway
+By the end of this chapter, you will understand:
 
-Flyway is a schema versioning tool. It maintains a `flyway_schema_history` table that records which migrations have run. On startup, Flyway compares the history against the filesystem and runs anything new.
+- Why `ddl-auto: create-drop` cannot survive contact with a real deployment.
+- What Flyway actually does, and how it tracks what has already run.
+- Why the baseline migration was exported from a live database, not written by hand.
+- Why a functional index cannot be expressed by JPA's `@Index` annotation.
+- Why seed data for products lives in a migration, but seed data for users does not.
+- Why the test profile deliberately disables Flyway and keeps `create-drop`.
+- Why migrations, once deployed, must never be edited.
+- How `ddl-auto: validate` turns a silent schema mismatch into a loud boot failure.
+- What broke — and why — when `defer-datasource-initialization` was left `true`.
+- Why enum changes now require a migration, not just a Java edit.
+- How to prove, with real numbers, that an index is actually being used.
 
-**Version naming:** `V{number}__{description}.sql`
+---
 
-- `V1` — baseline (the initial schema)
-- `V2`, `V3`, ... — incremental changes
-- Must be in order; Flyway will not run V3 if V2 failed
-- Idempotent within a version (Flyway skips it if already applied) but not across versions (running V1 twice recreates the baseline if you dropped the schema)
+# 🧭 The Schema Lifecycle
 
-**Locations:**
-- Production migrations: `backend/src/main/resources/db/migration/`
-- Dev-only seed data: `backend/src/main/resources/db/dev-seed/`
+The complete migration journey after Chapter 22:
 
-### V1: Baseline
+```text
+Local Entity Change
+       │
+       ▼
+Write V{n}__description.sql
+       │
+       ▼
+Run Locally (mvn flyway:info / validate)
+       │
+       ▼
+Commit Migration + Entity Together
+       │
+       ▼
+Push
+       │
+       ▼
+Deploy → Flyway Applies → Hibernate Validates
+       │
+       ▼
+🟢 Boot Succeeds, or 🔴 Boot Fails Loudly
+```
 
-The initial schema, created by exporting Hibernate's DDL via `pg_dump --schema-only` and cleaning it up. Includes:
+A failed boot is now the safety net. Before this chapter, a mismatch failed silently — the app just ran with whatever schema Hibernate happened to build.
 
-- `products` (50 rows, seeded in V3)
-- `users` (2 rows, seeded in dev-seed/dev-users.sql)
-- `wishlists` (empty)
-- `comparisons` (empty)
-- Indexes: `idx_products_category`, `idx_products_price`
+---
 
-Column order matches Hibernate's output (grouped by type width) so future `pg_dump` diffs stay clean.
+# 🤔 create-drop vs Flyway
 
-### V2: Functional Index
+CartWise now has two schema strategies, used in different places on purpose.
 
-Creates `idx_products_lower_category`, the index that ProductSpecifications.java deferred:
+**`create-drop`** answers:
+
+> What schema do these entities imply, right now, from scratch?
+
+```text
+Boot → build schema from entities → run → shut down → drop everything
+```
+
+**Flyway + `validate`** answers:
+
+> Does this frozen, versioned schema still match what the code expects?
+
+```text
+Boot → read migration history → apply anything new → Hibernate checks, never builds
+```
+
+The differences that matter in practice:
+
+```text
+                  create-drop         Flyway + validate
+Schema source     Entities (live)     SQL files (frozen)
+Used in           test profile only   dev, prod
+Data survives     No — wiped          Yes — persists
+Drift caught      Never               At boot, immediately
+Editable history  N/A                 Never, once deployed
+```
+
+They are not competing strategies — they are two tools used deliberately in two different places, and mixing them in the same profile is the single most common way to break this chapter.
+
+---
+
+# 🗂️ Feature Structure
+
+Schema migrations live entirely inside:
+
+```text
+backend/src/main/resources/db/
+```
+
+The structure is:
+
+```text
+db/
+│
+├── migration/
+│   ├── V1__baseline.sql
+│   ├── V2__add_functional_index_lower_category.sql
+│   └── V3__seed_products.sql
+│
+└── dev-seed/
+    └── dev-users.sql
+```
+
+`migration/` is read in every environment. `dev-seed/` is read only when the `dev` profile is active, via `spring.sql.init.data-locations` — never bundled into the versioned schema history.
+
+---
+
+# 🧩 Migration Architecture
+
+This is the most important section of the chapter, because Flyway and Hibernate are **two systems that can both try to own the schema**, and letting them collide is the easiest way to misunderstand this chapter.
+
+### Layer 1 — Flyway (Schema Definition)
+
+*What does the schema actually look like?* Versioned, ordered, immutable once applied.
+
+```text
+db/migration/*.sql
+        ↓
+flyway_schema_history (tracks what ran)
+        ↓
+PostgreSQL schema (tables, indexes, constraints)
+```
+
+### Layer 2 — Hibernate (Schema Verification)
+
+*Does the code agree with what Flyway built?* Read-only, checked on every boot.
+
+```text
+@Entity classes
+     ↓
+ddl-auto: validate
+     ↓
+Compared against the live schema
+     ↓
+Match → boot continues
+Mismatch → boot fails
+```
+
+The split matters. Layer 1 is the single source of truth for structure. Layer 2 never writes to the schema in dev or prod — it only ever reads and compares. A common mistake is letting Hibernate use `create` or `update` alongside Flyway, which puts both layers in control of the same tables at once.
+
+---
+
+# 🔑 Why the Baseline Was Exported, Not Hand-Written
+
+`V1__baseline.sql` was not typed out from the entity definitions. It was produced this way:
+
+```text
+App boots with the old create-drop schema
+       ↓
+pg_dump --schema-only
+       ↓
+Cleaned up
+       ↓
+V1__baseline.sql
+```
+
+Hand-transcribing DDL from Java annotations invites small, easy-to-miss mistakes — a wrong column order, a forgotten constraint, a type that doesn't quite match what Hibernate actually emits. Exporting from a database Hibernate itself built guarantees V1 matches reality on day one, which is what a later schema diff (covered below) is able to prove.
+
+Column order in V1 matches Hibernate's own output — grouped by type width — specifically so that future `pg_dump` comparisons stay clean rather than showing a diff on ordering alone.
+
+---
+
+# 💾 What Is Actually in V1
+
+```sql
+products        50 rows, seeded by V3
+users            2 rows, seeded by db/dev-seed/dev-users.sql
+wishlists        empty
+comparisons      empty
+
+idx_products_category
+idx_products_price
+```
+
+Three properties fall out of this baseline:
+
+- It is the exact schema Hibernate was already building, captured once and frozen.
+- It carries no seed data of its own — V1 is structure only.
+- It is the file every future migration is written against, so getting it right on day one matters more than any migration that follows.
+
+---
+
+# 🧮 V2: The Functional Index
+
+`ProductSpecifications.java` had already documented a limitation before this chapter arrived:
+
+> "A plain B-tree index on category cannot satisfy `lower(category) = ?`… needs a functional index — which JPA's `@Index` cannot express. This is recorded as a known limitation."
 
 ```sql
 CREATE INDEX idx_products_lower_category ON products (lower(category));
 ```
 
-This index powers case-insensitive category filtering at scale. JPA's `@Index` annotation cannot express function-based indexes; SQL migrations can.
+Named `idx_products_lower_category` — matching the sibling indexes `idx_products_category` and `idx_products_price`, not `idx_product_lower_category`, because the table is `products`, plural, and the naming has to agree with what already exists.
 
-### V3: Seed Products
+`@Index` takes a `columnList` — plain column names only. `lower(category)` is an expression, not a column, and JPA has no annotation for that. V1 gave this index somewhere to finally live: SQL, not Java.
 
-Inserts 50 products across 7 categories. Rows 1–23 mirror `frontend/src/features/product/data/catalogue.ts` (same slugs, prices, ratings, stock status); rows 24–50 are invented to avoid guessing which seed data is canonical.
+---
 
-**Why not data.sql?** Spring's `data.sql` is loaded by `spring.sql.init`, which respects the `mode: never` setting in prod. Flyway has no such switch — a `V4__seed_users.sql` would apply everywhere, including prod, with hardcoded passwords in the repo. Users now live in `db/dev-seed/dev-users.sql`, loaded via `spring.sql.init.data-locations` in dev only.
+# 🌱 V3: Seed Products
 
-## Implementation Details
-
-### Pom.xml Changes
-
-Three dependencies added:
-
-```xml
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-flyway</artifactId>
-</dependency>
-<dependency>
-  <groupId>org.flywaydb</groupId>
-  <artifactId>flyway-database-postgresql</artifactId>
-</dependency>
+```text
+50 products, 7 categories, 30 brands
+Price range: ₹5,999 – ₹229,999
+7 out of stock, 12 undiscounted
 ```
 
-And the Maven plugin for CLI commands (`mvn flyway:info`, `mvn flyway:validate`):
-
-```xml
-<plugin>
-  <groupId>org.flywaydb</groupId>
-  <artifactId>flyway-maven-plugin</artifactId>
-  <version>12.4.0</version>
-  <configuration>
-    <url>jdbc:postgresql://localhost:5432/cartwise_dev</url>
-    <user>cartwise</user>
-    <password>cartwise</password>
-  </configuration>
-</plugin>
+```text
+Accessories   8 products    ₹8,999  – ₹21,999
+Earbuds       6 products    ₹5,999  – ₹26,999
+Headphones    5 products    ₹5,999  – ₹32,999
+Laptop        8 products    ₹74,999 – ₹199,999
+Smartphone   11 products    ₹24,999 – ₹129,999
+Smartwatch    6 products    ₹14,999 – ₹99,990
+Television    6 products    ₹54,999 – ₹229,999
 ```
 
-Note: The plugin must be configured with explicit JDBC credentials; it does not read `application-dev.yml`.
+Rows 1–23 mirror `frontend/src/features/product/data/catalogue.ts` — same slugs, same prices, same ratings, and `stockCount: 0` mapped to `in_stock = false`. Rows 24–50 are new, and deliberately grouped separately in the file so nobody looking at it later has to guess which rows are the "real" original seed and which were invented to round the catalogue out to 50.
 
-### application-dev.yml
+---
+
+# 🚫 Why the Two Seed Users Did Not Become a Migration
+
+This is the design decision worth flagging hardest in the whole chapter.
+
+`data.sql` was safe in production for exactly one reason: `spring.sql.init.mode: never` meant it simply never ran there. Flyway has no equivalent switch.
+
+```text
+data.sql          respects spring.sql.init.mode: never
+V4__seed_users.sql   would run in EVERY environment, including prod
+```
+
+A `V4__seed_users.sql` would have published an ADMIN account — with its password sitting in the repository — to every environment the migrations ever touched, prod included. Instead, the two users live here:
+
+```text
+db/dev-seed/dev-users.sql
+    demo@cartwise.dev   → USER
+    admin@example.com   → ADMIN
+```
+
+Loaded only when `spring.sql.init.data-locations` points at it, which is only true under the dev profile. Verified present after boot by querying the `users` table directly — not assumed from the file existing.
+
+---
+
+# ⚙️ application-dev.yml
 
 ```yaml
 spring:
@@ -129,11 +298,11 @@ spring:
       data-locations: classpath:db/dev-seed/dev-users.sql
 ```
 
-- `ddl-auto: validate` — fails at boot if any entity does not match the schema
-- `flyway.enabled: true` — runs V1, V2, V3 on startup
-- `data-locations` — loads dev user fixtures after migrations
+`ddl-auto` changed from `create-drop` to `validate`. The reasoning is stated directly in the file: entities are no longer the schema; an entity change without a matching migration is now a laptop startup failure instead of a deploy failure. Catching the mistake on a developer's machine, immediately, beats catching it three environments later.
 
-### application-prod.yml
+---
+
+# 🛫 application-prod.yml
 
 ```yaml
 spring:
@@ -148,11 +317,11 @@ spring:
       mode: never
 ```
 
-Same as dev except:
-- No `db/dev-seed` location (seed data is v3, not loaded separately)
-- `sql.init.mode: never` (no additional fixture loading)
+Already correct before this chapter — `ddl-auto: validate` was set in prod from the start. What changed is that Flyway is now the thing actually building the schema `validate` checks against, rather than nothing.
 
-### application-test.yml
+---
+
+# 🧪 application-test.yml
 
 ```yaml
 spring:
@@ -163,202 +332,204 @@ spring:
       ddl-auto: create-drop
 ```
 
-Tests keep `create-drop` and disable Flyway. Why?
+This is the file's own header, and it says the quiet part out loud:
 
-Hibernate builds the schema from entities (`@DataJpaTest` does this automatically). Running both migrations and entity-based DDL would mean:
-1. V1 creates the tables
-2. Hibernate's `create-drop` drops and recreates them
-3. `flyway_schema_history` claims migrations are applied to a schema Flyway no longer built
+> "Chapter 22 arrived and did NOT make the swap this header used to promise. That is a decision, and reversing a written prediction deserves the reasoning rather than a quiet edit."
 
-This breaks the test contract: a repository test failing because a seed migration inserted 50 products it didn't ask for is no longer testing the thing it asserts.
+The suite keeps `create-drop` and turns Flyway **off**, explicitly:
 
-**The tradeoff:** Repository tests run against a schema Hibernate generated from the entities, not the schema production gets from migrations. The functional index `idx_products_lower_category` does not exist in the test database (because `@Index` cannot express it). This is documented in ProductSpecifications.java and guarded by `ddl-auto: validate` in dev and prod — if entities and migrations drift, the app fails to start, which is a louder signal than a test.
-
-## Migration Safety
-
-### Order Matters
-
-Flyway applies migrations in version order. If V2 depends on V1 (e.g., adding a column to a table V1 created), they must be run in order. Flyway checks this automatically and refuses to run V3 if V2 failed.
-
-### Idempotency Within a Version
-
-Once a migration is applied (recorded in `flyway_schema_history`), Flyway will not run it again, even if the file changes. This is by design — migrations describe change, not state. If you need to modify applied data, write a new migration (V4, V5, ...).
-
-### Immutability in Production
-
-Never edit a migration that has been deployed. If V2 is live and you realize it has a typo, you cannot edit it. You must write V4 to fix the mistake. This keeps the audit trail intact.
-
-## Data Seeding Strategy
-
-### V3: Canonical Seed
-
-The 50 products in V3 are the canonical seed for development and production. They are versioned with the schema because they are the minimum viable dataset the application expects to exist.
-
-### db/dev-seed/dev-users.sql: Developer Fixture
-
-The demo and admin users live in `db/dev-seed/dev-users.sql` and are loaded only in dev via `spring.sql.init.data-locations`. They are not in V3 because:
-
-1. Passwords should never be in production migrations
-2. Dev users (demo@cartwise.dev) are artifacts of local development, not production data
-3. Production admins are created by ops, not embedded in code
-
-### Test Fixtures: Belong to the Test
-
-Repository tests create their own fixture data in the test method. If a test needs 5 specific products, it inserts them; if it needs none, it inserts none. This makes the test self-contained — reading the test tells you exactly what data it depends on.
-
-## Known Limitations
-
-### No Functional Indexes in JPA
-
-JPA's `@Index` takes a `columnList` (e.g., `@Index(name = "idx_foo", columnList = "category")`). It cannot express expressions like `lower(category)`. The functional index lives only in V2, not in the entity:
-
-```java
-@Entity
-@Table(name = "products", indexes = {
-    @Index(name = "idx_products_category", columnList = "category"),
-    @Index(name = "idx_products_price", columnList = "price")
-    // idx_products_lower_category is NOT here; it lives in V2
-})
-public class Product { ... }
+```text
+spring.flyway.enabled: false
 ```
 
-Any test asserting on this index must be marked as a known limitation. In practice, the index is proved by EXPLAIN ANALYZE on real data.
+Not a default being restated — Boot's actual default is `true`, and `flyway-core` sits on the test classpath at `runtime` scope. Leaving this line out would mean Flyway silently auto-configures itself in every test context: V1 creates the tables, then `create-drop` drops and rebuilds them underneath it, leaving `flyway_schema_history` claiming migrations are applied to a schema Flyway no longer actually built.
 
-### Enum Constraints Must Be Hand-Maintained
+**The limitation this creates, stated plainly:** repository tests run against a schema Hibernate generated from the entities — not the schema a real deployment gets from `db/migration`. Concretely, `idx_products_lower_category` does not exist in the test database, because `@Index` cannot express it and Hibernate is what builds this particular schema. Any test asserting on that index would be asserting about something that exists nowhere in this profile.
 
-Hibernate used to regenerate the check constraint on the `role` column when an enum value was added. With a frozen schema, the constraint is static:
+**What guards the gap instead:** `ddl-auto: validate` in dev and prod. If V1 and the entities ever disagree, the application fails to start on a developer's laptop — a louder signal than a test would give, and one checked on every single dev boot rather than once per CI run.
+
+---
+
+# 🧯 What I Believe Is Now Worse
+
+Two things, stated deliberately, because a chapter that only lists wins is not trustworthy.
+
+### a) The `defer-datasource-initialization` Footgun
+
+This one is real, and it was hit for real, not theorized.
+
+```text
+spring.jpa.defer-datasource-initialization: true
+       ↓
+EntityManagerFactory registers itself as a database initializer
+       ↓
+configureOtherInitializersToDependOnJpaInitializers()
+makes every other initializer — Flyway included — depend on it
+       ↓
+Hibernate runs FIRST
+       ↓
+validate checks an unmigrated, empty database
+       ↓
+Boot dies: "Schema validation: missing table [comparisons]"
+```
+
+The symptom names nothing relevant. Flyway's auto-configuration matches, its beans get created, `spring.flyway.*` binds correctly — and yet zero Flyway log lines appear, because it never got the chance to run before Hibernate already failed. Reading `JpaDatabaseInitializerDetector` directly (from bytecode) is what actually explained this — not the stack trace, which just points at a missing table with no context about why it's missing.
+
+Accepted, and set to `false`, because the flag's only remaining job was ordering `data.sql`, which no longer exists in this codebase.
+
+### b) `users_role_check` Is Now Hand-Maintained
+
+Hibernate used to regenerate the enum's check constraint on every boot automatically. Adding a value to `Role` now requires a migration, or every insert of the new role fails at the database level, silently, until someone tries it.
+
+```text
+Before   enum change in Java  →  Hibernate updates the constraint automatically
+After    enum change in Java  →  constraint unchanged  →  new value rejected
+                               →  must also write a migration
+```
+
+That is the honest cost of freezing the schema. It buys auditability and predictability, and it spends automatic convenience to pay for it.
+
+**Also worth stating plainly:** dev data now persists across restarts. Stopping the backend no longer resets the database. That is the entire point of the chapter, but it changes the day-to-day workflow, and any stored setup notes that said "re-seed after every restart" are now wrong and need updating.
+
+---
+
+# 📋 Verification Performed
+
+### `mvn flyway:info`
+
+```text
+Schema version: 3
+
+Category    Version  Description                           State
+Versioned   1        baseline                               Success
+Versioned   2        add functional index lower category    Success
+Versioned   3        seed products                          Success
+```
+
+### `mvn flyway:validate`
+
+```text
+Successfully validated 3 migrations.
+```
+
+### Fresh Database Test
+
+```bash
+DROP DATABASE cartwise_dev;
+CREATE DATABASE cartwise_dev OWNER cartwise;
+```
+
+Then boot, and read the logs in order:
+
+```text
+DbValidate  : Successfully validated 3 migrations
+JdbcTableSchemaHistory : Creating Schema History table
+DbMigrate   : Migrating schema "public" to version "1 - baseline"
+DbMigrate   : Migrating schema "public" to version "2 - add functional index lower category"
+DbMigrate   : Migrating schema "public" to version "3 - seed products"
+DbMigrate   : Successfully applied 3 migrations to schema "public", now at version v3
+Started CartwiseBackendApplication in 5.263 seconds
+```
+
+Flyway completes fully before Hibernate ever initializes — proving the boot order this whole chapter depends on. `\d products` afterward confirms all 13 columns and the functional index are present.
+
+### Test Suite
+
+```text
+Tests run: 313, Failures: 0, Errors: 0, Skipped: 0
+```
+
+`Skipped: 0` matters specifically — it confirms the Testcontainers repository tests genuinely ran against a real PostgreSQL container, not that Docker was unavailable and they were quietly skipped.
+
+### Index Usage Proof
+
+At 50 rows — the actual seed size — the planner correctly chooses a sequential scan:
+
+```text
+Seq Scan on products  (actual time=0.015..0.041 rows=11)
+Execution Time: 0.087 ms
+```
+
+This is not a bug. At this scale a sequential scan genuinely is cheaper. To prove the index earns its place, 50,000 synthetic rows were loaded and analyzed:
+
+```text
+Bitmap Heap Scan on products
+  ->  Bitmap Index Scan on idx_products_lower_category
+Execution Time: 2.270 ms
+```
+
+Then the same query with the index forcibly disabled:
+
+```text
+Seq Scan on products
+  Rows Removed by Filter: 49039
+Execution Time: 18.104 ms
+```
+
+**2.27 ms vs 18.10 ms — roughly 8×.** The synthetic rows were deleted afterward; the table is back to 50.
+
+### Schema Diff
+
+`pg_dump` of both the Flyway-built schema and a Hibernate-built schema, normalized and diffed. The only difference:
 
 ```sql
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('USER', 'ADMIN'));
+CREATE INDEX idx_products_lower_category ON products USING btree (lower((category)::text));
 ```
 
-Adding a new role requires editing this constraint in a migration. Forgetting to do so means inserts of the new role fail with a constraint violation.
+Exactly what should differ, and nothing else — which is the actual proof that V1 is a faithful baseline.
 
-### Data Persists Across Restarts
+---
 
-Before Chapter 22, `ddl-auto: create-drop` reset the database on every boot. Dev data now persists. If you want a fresh database, you must:
+# 🌟 Why This Chapter Matters
 
-```bash
-psql -U cartwise -d cartwise_dev -c "DROP DATABASE cartwise_dev; CREATE DATABASE cartwise_dev OWNER cartwise;"
+Every chapter before this one treated the database as something that just existed, generated fresh from whatever the entities happened to say. This is the first chapter where the database became something the team is responsible for *evolving*, deliberately, with a paper trail.
+
+```text
+Identity over inference      → this chapter's whole premise
+Explicit over automatic      → validate instead of create-drop
+Immutable history            → migrations, once deployed, never edited
+Proof over assumption        → EXPLAIN ANALYZE, not "it should use the index"
+Honest tradeoffs             → test schema gap, stated and guarded, not hidden
 ```
 
-Then boot the app to re-run all migrations.
+It is also the first chapter where a real, unplanned bug (`defer-datasource-initialization`) got hit, diagnosed from bytecode rather than a helpful error message, and fixed — which is closer to what schema work actually looks like in production than any of the chapters that came before it.
 
-## Common Pitfalls
+---
 
-### Forgetting @ActiveProfiles("test")
+# 📌 Key Takeaways
 
-A test that lacks `@ActiveProfiles("test")` loads the `dev` profile by default (from `spring.profiles.default`). If your machine has `cartwise_dev` running, the test passes — against your real data. Worse, `ddl-auto: create-drop` then drops it on startup.
+After Chapter 22:
 
-Always include `@ActiveProfiles("test")` on any test using a database.
+- `ddl-auto: create-drop` no longer runs in dev or prod — only in tests, where it's the correct and intentional choice.
+- V1 is an exported baseline, not a hand-written guess at what the entities imply.
+- V2 exists because JPA's `@Index` cannot express a functional index like `lower(category)`.
+- V3 seeds 50 products; the first 23 are canonical, mirrored from the frontend catalogue.
+- Seed users live outside any migration entirely, because Flyway has no production-safe switch to skip them.
+- The test profile disables Flyway on purpose — running both would corrupt `flyway_schema_history`.
+- `ddl-auto: validate` is what guards the gap between test schema and production schema.
+- Migrations are immutable once deployed — mistakes are fixed with a new migration, never an edit.
+- `defer-datasource-initialization` had to become `false`, for a subtle and specific reason involving initializer ordering.
+- Enum changes now require a migration alongside the Java change, not instead of it.
+- The functional index's value was proven with real numbers at real scale, not assumed from its presence in the schema.
 
-### Mixing Flyway and Hibernate DDL
+---
 
-If `flyway.enabled: true` and `ddl-auto: create` (not validate), Flyway runs first and creates tables, then Hibernate tries to regenerate them. This creates a `flyway_schema_history` that Flyway no longer owns. Always pair Flyway with `ddl-auto: validate` in dev/prod.
+# 🎯 Chapter Outcome
 
-### Editing Applied Migrations
+The CartWise database is now:
 
-Once a migration is deployed, do not edit it. Write a new migration instead. Editing a deployed migration breaks the audit trail and can cause inconsistency between environments.
-
-### Hardcoding Credentials in Plugin Config
-
-The Flyway Maven plugin config has explicit JDBC credentials:
-
-```xml
-<configuration>
-  <url>jdbc:postgresql://localhost:5432/cartwise_dev</url>
-  <user>cartwise</user>
-  <password>cartwise</password>
-</configuration>
+```text
+🗄️ Frozen Schema
+     ↓
+📜 Versioned in Git
+     ↓
+🔍 Validated on Every Boot
+     ↓
+🧯 Fails Loudly, Not Silently
+     ↓
+🏆 Deployable With Confidence
 ```
 
-This is acceptable for dev and CI (where the database is local or ephemeral). For production migrations, use environment variables or Secrets Manager, never embed credentials in pom.xml.
+The database stopped being inferred and started being built. Every future chapter that touches the schema now has a place to write that change down — and a way to prove, before deploying, that the change actually matches the code.
 
-## Testing Strategy
-
-### Unit Tests (No Context)
-
-Service and utility tests use mocks. They do not touch the database and are unaffected by schema changes.
-
-### Repository Tests (@DatabaseTest)
-
-These run against a real PostgreSQL container with a Hibernate-generated schema. They verify query behavior without testing the migration pipeline itself. Flyway is disabled; the schema comes from `@DataJpaTest` + entities.
-
-### Integration Tests (Full Context)
-
-`CartwiseBackendApplicationTests.contextLoads()` is the one test that exercises the full boot path, including Flyway. It runs with:
-
-```java
-@SpringBootTest
-@Import(PostgresTestContainerConfig.class)
-@ActiveProfiles("test")
-@RequiresDocker
-```
-
-This context starts Flyway, which runs V1, V2, V3. If any migration fails, the test fails. If entities don't validate against the schema, the test fails. This is your canary for deployment readiness.
-
-### Verification in Development
-
-After pulling new migrations, boot the app:
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=dev"
-```
-
-Watch the logs for Flyway output:
-
-```
-o.f.core.internal.command.DbValidate : Successfully validated 3 migrations
-o.f.c.i.s.JdbcTableSchemaHistory     : Creating Schema History table ...
-o.f.core.internal.command.DbMigrate  : Migrating schema "public" to version "1 - baseline"
-o.f.core.internal.command.DbMigrate  : Migrating schema "public" to version "2 - add functional index lower category"
-o.f.core.internal.command.DbMigrate  : Migrating schema "public" to version "3 - seed products"
-o.f.core.internal.command.DbMigrate  : Successfully applied 3 migrations to schema "public", now at version v3
-```
-
-If you see `ERROR`, stop and fix the migration before proceeding.
-
-## What Improved
-
-### Schema is Auditable
-
-Every change to the database lives in version control with a timestamp and description. You can trace why a column exists or when an index was added. `git log db/migration/` is now the source of truth for schema history.
-
-### Deployments Are Predictable
-
-Prod boots with `ddl-auto: validate`. If an entity was changed without a matching migration, the app refuses to start. This catches mistakes before they reach production. A passing boot is proof that entities and schema are in sync.
-
-### Development Is Safer
-
-Dev boots with `ddl-auto: validate` too. Any entity change requires a migration. Forgetting the migration means your laptop fails to start the app, not silently diverges from prod.
-
-### Testing Is Honest
-
-The test suite no longer masks schema drift. Tests that pass are tests that would work in prod. Tests that fail due to missing migrations fail in dev first, where they're cheap to fix.
-
-## What Got Worse
-
-### Data Persists Across Restarts
-
-Developers used to get a clean database on every boot. Now stopping and starting the app preserves data. To reset:
-
-```bash
-psql -U cartwise -d cartwise_dev -c "DROP DATABASE cartwise_dev; CREATE DATABASE cartwise_dev OWNER cartwise;"
-mvn spring-boot:run
-```
-
-This is a feature in production (data durability) but a friction point in development. Accept it or automate it with a pre-boot script.
-
-### Enum Changes Require Migrations
-
-Adding a new role to the `Role` enum now requires a migration to update the check constraint. Forgetting it means inserts fail. The entity change is incomplete without the migration.
-
-### Migrations Are Immutable
-
-Once a migration is deployed, you cannot edit it. Writing migrations carefully becomes important. A typo in V2 means V3 to fix it, not editing V2 retroactively. This is correct behavior, but it demands more attention.
-
-## Next Steps
-
-The schema is now frozen and versioned. Chapter 23 will wire the frontend to real API endpoints (wishlist, compare) and unify duplicated components. Chapter 24 will harden production deployments with rate limiting, Docker image builds, and CI/CD. Chapter 25 will document the application and conduct a security audit.
-
-The database is ready to evolve. Every change now has a trail.
+# 🔌 Chapter 23 — Finish Wiring & Consolidate
