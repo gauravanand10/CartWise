@@ -17,6 +17,7 @@ export default function RecentlyViewed() {
                     accentClass="text-slate-500"
                     title="Recently viewed"
                     ctaLabel="Full history"
+                    ctaTo="/browse"
                 />
             </Reveal>
 

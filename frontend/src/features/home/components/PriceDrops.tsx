@@ -28,6 +28,7 @@ export default function PriceDrops() {
                     title="Biggest price drops"
                     subtitle="Ranked by how far each product has fallen below its usual price."
                     ctaLabel="All price drops"
+                    ctaTo="/browse?sort=price-asc"
                 />
             </Reveal>
 

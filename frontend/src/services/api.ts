@@ -196,6 +196,29 @@ export interface ApiProduct {
     inStock: boolean;
     /** `ProductCardModel` calls this `image`. Null when there is no image. */
     imageUrl: string | null;
+
+    /*
+     * Chapter 24 — image provenance. Openverse serves openly-licensed photography, and the CC
+     * licences it indexes require attribution as a condition of use, so these arrive attached to
+     * the product rather than being fetched separately. A client that renders `imageUrl` without
+     * `imageAttribution` is using the work outside its licence.
+     */
+
+    /** Credit line to display beside the image. Null when `imageUrl` is a placeholder. */
+    imageAttribution: string | null;
+    /** Licence code, e.g. `"by-sa"`. */
+    imageLicense: string | null;
+    /** Licence deed URL. */
+    imageLicenseUrl: string | null;
+    /** The provider's page for the original work. */
+    imageSourceUrl: string | null;
+    /**
+     * True when `imageUrl` is the seeded placehold.co stand-in rather than a real photograph.
+     *
+     * Sent by the server rather than inferred from a null here, so "no photo was found for this
+     * product" stays distinguishable from "this field has not been populated yet".
+     */
+    imagePlaceholder: boolean;
 }
 
 /** One saved product, with the product embedded. */

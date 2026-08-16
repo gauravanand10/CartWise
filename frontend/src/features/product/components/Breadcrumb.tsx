@@ -34,9 +34,27 @@ export default function Breadcrumb({ category, name }: BreadcrumbProps) {
                     <ChevronRight size={14} />
                 </li>
 
+                {/*
+                    Chapter 24 repointed this from `/search?category=` to
+                    `/browse?category=`.
+
+                    Two things were wrong with the old target. SearchPage read
+                    no URL parameters at all, so the category was silently
+                    dropped and the crumb landed on an unfiltered page — the
+                    trail claimed to walk up to "all Smartphones" and delivered
+                    the generic search screen. And /search is served by a
+                    20-product mock array, while the product the crumb belongs
+                    to came from the live catalogue of 50, so even a working
+                    filter would have walked from real data into mock data.
+
+                    /browse reads `?category=` already and is backed by the
+                    same API as this page. The slug is lowercased because that
+                    is the form `GET /api/categories` publishes and the
+                    catalogue filter compares against.
+                */}
                 <li>
                     <Link
-                        to={`/search?category=${encodeURIComponent(category)}`}
+                        to={`/browse?category=${encodeURIComponent(category.toLowerCase())}`}
                         className={linkClass}
                     >
                         {category}

@@ -18,6 +18,7 @@ export default function RecommendedProducts() {
                     title="Recommended for you"
                     subtitle="Based on what you've viewed and compared so far."
                     ctaLabel="Refine picks"
+                    ctaTo="/browse"
                 />
             </Reveal>
 

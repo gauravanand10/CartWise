@@ -3,14 +3,42 @@ import { Link } from "react-router-dom";
 
 import Container from "./Container";
 
+/*
+ * ---------------------------------------------------------------------------
+ * CHAPTER 24 — where these used to point.
+ *
+ * Fifteen links, and eleven of them went nowhere useful. Six ("About
+ * CartWise", "How scoring works", "Careers", "Contact", "Privacy", "Terms")
+ * pointed at "/" — clicking them reloaded the homepage you were probably
+ * already on, which is a dead link wearing a valid href. Five more pointed at
+ * a bare "/search", so "Flash deals", "Trending now" and "Shop by brand" all
+ * landed on the same unfiltered page and none of them delivered what its label
+ * promised.
+ *
+ * The Shop column now points into /browse with a real query behind each label,
+ * because /browse reads category, brand, price and sort from the URL and is
+ * backed by the live catalogue.
+ *
+ * The Company column is the honest problem. There is no about page, no
+ * careers page, no contact page and no privacy or terms page anywhere in this
+ * application, and writing five of them is a chapter of its own rather than a
+ * navigation fix. Those links are therefore REMOVED rather than repointed:
+ * a link to a page that does not exist cannot be fixed by aiming it somewhere
+ * unrelated, and a footer column of four links that all silently land on the
+ * catalogue is more dishonest than a footer that does not claim to have them.
+ * See the chapter report — this is deferred scope, stated rather than hidden.
+ * ---------------------------------------------------------------------------
+ */
 const linkColumns = [
     {
         heading: "Shop",
         links: [
-            { label: "All categories", to: "/search" },
-            { label: "Flash deals", to: "/search" },
-            { label: "Trending now", to: "/search" },
-            { label: "Shop by brand", to: "/search" },
+            { label: "All categories", to: "/browse" },
+            // No "discount" filter exists server-side; cheapest-first is the
+            // closest honest reading of "deals" the catalogue can answer.
+            { label: "Today's deals", to: "/browse?sort=price-asc" },
+            { label: "Top rated", to: "/browse?sort=rating-desc" },
+            { label: "New arrivals", to: "/browse?sort=name-asc" },
         ],
     },
     {
@@ -18,17 +46,8 @@ const linkColumns = [
         links: [
             { label: "Compare products", to: "/compare" },
             { label: "Wishlist", to: "/wishlist" },
-            { label: "Price alerts", to: "/wishlist" },
-            { label: "AI recommendations", to: "/search" },
-        ],
-    },
-    {
-        heading: "Company",
-        links: [
-            { label: "About CartWise", to: "/" },
-            { label: "How scoring works", to: "/" },
-            { label: "Careers", to: "/" },
-            { label: "Contact", to: "/" },
+            { label: "Search", to: "/search" },
+            { label: "Browse the catalogue", to: "/browse" },
         ],
     },
 ];
@@ -152,7 +171,10 @@ export default function Footer() {
                 {/* 1 → 2 (link columns share a row from `sm`) → 4. The brand
                     blurb keeps a wider track only once there's room at `lg`. */}
 
-                <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12 lg:mt-16 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
+                {/* Two link columns now rather than three — see the note above
+                    the Company column's removal. */}
+
+                <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12 lg:mt-16 lg:grid-cols-[1.4fr_repeat(2,1fr)]">
 
                     <div className="max-w-xs">
                         <Link
@@ -224,15 +246,15 @@ export default function Footer() {
                         © 2026 CartWise. Built with React, TypeScript and Tailwind CSS.
                     </p>
 
-                    <div className="flex gap-6">
-                        <Link to="/" className="transition-colors hover:text-white">
-                            Privacy
-                        </Link>
-
-                        <Link to="/" className="transition-colors hover:text-white">
-                            Terms
-                        </Link>
-                    </div>
+                    {/*
+                        "Privacy" and "Terms" both linked to "/" and are gone
+                        for the same reason as the Company column: neither page
+                        exists. These two are worth calling out separately
+                        because a footer legal link is the one place a dead
+                        link is actively misleading rather than merely useless
+                        — it implies a policy has been published. Restore them
+                        when there is something real to link to.
+                    */}
                 </div>
 
             </Container>

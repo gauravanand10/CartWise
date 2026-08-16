@@ -2,14 +2,17 @@ package com.cartwise.controller;
 
 import com.cartwise.common.dto.ChangeRoleRequest;
 import com.cartwise.common.dto.UserDto;
+import com.cartwise.service.ProductImageService;
 import com.cartwise.service.UserAdminService;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -55,9 +58,42 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final UserAdminService userAdminService;
+    private final ProductImageService productImageService;
 
-    public AdminController(UserAdminService userAdminService) {
+    public AdminController(
+            UserAdminService userAdminService,
+            ProductImageService productImageService) {
         this.userAdminService = userAdminService;
+        this.productImageService = productImageService;
+    }
+
+    /**
+     * {@code POST /api/admin/products/images} — fetch real photographs for the catalogue.
+     *
+     * <p>On demand rather than scheduled, and that choice is worth defending because a
+     * {@code @Scheduled} job is the more obvious answer. Product photographs are not time-varying
+     * data. A photograph of a smartphone does not become stale the way a price does, so a job that
+     * re-ran nightly would spend upstream quota to replace correct images with different correct
+     * images, and would do it on every deployed instance at once. This is a backfill: something an
+     * operator runs when the catalogue gains products, not a clock-driven refresh.
+     *
+     * <p>Idempotent. Products that already carry a photograph are skipped, so calling this twice
+     * costs nothing the second time and a run interrupted by rate limiting resumes where it stopped.
+     * {@code ?force=true} overrides that and re-photographs everything.
+     *
+     * <p>Gated as ADMIN by the class-level {@code /api/admin} prefix, like everything else here.
+     * That matters more for this route than for the others: it spends a third party's rate limit,
+     * so an anonymous caller able to invoke it could exhaust the daily allowance in a minute.
+     *
+     * <p>200 with a {@link ProductImageService.BackfillResult} describing what happened, including
+     * the slugs of any products the image search could not illustrate. Those are reported rather
+     * than hidden — they keep their placeholder and the catalogue API continues to mark them
+     * {@code imagePlaceholder: true}.
+     */
+    @PostMapping("/products/images")
+    public ResponseEntity<ProductImageService.BackfillResult> backfillImages(
+            @RequestParam(defaultValue = "false") boolean force) {
+        return ResponseEntity.ok(productImageService.backfill(force));
     }
 
     /**

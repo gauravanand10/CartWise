@@ -37,6 +37,16 @@ export function toCardModel(product: ApiProduct): ProductCardModel {
         // honest value for "no image" — it fails the load and gets the fallback.
         image: product.imageUrl ?? "",
 
+        // Chapter 24. Carried through with the URL rather than dropped here,
+        // because the licence that permits displaying the image is the same
+        // licence that requires this credit — an adapter that kept one and
+        // discarded the other would produce a card that cannot legally render
+        // its own picture. Null becomes undefined for the same reason as
+        // originalPrice above: the model marks these optional, not nullable.
+        imageAttribution: product.imageAttribution ?? undefined,
+        imageLicenseUrl: product.imageLicenseUrl ?? undefined,
+        imageSourceUrl: product.imageSourceUrl ?? undefined,
+
         // Deliberately absent. `aiScore` has no column behind it, and the card
         // hides its badge when the field is undefined. Inventing a number here
         // would put a fabricated score on every product on the browse page.

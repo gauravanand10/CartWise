@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import type { Brand } from "../../types/home";
 
@@ -9,14 +10,21 @@ interface BrandCardProps {
 /**
  * A brand tile that degrades to a gradient monogram when the logo file is
  * missing — which is currently every brand, since the asset folders are empty.
+ *
+ * Chapter 24: this was a `<button type="button">` with no `onClick`. A grid of
+ * eight brand tiles under a "Shop by brand" heading, none of which did
+ * anything. It is now a link into `/browse?brand=`, which the catalogue API
+ * already filters on — the brand names in this data ("Apple", "Samsung", …)
+ * are the same strings the products table stores, and the server compares them
+ * case-insensitively.
  */
 export default function BrandCard({ brand }: BrandCardProps) {
     const { name, logo, monogram, products, gradient } = brand;
     const [logoFailed, setLogoFailed] = useState(false);
 
     return (
-        <button
-            type="button"
+        <Link
+            to={`/browse?brand=${encodeURIComponent(name)}`}
             className="
                 group
                 flex
@@ -104,6 +112,6 @@ export default function BrandCard({ brand }: BrandCardProps) {
                     {products}
                 </span>
             </span>
-        </button>
+        </Link>
     );
 }

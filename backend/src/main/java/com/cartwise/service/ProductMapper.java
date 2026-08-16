@@ -32,6 +32,20 @@ final class ProductMapper {
      * special-case.
      */
     static ProductDto toDto(Product product) {
+        /*
+         * Chapter 24. "Is this a placeholder?" is defined as "was no attribution recorded", and it
+         * is defined in exactly one place — here — rather than being re-derived by each consumer.
+         *
+         * Attribution is the right field to test, not imageUrl. Every product has an imageUrl,
+         * because V3 seeded every row with a placehold.co URL, so its presence says nothing. An
+         * attribution string is only ever written by the Openverse backfill, alongside a real
+         * photograph, and the two are set together by Product.applyImage — so attribution present
+         * means "a licensed photograph is here and here is how to credit it", and absent means
+         * "this is the seeded stand-in".
+         */
+        boolean placeholder = product.getImageAttribution() == null
+                || product.getImageAttribution().isBlank();
+
         return new ProductDto(
                 product.getId(),
                 product.getSlug(),
@@ -43,6 +57,11 @@ final class ProductMapper {
                 product.getRating(),
                 product.getReviewCount(),
                 product.isInStock(),
-                product.getImageUrl());
+                product.getImageUrl(),
+                product.getImageAttribution(),
+                product.getImageLicense(),
+                product.getImageLicenseUrl(),
+                product.getImageSourceUrl(),
+                placeholder);
     }
 }

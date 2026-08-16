@@ -18,6 +18,7 @@ export default function TrendingProducts() {
                     title="What everyone's comparing"
                     subtitle="The most-viewed products on CartWise in the last 24 hours."
                     ctaLabel="See all"
+                    ctaTo="/browse?sort=rating-desc"
                 />
             </Reveal>
 

@@ -1,14 +1,43 @@
-import { Mic, Search } from "lucide-react";
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Compact search field for the sticky header.
  *
  * Deliberately quieter than the homepage hero search — this one is a
  * persistent utility, not the page's headline action.
+ *
+ * Chapter 24 gave it a destination. Until then it was a bare <input> with no
+ * form, no handler and no router access — the one search affordance visible on
+ * every page of the app, and typing into it and pressing Enter did nothing.
+ * It now submits to `/search?q=`, which SearchPage seeds its query from.
+ *
+ * A <form> rather than an onKeyDown on the input: Enter-to-submit is then the
+ * browser's behaviour rather than something re-implemented, and the field gets
+ * the mobile keyboard's "Search" key for free.
  */
 export default function SearchBar() {
+    const [value, setValue] = useState("");
+    const navigate = useNavigate();
+
+    function onSubmit(event: React.FormEvent) {
+        event.preventDefault();
+
+        // An empty search would land on /search with `?q=`, which reads as a
+        // search for nothing rather than the page's own idle state.
+        const trimmed = value.trim();
+        if (!trimmed) return;
+
+        navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    }
+
     return (
-        <div className="flex w-full items-center justify-center">
+        <form
+            onSubmit={onSubmit}
+            role="search"
+            className="flex w-full items-center justify-center"
+        >
 
             <div
                 className="
@@ -34,7 +63,9 @@ export default function SearchBar() {
                 />
 
                 <input
-                    type="text"
+                    type="search"
+                    value={value}
+                    onChange={(event) => setValue(event.target.value)}
                     placeholder="Search phones, laptops, audio…"
                     aria-label="Search products"
                     className="
@@ -60,9 +91,15 @@ export default function SearchBar() {
                     "
                 />
 
+                {/*
+                    Was a microphone labelled "Search by voice" with no handler
+                    and no speech recognition behind it — an affordance for a
+                    capability the app does not have. Replaced with the submit
+                    control the form actually needs rather than left dead.
+                */}
                 <button
-                    type="button"
-                    aria-label="Search by voice"
+                    type="submit"
+                    aria-label="Search"
                     className="
                         absolute
                         right-2
@@ -83,10 +120,10 @@ export default function SearchBar() {
                         focus-visible:ring-blue-500
                     "
                 >
-                    <Mic size={16} />
+                    <Search size={16} />
                 </button>
             </div>
 
-        </div>
+        </form>
     );
 }

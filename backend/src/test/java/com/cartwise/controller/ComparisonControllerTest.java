@@ -58,8 +58,13 @@ class ComparisonControllerTest extends ControllerTestBase {
     private static ComparisonItemDto item(int position) {
         return new ComparisonItemDto(
                 5L,
+                // Null image, and therefore null attribution and imagePlaceholder true — the
+                // Chapter 24 shape for a product the image backfill could not illustrate. Kept
+                // deliberately as the *un*populated case, complementing ProductControllerTest's
+                // populated one, so both halves of the image contract are covered somewhere.
                 new ProductDto(10L, SLUG, "iPhone 16 Pro", "Apple", "Smartphone",
-                        new BigDecimal("119900.00"), null, new BigDecimal("4.8"), 1200, true, null),
+                        new BigDecimal("119900.00"), null, new BigDecimal("4.8"), 1200, true, null,
+                        null, null, null, null, true),
                 position,
                 Instant.parse("2026-08-16T10:00:00Z"));
     }

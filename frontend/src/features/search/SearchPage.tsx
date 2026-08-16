@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal } from "lucide-react";
 
 import ActiveFilters from "./components/ActiveFilters";
@@ -19,6 +20,14 @@ import { useRecentSearches } from "./hooks/useRecentSearches";
 import { useSearch } from "./hooks/useSearch";
 
 export default function SearchPage() {
+    /*
+     * Chapter 24. The header and hero search fields navigate here with `?q=`,
+     * and the product breadcrumb can arrive with `?category=`. Read once, as
+     * the *initial* state only: this page owns the query after landing, so
+     * re-syncing on every param change would fight the user's typing.
+     */
+    const [searchParams] = useSearchParams();
+
     const {
         query,
         setQuery,
@@ -36,7 +45,10 @@ export default function SearchPage() {
         categories,
         brands,
         priceBounds,
-    } = useSearch();
+    } = useSearch({
+        query: searchParams.get("q") ?? undefined,
+        category: searchParams.get("category") ?? undefined,
+    });
 
     const { recent, add, remove, clear } = useRecentSearches();
 

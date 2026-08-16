@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Mic, ScanLine, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const quickSearches = [
     "iPhone 16 Pro",
@@ -9,49 +10,42 @@ const quickSearches = [
     "Apple Watch Ultra",
 ];
 
-interface ModeButtonProps {
-    label: string;
-    icon: typeof Mic;
-    onClick?: () => void;
-}
-
-function ModeButton({ label, icon: Icon, onClick }: ModeButtonProps) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            title={label}
-            aria-label={label}
-            className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-full
-                text-slate-500
-                transition
-                duration-200
-                hover:bg-slate-100
-                hover:text-slate-900
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-blue-500
-            "
-        >
-            <Icon size={19} />
-        </button>
-    );
-}
-
 /**
  * The homepage's primary entry point.
  *
- * Deliberately the only interactive element above the fold: one large field,
- * three input modes, and a row of suggestions. No stats, no cards, no noise.
+ * Deliberately the only interactive element above the fold: one large field
+ * and a row of suggestions. No stats, no cards, no noise.
+ *
+ * ---------------------------------------------------------------------------
+ * CHAPTER 24 — this component had no destination.
+ *
+ * It held a `query` in state and rendered it, and that was the whole of it:
+ * no <form>, no `useNavigate`, no submit handler. The largest, most prominent
+ * control in the application — the one directly under the headline — did
+ * nothing at all when you typed into it and pressed Enter.
+ *
+ * It now submits to `/search?q=`, the same destination as the header field, so
+ * the two searches in the app agree rather than behaving differently.
+ *
+ * The "Search by voice" and "Search by image" mode buttons were removed rather
+ * than wired. Both were `<button>`s with an optional `onClick` that no caller
+ * ever passed, and neither speech recognition nor image search exists anywhere
+ * in this codebase — wiring them would mean inventing the feature, and leaving
+ * them meant two more controls that look clickable and are not.
+ * ---------------------------------------------------------------------------
  */
 export default function HeroSearch() {
     const [query, setQuery] = useState("");
+    const navigate = useNavigate();
+
+    function onSubmit(event: React.FormEvent) {
+        event.preventDefault();
+
+        const trimmed = query.trim();
+        if (!trimmed) return;
+
+        navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    }
 
     return (
         <div className="mx-auto w-full max-w-3xl text-center">
@@ -74,7 +68,9 @@ export default function HeroSearch() {
 
             {/* Search field */}
 
-            <div
+            <form
+                onSubmit={onSubmit}
+                role="search"
                 className="
                     group
                     mt-7
@@ -124,19 +120,8 @@ export default function HeroSearch() {
                     "
                 />
 
-                {/* Voice/image modes need ~90px of chrome. Below `sm` that space
-                    is better spent on the field itself, and both modes remain
-                    reachable from the header search on those widths. */}
-
-                <span className="hidden items-center sm:flex">
-                    <ModeButton label="Search by voice" icon={Mic} />
-                    <ModeButton label="Search by image" icon={ScanLine} />
-                </span>
-
-                <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
-
                 <button
-                    type="button"
+                    type="submit"
                     aria-label="AI Search"
                     className="
                         inline-flex
@@ -169,7 +154,7 @@ export default function HeroSearch() {
                     <Sparkles size={16} />
                     <span className="hidden sm:inline">AI Search</span>
                 </button>
-            </div>
+            </form>
 
             {/* Suggestions.
                 Below `sm` these scroll sideways instead of wrapping — wrapping
@@ -201,7 +186,17 @@ export default function HeroSearch() {
                     <button
                         key={item}
                         type="button"
-                        onClick={() => setQuery(item)}
+                        /*
+                            Was `setQuery(item)` alone, which filled the field
+                            and stopped there — the chip looked like a shortcut
+                            to results but only ever typed for you, and with the
+                            field itself dead there was nothing to submit it
+                            with. Searching directly is what the chip claims to
+                            do.
+                        */
+                        onClick={() =>
+                            navigate(`/search?q=${encodeURIComponent(item)}`)
+                        }
                         className="
                             shrink-0
                             whitespace-nowrap

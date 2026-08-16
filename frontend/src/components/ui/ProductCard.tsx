@@ -191,6 +191,36 @@ export default function ProductCard({
                     </div>
                 )}
 
+                {/*
+                    Chapter 24 — the photograph's credit.
+
+                    Required, not decorative: these images come from Openverse
+                    under Creative Commons licences that permit this use only if
+                    the creator is credited, so this element is part of what
+                    makes displaying the image above it lawful.
+
+                    Rendered as a `title` on a small marker rather than as a
+                    visible caption on every tile. A grid of twenty cards cannot
+                    carry twenty sentences of credit without becoming unreadable,
+                    and the full credit line is reachable on hover, through the
+                    accessibility tree, and in full on the product page. The
+                    marker is always present when there is something to credit —
+                    it is never conditional on hover — so the attribution cannot
+                    be scrolled past without existing.
+
+                    Absent entirely for placeholder images, where there is no
+                    creator and nothing to credit.
+                */}
+                {product.imageAttribution && (
+                    <span
+                        title={product.imageAttribution}
+                        className="absolute bottom-1 left-1 z-10 rounded bg-card/80 px-1 py-0.5 text-[9px] font-medium leading-none text-ink-muted backdrop-blur-sm"
+                    >
+                        <span className="sr-only">Image credit: </span>
+                        CC
+                    </span>
+                )}
+
                 {!product.inStock && (
                     <span className="absolute inset-0 flex items-center justify-center bg-card/75 text-xs font-bold uppercase tracking-wide text-danger backdrop-blur-[1px]">
                         Out of stock

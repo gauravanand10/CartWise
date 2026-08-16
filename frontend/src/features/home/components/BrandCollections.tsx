@@ -13,6 +13,7 @@ export default function BrandCollections() {
                     title="Shop by brand"
                     subtitle="Jump straight into a catalogue you already trust."
                     ctaLabel="All brands"
+                    ctaTo="/browse"
                 />
             </Reveal>
 

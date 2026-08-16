@@ -120,16 +120,25 @@ export default function NavActions() {
                 to="/compare"
             />
 
-            {/* Lowest-value action; first to go when space is tight. */}
+            {/*
+                Chapter 24 removed the notifications bell.
 
-            <span className="hidden sm:block">
-                <ActionButton
-                    icon={<Bell size={19} />}
-                    label="Notifications"
-                    badge={3}
-                    to="#"
-                />
-            </span>
+                It was `to="#"`, which React Router does not treat as "no
+                destination" — it resolves "#" as a relative path against the
+                current location, so the link rendered as href="/browse" on
+                /browse and href="/" on the homepage, and clicking it navigated
+                to the page you were already on. A no-op wearing a real href.
+
+                Worse, it carried a hardcoded `badge={3}` that was never
+                anything but 3: the app has no notifications feature, no
+                endpoint behind it and nothing that could ever change the
+                count. It sat next to the wishlist and compare badges, which
+                are live counts of real user state, and was indistinguishable
+                from them.
+
+                Removed rather than repointed — there is no notifications page
+                to point at, and inventing one is not this chapter's scope.
+            */}
 
             {/*
                 Chapter 23.5 gave this control a destination. It was a bare

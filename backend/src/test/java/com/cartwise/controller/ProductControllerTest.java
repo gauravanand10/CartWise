@@ -42,9 +42,17 @@ class ProductControllerTest extends ControllerTestBase {
     private ProductService productService;
 
     private static ProductDto product(String slug, String name) {
+        // Chapter 24 added the five image-provenance fields. This fixture stands for a product
+        // that HAS a real licensed photograph — attribution present, imagePlaceholder false — so
+        // the controller tests exercise the populated shape rather than the degenerate one.
         return new ProductDto(1L, slug, name, "Apple", "Smartphone",
                 new BigDecimal("119900.00"), new BigDecimal("134900.00"),
-                new BigDecimal("4.8"), 1200, true, "https://example.test/p.png");
+                new BigDecimal("4.8"), 1200, true, "https://example.test/p.png",
+                "\"Phone\" by Someone is licensed under CC BY-SA 2.0.",
+                "by-sa",
+                "https://creativecommons.org/licenses/by-sa/2.0/",
+                "https://example.test/original",
+                false);
     }
 
     @Nested

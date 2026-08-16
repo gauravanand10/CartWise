@@ -53,8 +53,11 @@ class WishlistControllerTest extends ControllerTestBase {
     private static WishlistItemDto item() {
         return new WishlistItemDto(
                 5L,
+                // No image, so no attribution and imagePlaceholder true. See the note in
+                // ComparisonControllerTest — this is the Chapter 24 unilluminated-product shape.
                 new ProductDto(10L, SLUG, "iPhone 16 Pro", "Apple", "Smartphone",
-                        new BigDecimal("119900.00"), null, new BigDecimal("4.8"), 1200, true, null),
+                        new BigDecimal("119900.00"), null, new BigDecimal("4.8"), 1200, true, null,
+                        null, null, null, null, true),
                 Instant.parse("2026-08-15T10:00:00Z"));
     }
 

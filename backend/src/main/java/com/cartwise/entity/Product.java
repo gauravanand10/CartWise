@@ -124,6 +124,46 @@ public class Product {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    /*
+     * Chapter 24 — provenance and licensing for the image above.
+     *
+     * These six exist because the photograph is not ours. Images come from Openverse, which indexes
+     * Creative Commons and public-domain works, and the CC licences that cover almost all of them
+     * grant use *on condition* of attribution. Displaying imageUrl without being able to display
+     * imageAttribution is not a cosmetic omission, it is using the work outside its licence — which
+     * is why these are part of the entity rather than a side table nobody joins.
+     *
+     * All nullable. A product whose Openverse search returned nothing keeps its seeded placeholder
+     * URL and leaves every one of these null, and that combination is the signal the API uses to
+     * tell the frontend "this is a placeholder, not a licensed photograph".
+     */
+
+    /** Openverse's UUID for the work, so it can be re-fetched without repeating the search. */
+    @Column(name = "image_external_id", length = 64)
+    private String imageExternalId;
+
+    @Column(name = "image_creator", length = 200)
+    private String imageCreator;
+
+    /** Licence code as Openverse reports it — {@code by}, {@code by-sa}, {@code cc0}, … */
+    @Column(name = "image_license", length = 40)
+    private String imageLicense;
+
+    @Column(name = "image_license_url", length = 300)
+    private String imageLicenseUrl;
+
+    /** The credit line Openverse composes. Stored verbatim rather than reassembled from the parts. */
+    @Column(name = "image_attribution", length = 500)
+    private String imageAttribution;
+
+    /** The provider's page for the original work — not the image bytes. */
+    @Column(name = "image_source_url", length = 500)
+    private String imageSourceUrl;
+
+    /** When the fetch last succeeded. Null means never fetched, or fetched and nothing matched. */
+    @Column(name = "image_fetched_at")
+    private Instant imageFetchedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -192,6 +232,64 @@ public class Product {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getImageExternalId() {
+        return imageExternalId;
+    }
+
+    public String getImageCreator() {
+        return imageCreator;
+    }
+
+    public String getImageLicense() {
+        return imageLicense;
+    }
+
+    public String getImageLicenseUrl() {
+        return imageLicenseUrl;
+    }
+
+    public String getImageAttribution() {
+        return imageAttribution;
+    }
+
+    public String getImageSourceUrl() {
+        return imageSourceUrl;
+    }
+
+    public Instant getImageFetchedAt() {
+        return imageFetchedAt;
+    }
+
+    /**
+     * Attaches a fetched photograph and everything needed to credit it.
+     *
+     * <p>One setter for all seven fields rather than seven setters, because they are one fact and
+     * are only ever valid together. A caller that could set {@code imageUrl} alone could leave the
+     * catalogue displaying a Creative Commons photograph with no attribution beside it, which is
+     * the exact failure these columns exist to prevent — so the type system is used to make that
+     * unexpressible rather than merely discouraged.
+     *
+     * <p>Sets {@code imageFetchedAt} itself, from the same clock, so "has an image" and "was
+     * fetched at" cannot disagree.
+     */
+    public void applyImage(
+            String url,
+            String externalId,
+            String creator,
+            String license,
+            String licenseUrl,
+            String attribution,
+            String sourceUrl) {
+        this.imageUrl = url;
+        this.imageExternalId = externalId;
+        this.imageCreator = creator;
+        this.imageLicense = license;
+        this.imageLicenseUrl = licenseUrl;
+        this.imageAttribution = attribution;
+        this.imageSourceUrl = sourceUrl;
+        this.imageFetchedAt = Instant.now();
     }
 
     public Instant getCreatedAt() {

@@ -14,6 +14,8 @@ interface SectionHeaderProps {
     accentClass?: string;
     ctaLabel?: string;
     onCtaClick?: () => void;
+    /** Route the CTA navigates to. See ViewAllButton's `to`. */
+    ctaTo?: string;
     /** Renders light-on-dark, for use inside saturated panels. */
     onDark?: boolean;
     /** Hides the CTA entirely for sections that don't have a "see more" target. */
@@ -35,6 +37,7 @@ export default function SectionHeader({
     accentClass = "text-blue-600",
     ctaLabel,
     onCtaClick,
+    ctaTo,
     onDark = false,
     hideCta = false,
 }: SectionHeaderProps) {
@@ -96,6 +99,7 @@ export default function SectionHeader({
                     label={ctaLabel}
                     onDark={onDark}
                     onClick={onCtaClick}
+                    to={ctaTo}
                 />
             )}
 

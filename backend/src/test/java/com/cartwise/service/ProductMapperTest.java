@@ -71,6 +71,64 @@ class ProductMapperTest {
         assertThat(dto.imageUrl()).isNull();
     }
 
+    /*
+     * ---------------------------------------------------------------------------------------
+     * Chapter 24 — the image-attribution contract.
+     *
+     * These two tests are the guard on a legal requirement rather than a cosmetic one. Openverse
+     * serves Creative Commons works whose licences permit this use only if the creator is
+     * credited, so a mapper that emitted imageUrl while dropping imageAttribution would put the
+     * application in breach on every product response. That is a silent failure with no visible
+     * symptom, which is exactly the kind worth pinning down in a test.
+     * ---------------------------------------------------------------------------------------
+     */
+
+    @Test
+    @DisplayName("carries the image credit alongside the image, and marks it not a placeholder")
+    void licensedPhotographCarriesItsAttribution() {
+        Product product = ProductFixtures.product().buildWithId(1L);
+        product.applyImage(
+                "https://live.staticflickr.com/1/2_b.jpg",
+                "cf510223-b7f1-4030-9904-836225509f2c",
+                "Insights Unspoken",
+                "by-sa",
+                "https://creativecommons.org/licenses/by-sa/2.0/",
+                "\"Smartphone\" by Insights Unspoken is licensed under CC BY-SA 2.0.",
+                "https://www.flickr.com/photos/23328561@N07/21135682726");
+
+        ProductDto dto = ProductMapper.toDto(product);
+
+        assertThat(dto.imageUrl()).isEqualTo("https://live.staticflickr.com/1/2_b.jpg");
+        assertThat(dto.imageAttribution())
+                .isEqualTo("\"Smartphone\" by Insights Unspoken is licensed under CC BY-SA 2.0.");
+        assertThat(dto.imageLicense()).isEqualTo("by-sa");
+        assertThat(dto.imageLicenseUrl())
+                .isEqualTo("https://creativecommons.org/licenses/by-sa/2.0/");
+        assertThat(dto.imageSourceUrl())
+                .isEqualTo("https://www.flickr.com/photos/23328561@N07/21135682726");
+        assertThat(dto.imagePlaceholder()).isFalse();
+    }
+
+    /**
+     * A product the backfill could not illustrate keeps the seeded placehold.co URL. It therefore
+     * has an {@code imageUrl} and no attribution, and the flag has to be driven by the attribution
+     * rather than by the URL — testing the URL would report every product as illustrated, since V3
+     * gave every row one.
+     */
+    @Test
+    @DisplayName("flags an unattributed image as a placeholder even though a URL is present")
+    void unattributedImageIsAPlaceholder() {
+        Product product = ProductFixtures.product()
+                .imageUrl("https://placehold.co/300x300?text=OnePlus%2013")
+                .buildWithId(1L);
+
+        ProductDto dto = ProductMapper.toDto(product);
+
+        assertThat(dto.imageUrl()).isNotNull();
+        assertThat(dto.imageAttribution()).isNull();
+        assertThat(dto.imagePlaceholder()).isTrue();
+    }
+
     @Test
     @DisplayName("carries an out-of-stock product's availability as false, not as absent")
     void outOfStockIsFalse() {

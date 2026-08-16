@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.cartwise.common.dto.UserDto;
 import com.cartwise.entity.Role;
+import com.cartwise.service.ProductImageService;
 import com.cartwise.service.UserAdminService;
 import com.cartwise.testsupport.ControllerTestBase;
 import com.cartwise.testsupport.WithCartwiseSecurity;
@@ -43,6 +44,15 @@ class AdminControllerTest extends ControllerTestBase {
 
     @MockitoBean
     private UserAdminService userAdminService;
+
+    /*
+     * Chapter 24. AdminController gained POST /api/admin/products/images, so the web slice now has
+     * a second collaborator to satisfy. Mocked rather than real for the obvious reason — the real
+     * one calls Openverse over the network, and a controller test that reaches a third party is a
+     * test that fails when someone else's service is down.
+     */
+    @MockitoBean
+    private ProductImageService productImageService;
 
     private static UserDto user(long id, String email, Role role) {
         return new UserDto(id, email, role, Instant.parse("2026-08-15T09:00:00Z"));

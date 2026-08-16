@@ -36,20 +36,37 @@ interface UseSearch {
     priceBounds: { min: number; max: number };
 }
 
-export function useSearch(): UseSearch {
+/**
+ * Optional starting state, read from the URL by the page.
+ *
+ * Chapter 24: the header and hero search fields navigate to `/search?q=…`, and
+ * a breadcrumb can arrive with `?category=…`. Without seeding, both landed on
+ * an unfiltered page that silently ignored what the user had asked for.
+ */
+export interface SearchInitialState {
+    query?: string;
+    /** Display form, e.g. `"Smartphone"` — the facet values this hook exposes. */
+    category?: string;
+}
+
+export function useSearch(initial: SearchInitialState = {}): UseSearch {
     // Facets come from the whole catalogue, not the current results: deriving
     // them from filtered data makes every other option vanish the moment one
     // is picked, leaving no way back without clearing the filter first.
     const catalogue = useMemo(() => getCatalogue(), []);
     const priceBounds = useMemo(() => priceBoundsOf(catalogue), [catalogue]);
 
-    const [query, setQuery] = useState("");
+    const [query, setQuery] = useState(initial.query ?? "");
     const [sort, setSort] = useState<SortOption>("relevance");
 
     // Seeded from the real catalogue bounds so the price slider and the
     // "is this filter active?" check agree from the very first render.
     const [filter, setFilterState] = useState<SearchFilter>(() => ({
         ...DEFAULT_FILTER,
+        // An unknown category is left at "All" rather than applied blindly:
+        // filtering on a value no product carries would render an empty page
+        // with no way to tell a bad link from a genuinely empty result.
+        category: initial.category ?? DEFAULT_FILTER.category,
         price: priceBounds,
     }));
 

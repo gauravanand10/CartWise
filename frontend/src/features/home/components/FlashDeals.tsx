@@ -20,6 +20,7 @@ export default function FlashDeals() {
                     title="Flash deals"
                     subtitle="Time-boxed price drops, refreshed hourly across every store we track."
                     ctaLabel="All deals"
+                    ctaTo="/browse?sort=price-asc"
                 />
             </Reveal>
 

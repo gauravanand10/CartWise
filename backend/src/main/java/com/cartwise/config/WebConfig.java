@@ -17,7 +17,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * chapter's "the skeleton actually works" claim unverifiable.
  */
 @Configuration
-@EnableConfigurationProperties(CorsProperties.class)
+// OpenverseProperties is registered here rather than in a config class of its own: it is bound the
+// same way, from the same file, and one @EnableConfigurationProperties listing both is easier to
+// read than a second @Configuration that exists only to hold one annotation.
+@EnableConfigurationProperties({CorsProperties.class, OpenverseProperties.class})
 public class WebConfig implements WebMvcConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(WebConfig.class);
