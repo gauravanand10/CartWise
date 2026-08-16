@@ -36,6 +36,17 @@ export function apiProduct(overrides: Partial<ApiProduct> = {}): ApiProduct {
         reviewCount: 10,
         inStock: true,
         imageUrl: null,
+
+        // Chapter 24's image-provenance fields. Null here, matching `imageUrl: null` above — this
+        // fixture stands for a product with no photograph, and a credit without an image would be
+        // an incoherent state for a test to start from. A test that needs the illustrated shape
+        // passes them through `overrides`.
+        imageAttribution: null,
+        imageLicense: null,
+        imageLicenseUrl: null,
+        imageSourceUrl: null,
+        imagePlaceholder: true,
+
         ...overrides,
     };
 }

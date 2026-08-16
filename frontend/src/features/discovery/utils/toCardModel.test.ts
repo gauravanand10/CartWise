@@ -23,6 +23,15 @@ const apiProduct: ApiProduct = {
     reviewCount: 1234,
     inStock: true,
     imageUrl: "https://example.test/sony.png",
+
+    // Chapter 24. This fixture has a real image, so it carries the credit that image's licence
+    // requires — the adapter under test is responsible for passing all three through, and a
+    // fixture with a URL but no attribution could not catch it dropping them.
+    imageAttribution: "\"Headphones\" by Someone is licensed under CC BY-SA 2.0.",
+    imageLicense: "by-sa",
+    imageLicenseUrl: "https://creativecommons.org/licenses/by-sa/2.0/",
+    imageSourceUrl: "https://example.test/original",
+    imagePlaceholder: false,
 };
 
 describe("toCardModel", () => {
@@ -39,6 +48,14 @@ describe("toCardModel", () => {
             reviews: 1234,
             inStock: true,
             image: "https://example.test/sony.png",
+
+            // Chapter 24's image credit, asserted here rather than only in its own test because
+            // this is the exhaustive `toEqual` — it is the assertion that fails if the adapter ever
+            // silently stops carrying a field, which for these three would mean the catalogue
+            // rendering Creative Commons photographs with no attribution beside them.
+            imageAttribution: "\"Headphones\" by Someone is licensed under CC BY-SA 2.0.",
+            imageLicenseUrl: "https://creativecommons.org/licenses/by-sa/2.0/",
+            imageSourceUrl: "https://example.test/original",
         });
     });
 

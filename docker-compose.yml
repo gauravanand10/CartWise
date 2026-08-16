@@ -1,0 +1,157 @@
+# CartWise — the whole stack, locally. Chapter 25.
+#
+# This file is the chapter's central claim: that CartWise can be deployed, demonstrated by running
+# it as three containers with nothing on the host but Docker. `docker compose up --build` from the
+# repository root brings up PostgreSQL, migrates a genuinely empty database with Flyway, starts the
+# API, and serves the built frontend through nginx.
+#
+#   frontend  http://localhost:8081
+#   backend   http://localhost:8080
+#   health    http://localhost:8080/actuator/health
+#
+# Configuration comes from `.env` in this directory, which Compose reads automatically. It is
+# gitignored; `.env.example` is the committed template. Every variable below has a fallback after
+# `:-`, so the stack starts with no `.env` at all — convenient for a first run, and the reason the
+# JWT fallback carries the warning it does.
+
+name: cartwise
+
+services:
+
+  # -------------------------------------------------------------------------------------------
+  # PostgreSQL
+  # -------------------------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cartwise}
+      POSTGRES_USER: ${POSTGRES_USER:-cartwise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cartwise}
+
+    # Not published to the host by default. The backend reaches it over the compose network by
+    # service name, and nothing else needs to — exposing 5432 would put a database on the host's
+    # interfaces for the convenience of occasionally running psql. Uncomment when that is worth it.
+    # ports:
+    #   - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+    # The backend must not start before the database can answer, and "the container is running" is
+    # not the same claim — postgres accepts connections a second or two after the process starts,
+    # and Flyway connecting in that gap fails the boot. pg_isready is the real readiness signal.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cartwise} -d ${POSTGRES_DB:-cartwise}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # -------------------------------------------------------------------------------------------
+  # Backend
+  # -------------------------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        # Waits for the healthcheck above, not merely for the container to exist. Without this the
+        # first `up` on a fresh volume is a race the backend usually loses.
+        condition: service_healthy
+
+    environment:
+      # The dev profile, running against a container rather than a laptop.
+      #
+      # Worth being explicit about, because it looks like a mistake and is not. `prod` would demand
+      # a real JWT_SECRET and real DB credentials with no fallbacks — correct for a deployment,
+      # hostile for a local proof that the stack composes. What this file demonstrates is that the
+      # image, the migrations and the wiring work; the prod profile's stricter contract is
+      # exercised by application-prod.yml having no defaults, which is a property of that file.
+      #
+      # Every value below is supplied as an environment variable regardless, which is the part that
+      # matters: it proves the application takes its configuration from the environment rather than
+      # from anything baked into the image.
+      SPRING_PROFILES_ACTIVE: dev
+
+      # `postgres` is the service name and resolves on the compose network. NOT localhost —
+      # inside a container that means the container itself, and is the single most common reason a
+      # containerised app cannot find its database.
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-cartwise}
+      DB_USERNAME: ${POSTGRES_USER:-cartwise}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-cartwise}
+
+      # The fallback is a throwaway that exists so `docker compose up` works before anyone has
+      # written a `.env`. It is 64+ bytes because JwtProperties refuses to start otherwise.
+      #
+      # It is NOT a secret and must never be used anywhere real — it is committed, so anyone
+      # reading this repository can sign a token with it. A deployment sets JWT_SECRET properly;
+      # see .env.example for how to generate one.
+      JWT_SECRET: ${JWT_SECRET:-compose-local-only-signing-key-do-not-use-anywhere-real-0123456789}
+
+      # The frontend's published origin. The browser loads the app from :8081 and calls the API on
+      # :8080, so those are two origins and the API has to allow the first by name.
+      # Both loopback spellings, because they are distinct origins to a browser and people type
+      # each of them.
+      CARTWISE_ALLOWED_ORIGINS: ${CARTWISE_ALLOWED_ORIGINS:-http://localhost:8081,http://127.0.0.1:8081}
+
+      # Optional, and empty by default — the Openverse client calls anonymously without them.
+      OPENVERSE_CLIENT_ID: ${OPENVERSE_CLIENT_ID:-}
+      OPENVERSE_CLIENT_SECRET: ${OPENVERSE_CLIENT_SECRET:-}
+
+    ports:
+      - "8080:8080"
+
+    # The ROOT actuator health endpoint, not /health/readiness and not /api/health.
+    #
+    # /api/health is Chapter 16's and returns a hardcoded "UP" — it would report a backend with no
+    # database as perfectly well. /actuator/health/readiness looks like the right answer and is
+    # not: its default group excludes the db indicator, measured still answering 200 with
+    # PostgreSQL stopped. See the long note in application.yml.
+    #
+    # The root endpoint aggregates every indicator including db, and was measured returning 503 in
+    # that same test, so "healthy" here means the API answered *and* its database did.
+    #
+    # timeout must exceed the datasource connection timeout (5s, set in application-dev.yml) or the
+    # probe gives up before the health check it is waiting on has decided anything.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 40s
+
+  # -------------------------------------------------------------------------------------------
+  # Frontend
+  # -------------------------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+
+    # Ordering only, not a dependency. The frontend is static files and serves perfectly well with
+    # the API down — the app renders and its error states appear, which is better than nginx
+    # refusing to start. Deliberately NOT `service_healthy`: that would make a backend problem look
+    # like a total outage.
+    depends_on:
+      - backend
+
+    ports:
+      - "8081:80"
+
+# -----------------------------------------------------------------------------------------------
+# Volumes
+# -----------------------------------------------------------------------------------------------
+volumes:
+  # Named volume rather than a bind mount. The database's files stay under Docker's management
+  # instead of being written into the repository working tree, where they would be one `docker
+  # compose down -v` away from a confusing git status and are wrong to commit under any
+  # circumstances.
+  #
+  # Persistence across `up`/`down` is the point: signing up a user, stopping the stack and starting
+  # it again keeps that user. `docker compose down -v` is the way to get the fresh-database
+  # behaviour back, and is what this chapter's Flyway proof runs against.
+  postgres-data:

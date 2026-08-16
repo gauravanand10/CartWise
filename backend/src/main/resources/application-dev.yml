@@ -4,9 +4,33 @@ spring:
     # PostgreSQL, not H2. An in-memory database that "works on my machine" is exactly how
     # dialect-specific bugs reach production — a generated-key strategy or a check constraint
     # that H2 accepts and PostgreSQL rejects. Dev runs the same engine as prod.
-    url: jdbc:postgresql://localhost:5432/cartwise_dev
-    username: cartwise
-    password: cartwise
+    #
+    # Chapter 25 made these three overridable. The literal values are kept as *defaults* rather
+    # than deleted, and the distinction is the whole point: `${DB_URL:jdbc:...}` means a laptop
+    # still starts with no setup at all, while Docker Compose — which runs this same dev profile
+    # against a container on a different host — supplies DB_URL/DB_USERNAME/DB_PASSWORD and needs
+    # no second profile to do it.
+    #
+    # These defaults are not a secret being committed. They are the credentials of a database that
+    # exists only on a developer's machine, listening on localhost, holding seed data. Compare
+    # application-prod.yml, where the same three keys have deliberately NO default and an unset
+    # variable stops the boot.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cartwise_dev}
+    username: ${DB_USERNAME:cartwise}
+    password: ${DB_PASSWORD:cartwise}
+
+    hikari:
+      # Chapter 25. Five seconds, down from Hikari's 30-second default, and the reason is the
+      # health check rather than request latency.
+      #
+      # With the database stopped, the `db` health indicator inherits this timeout — it was
+      # measured taking 30012ms to answer, which is longer than any sensible probe interval and
+      # long enough that Boot itself logs "took 30012ms to respond". A probe that times out before
+      # its own health check returns learns nothing.
+      #
+      # Five seconds is far longer than a connection to a healthy database takes and short enough
+      # that an unhealthy one is reported as unhealthy while a monitor is still listening.
+      connection-timeout: 5000
 
   # Chapter 22. Flyway owns the schema now, in dev exactly as in prod.
   #
@@ -131,22 +155,50 @@ cartwise:
     # bytes; jjwt refuses a shorter one with WeakKeyException rather than signing something it
     # cannot sign safely, and JwtProperties checks the same thing at startup so the failure names
     # the property instead of surfacing at the first login.
-    secret: "cartwise-dev-only-signing-key-not-for-any-deployed-environment-0123456789"
+    #
+    # CHAPTER 25 — THIS KEY IS IN THE GIT HISTORY, AND THAT IS A PERMANENT FACT.
+    #
+    # It was committed in 9e002aa ("feat: implement Chapters 18-20 — auth, roles, and product
+    # discovery with design tokens") and is recoverable by anyone who can read this repository's
+    # history, forever, regardless of what this line says today. Parameterising it now does not
+    # un-publish it, and pretending otherwise would be the dangerous kind of tidy-up.
+    #
+    # What limits the damage is what this key can sign for: a database on one laptop, reachable
+    # from nowhere else. It has never been the key of any deployed environment — application-prod.yml
+    # has no default and refuses to boot without JWT_SECRET — so there is no live session to forge.
+    #
+    # It is now overridable so that Docker Compose and any other non-laptop runner can supply a real
+    # one. The default stays because a dev profile that cannot start without a secret store is a dev
+    # profile people work around.
+    secret: ${JWT_SECRET:cartwise-dev-only-signing-key-not-for-any-deployed-environment-0123456789}
     # 24 hours. Long enough not to interrupt a day of development, short enough that a token
     # copied out of a log or a browser's storage does not stay useful indefinitely. There are no
     # refresh tokens in this chapter, so this value is also exactly how long a session lasts
     # before the user has to sign in again.
-    expiration: 24h
+    expiration: ${JWT_EXPIRATION:24h}
 
   cors:
     # The Vite dev server origin. 5173 is Vite's default and the port this repo's frontend
     # was observed serving on; 5174 is the fallback Vite picks when 5173 is already taken.
     # Both localhost and 127.0.0.1 are listed because they are distinct origins to the browser.
-    allowed-origins:
-      - http://localhost:5173
-      - http://127.0.0.1:5173
-      - http://localhost:5174
-      - http://127.0.0.1:5174
+    #
+    # Chapter 25 made this overridable, and doing so fixed a real bug rather than tidying config.
+    #
+    # As a hardcoded YAML list this could not be overridden by CARTWISE_ALLOWED_ORIGINS at all, so
+    # the Docker Compose stack booted logging
+    #
+    #   Registering CORS mapping for /api/** with allowed origins
+    #     [http://localhost:5173, http://127.0.0.1:5173, ...]
+    #
+    # while the containerised frontend is served from http://localhost:8081. Every API call the
+    # browser made from that page would have failed its preflight — the stack would have come up
+    # looking healthy and been unusable from the UI, which is the worst shape a deployment bug can
+    # take.
+    #
+    # Written as a comma-separated default rather than a list because that is the form Spring can
+    # bind an environment variable to; the relaxed binding maps a single scalar onto List<String>
+    # by splitting on commas. The dev origins remain the default so a laptop needs no .env.
+    allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
 
 logging:
   level:

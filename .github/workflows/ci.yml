@@ -1,0 +1,101 @@
+name: CI
+
+# Every push and every pull request to main. Chapter 25.
+#
+# Two jobs rather than one, run in parallel: the backend suite takes minutes (it starts real
+# PostgreSQL containers), the frontend checks take under one. Sequencing them would mean a
+# TypeScript error waits on Testcontainers to finish before anyone hears about it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A second push to the same branch cancels the first run still in flight. Without this, pushing
+# three times in five minutes queues three full Testcontainers runs, two of which test code nobody
+# is looking at any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  backend:
+    name: Backend — mvn clean test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          # Caches ~/.m2 keyed on the pom. Without it every run re-downloads the whole Spring Boot
+          # dependency tree, which is the slowest part of a build that is otherwise dominated by
+          # container startup.
+          cache: maven
+
+      # No "install Docker" step, and that absence is the point of Chapter 21's Testcontainers
+      # work finally paying off. GitHub's ubuntu-latest runner ships a running Docker daemon, so
+      # PostgresTestContainerConfig starts a real PostgreSQL container here exactly as it does on a
+      # laptop. The repository tests therefore run against PostgreSQL in CI — not H2, not a mock —
+      # which is what makes a green tick here mean something about the dialect-specific behaviour
+      # the suite was written to cover.
+      - name: Run backend tests
+        working-directory: ./backend
+        run: ./mvnw -B clean test
+
+      # Uploaded even when the step above fails — `if: always()` — because a failing run is
+      # precisely when the reports are worth reading.
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend — tests, types, lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci`, not `npm install`: installs exactly the lockfile and fails if it disagrees with
+      # package.json, so CI cannot silently test a different dependency tree than a developer has.
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # Each check is its own step so the failing one is named in the UI rather than all three
+      # hiding behind a single red "checks" step. They do not short-circuit each other's
+      # diagnostics any more than a combined command would, and they read far better.
+
+      # `tsc -b`, NOT `tsc --noEmit`.
+      #
+      # This distinction was found the hard way in Chapter 25 and is worth the four lines. The root
+      # tsconfig.json is a solution file — `"files": []` plus project references — so plain
+      # `tsc --noEmit` type-checks *nothing at all* and exits 0 on a codebase full of errors. It
+      # reported success while three real type errors sat in the tree. Build mode follows the
+      # references and is the only invocation here that checks anything.
+      - name: TypeScript
+        working-directory: ./frontend
+        run: npx tsc -b
+
+      - name: ESLint
+        working-directory: ./frontend
+        run: npx eslint .
+
+      - name: Unit tests
+        working-directory: ./frontend
+        run: npx vitest run

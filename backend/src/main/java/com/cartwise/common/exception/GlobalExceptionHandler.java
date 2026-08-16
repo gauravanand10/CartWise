@@ -174,6 +174,30 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * The caller has spent its allowance for this endpoint → 429. Chapter 25.
+     *
+     * <p>Carries a {@code Retry-After} header alongside the usual {@link ApiError} body. The header
+     * is the half a machine reads — it is standard for 429 and an HTTP client can back off on it
+     * without parsing anything — and the body is the half a human reads. Sending only the body
+     * would make every client invent its own backoff; sending only the header would break the
+     * "every failure looks the same" property the rest of this class exists to maintain.
+     *
+     * <p>Seconds rather than an HTTP-date, which the specification permits and which avoids handing
+     * clients a timestamp they then have to reconcile against a clock that may not agree with ours.
+     *
+     * <p>Not logged here. {@link com.cartwise.security.RateLimitInterceptor} already logged the
+     * rejection at WARN with the path, and logging it a second time would double every entry during
+     * exactly the traffic spike that makes logs hardest to read.
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiError> handleRateLimited(RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new ApiError(
+                        RateLimitExceededException.CODE, ex.getMessage(), Instant.now(clock)));
+    }
+
+    /**
      * Last-resort handler: log the real cause server-side, return a generic body to the client.
      *
      * <p>Reached only by exceptions no handler above claims — genuine bugs. The body says nothing

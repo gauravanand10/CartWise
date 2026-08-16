@@ -12,9 +12,122 @@ spring:
 server:
   port: 8080
 
+  # Chapter 25 — HTTPS readiness.
+  #
+  # Spring Boot does not terminate TLS in this deployment and should not: the container serves
+  # plain HTTP and a reverse proxy or load balancer in front of it holds the certificate. That
+  # arrangement has one consequence that does NOT take care of itself, which is why this line
+  # exists rather than being assumed.
+  #
+  # Behind a proxy, every request arrives claiming to be http:// from the proxy's own address. The
+  # real scheme, host and client address are in X-Forwarded-Proto / -Host / -For. Without this
+  # setting Spring ignores them, and anything that builds an absolute URL — a redirect, a Location
+  # header — emits http:// against the public https:// origin, which browsers either block as mixed
+  # content or downgrade. `framework` makes Boot register ForwardedHeaderFilter, which rewrites the
+  # request to what the client actually asked for.
+  #
+  # This trusts whatever sends those headers, so the proxy must overwrite rather than append them.
+  # If CartWise is ever exposed directly to the internet with no proxy, this must be set back to
+  # `none` — a client could otherwise assert its own X-Forwarded-For. The same caveat governs the
+  # rate limiter's IP keying; see RateLimitInterceptor.clientIp.
+  forward-headers-strategy: framework
+
+# ---------------------------------------------------------------------------------------------
+# Actuator. Chapter 25.
+# ---------------------------------------------------------------------------------------------
+#
+# Deliberately narrow. Actuator ships a large surface — env, beans, configprops, heapdump,
+# threaddump — and several of those disclose exactly what Part A of this chapter spent its time
+# removing from the repository: /actuator/env prints resolved configuration including, depending on
+# sanitisation, the values of environment variables. Only health is exposed.
+management:
+  endpoints:
+    web:
+      exposure:
+        # An allowlist, not a denylist. A future Boot version adding a new endpoint must not
+        # publish it here by default.
+        include: health
+  endpoint:
+    health:
+      # Component detail — including which indicator is down — is shown to everyone, because
+      # nothing sits in front of this to authenticate a probe. An orchestrator's liveness check
+      # cannot present a JWT, so requiring one would mean the probe never passes.
+      #
+      # The trade is that an anonymous caller learns the database is unreachable. That is a fact an
+      # unreachable database already makes obvious from the outside, and it is worth far less to an
+      # attacker than a working health check is to an operator.
+      show-details: always
+      probes:
+        # Splits /actuator/health into liveness and readiness groups.
+        #
+        # The distinction matters to an orchestrator: liveness answers "should this container be
+        # restarted", readiness answers "should it receive traffic". A database outage must make
+        # the app un-ready — removed from the pool — but NOT un-alive, because restarting a
+        # perfectly healthy JVM does not bring a database back and a crash-loop makes the outage
+        # worse.
+        enabled: true
+
+    # ------------------------------------------------------------------------------------------
+    # A MEASURED FINDING ABOUT THE READINESS GROUP, AND WHY THE PROBE USES THE ROOT ENDPOINT.
+    #
+    # Boot's default readiness group contains `readinessState` alone — the application's own
+    # lifecycle flag, which reports that the context finished starting and knows nothing whatever
+    # about the database. With PostgreSQL deliberately stopped and the pool exhausted:
+    #
+    #   GET /actuator/health            → 503, db DOWN (CannotGetJdbcConnectionException)
+    #   GET /actuator/health/readiness  → 200, {"status":"UP"}
+    #
+    # So a probe pointed at /readiness would call this container healthy while it could not serve
+    # any request that touched the database — the "the JVM is running" health check this chapter
+    # exists to eliminate, reintroduced one level down.
+    #
+    # The documented fix is `management.endpoint.health.group.readiness.include: readinessState,db`.
+    # It was tried here and did NOT take effect on Boot 4.1.0 — readiness still answered 200/UP
+    # after sixty seconds with the database down, verified with the property present in the jar's
+    # application.yml. Boot 4 moved health into a separate `spring-boot-health` module and the
+    # behaviour of that property there was not established; rather than ship configuration that
+    # looks correct and demonstrably does nothing, it is removed and the finding recorded.
+    #
+    # docker-compose.yml therefore probes the ROOT /actuator/health, which was measured returning
+    # 503 in exactly the case that matters. The cost is that the probe conflates liveness with
+    # readiness — a database outage will eventually restart the container rather than merely
+    # draining it — which is the wrong behaviour under an orchestrator and is accepted here only
+    # because Compose has no separate readiness concept to lose. Anything running this under a
+    # real orchestrator must resolve the group question first.
+    # ------------------------------------------------------------------------------------------
+  health:
+    # Explicit rather than relying on the default. This is the indicator that makes the health
+    # check mean something: it borrows a connection and runs a validation query, so a green
+    # response is evidence the database answered, not that the process is alive.
+    db:
+      enabled: true
+
 # CartWise-owned configuration. Bound by com.cartwise.config.CorsProperties.
 # Deliberately no value here: each profile must name its own frontend origins, and an
 # unset list registers no CORS mapping at all rather than falling back to something permissive.
 cartwise:
   cors:
     allowed-origins: []
+
+  # Chapter 24's image search, Chapter 25's environment wiring.
+  #
+  # Both credentials are read from the environment and both default to empty, which is the
+  # supported anonymous mode rather than a broken one — OpenverseImageClient calls without a
+  # bearer token when they are blank. They exist so a deployment CAN raise its rate ceiling, not
+  # because it must.
+  #
+  # There is deliberately no literal here to move to a secret store later: the credential pair
+  # obtained while writing Chapter 24 was never committed, which was checked rather than assumed.
+  openverse:
+    base-url: ${OPENVERSE_BASE_URL:https://api.openverse.org}
+    client-id: ${OPENVERSE_CLIENT_ID:}
+    client-secret: ${OPENVERSE_CLIENT_SECRET:}
+
+  # Chapter 25. See RateLimitProperties for what each bucket protects and why the three differ.
+  rate-limit:
+    auth-capacity: ${RATE_LIMIT_AUTH_CAPACITY:10}
+    auth-refill-seconds: ${RATE_LIMIT_AUTH_REFILL_SECONDS:60}
+    write-capacity: ${RATE_LIMIT_WRITE_CAPACITY:60}
+    write-refill-seconds: ${RATE_LIMIT_WRITE_REFILL_SECONDS:60}
+    admin-capacity: ${RATE_LIMIT_ADMIN_CAPACITY:3}
+    admin-refill-seconds: ${RATE_LIMIT_ADMIN_REFILL_SECONDS:3600}

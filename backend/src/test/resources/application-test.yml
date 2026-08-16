@@ -70,6 +70,27 @@ spring:
       mode: never
 
 cartwise:
+  # Chapter 25 — rate limiting OFF for the suite, and this is a deliberate decision rather than a
+  # convenience.
+  #
+  # Turning it on broke seven tests in AuthControllerTest the moment it was added, and the failures
+  # were the limiter working correctly. Every request MockMvc makes reports the same client
+  # address, so an entire test class shares one bucket: the eleventh assertion in the class got a
+  # 429 instead of the 401 or 400 it was written to check. Nothing was wrong with those tests —
+  # they assert on authentication behaviour and had no reason to anticipate a throttle.
+  #
+  # Zero capacity disables the bucket outright (see TokenBucket, where that behaviour exists for
+  # exactly this reason plus the ability to switch a limit off in production without a redeploy).
+  #
+  # The limiter is NOT therefore untested. RateLimitInterceptorTest re-enables it with a tiny
+  # capacity via @TestPropertySource and asserts the 429, the ApiError body and the Retry-After
+  # header — testing it in one place that opts in, rather than having every other test in the
+  # project quietly depend on staying under a threshold.
+  rate-limit:
+    auth-capacity: 0
+    write-capacity: 0
+    admin-capacity: 0
+
   jwt:
     # A signing key that exists only to satisfy JwtProperties' startup validation and to sign
     # tokens that never leave the JVM. It is >= 64 bytes because HS512 requires it and jjwt

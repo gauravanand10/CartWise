@@ -134,6 +134,24 @@
 		</dependency>
 
 		<!--
+			Chapter 25 — health checks for a container orchestrator.
+
+			Added for one reason that could not be met otherwise: /api/health, written in Chapter
+			16, returns a hardcoded "UP". It reports that the JVM is running and nothing else, so a
+			container whose database had vanished would keep passing its probe and keep receiving
+			traffic it could not serve. Actuator's health endpoint aggregates real indicators —
+			DataSourceHealthIndicator runs a validation query, so "UP" means the database answered.
+
+			This is the only new runtime dependency this chapter adds, and it is a Spring Boot
+			starter rather than new infrastructure: no extra process, no port, nothing to operate.
+			The brief's prohibition is on things like Redis, and this is not that.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!--
 			Chapter 22: versioned schema migrations.
 
 			THE STARTER, NOT flyway-core. This is a Boot 4 change and it fails silently, which is the

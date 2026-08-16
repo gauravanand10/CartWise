@@ -1,0 +1,10 @@
+# node_modules is the important line: it is large, platform-specific, and `npm ci` rebuilds it
+# inside the image anyway. Copying the host's would both slow the build and risk shipping native
+# binaries compiled for the wrong platform.
+node_modules/
+dist/
+.git/
+*.log
+.env
+.env.*
+!.env.example

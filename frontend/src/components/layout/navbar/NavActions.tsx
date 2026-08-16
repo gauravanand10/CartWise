@@ -1,4 +1,4 @@
-import { Bell, Heart, LogOut, Scale, Search, User } from "lucide-react";
+import { Heart, LogOut, Scale, Search, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 

@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -69,6 +70,68 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                /*
+                 * Chapter 25 — response security headers.
+                 *
+                 * Spring Security already sends most of what matters, and this block is written to
+                 * say which are defaults being kept and which are additions, because "we configured
+                 * headers" is otherwise unverifiable. Confirmed against the running app rather than
+                 * from memory.
+                 *
+                 * Already on by default, left alone:
+                 *   X-Content-Type-Options: nosniff     — stops MIME sniffing turning a JSON error
+                 *                                         body into executable script.
+                 *   X-Frame-Options: DENY               — clickjacking. Harmless for a JSON API and
+                 *                                         correct for anything that ever renders.
+                 *   Cache-Control: no-store             — keeps authenticated responses out of
+                 *                                         shared caches.
+                 *
+                 * Added here:
+                 */
+                .headers(headers -> headers
+                        /*
+                         * HSTS. NOT a default — Spring Security omits it on plain HTTP, which is
+                         * exactly what this container serves, so it has to be asked for.
+                         *
+                         * It tells a browser to refuse plain HTTP to this host for a year, which
+                         * removes the first request of every future visit as a downgrade
+                         * opportunity. Meaningful only once TLS terminates at the proxy in front of
+                         * this app; harmless before then, because a browser ignores the header when
+                         * it arrives over HTTP.
+                         *
+                         * `includeSubDomains` is on deliberately and is the part with teeth: it
+                         * commits every subdomain of the deployed host to HTTPS for a year, and a
+                         * subdomain still served over HTTP will break. That is a deployment fact
+                         * worth knowing before the first release, not after.
+                         */
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31_536_000L))
+
+                        /*
+                         * Referrer-Policy. Spring Security does not send one by default, so the
+                         * browser default applies and full URLs leak to third-party hosts — every
+                         * Openverse image request from Chapter 24 currently carries the CartWise
+                         * page URL in its Referer.
+                         *
+                         * same-origin keeps the full path for our own requests and sends nothing
+                         * cross-origin.
+                         */
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicy.SAME_ORIGIN))
+
+                        /*
+                         * Content-Security-Policy, scoped to what this application actually serves.
+                         *
+                         * The backend returns JSON, not HTML, so a policy here protects error pages
+                         * and anything Actuator renders rather than the React app — the frontend
+                         * gets its own policy from nginx, where its real script and style sources
+                         * are known. `default-src 'none'` is therefore correct here and would be
+                         * far too strict one service over.
+                         */
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'none'; frame-ancestors 'none'; base-uri 'none'")))
+
                 .authorizeHttpRequests(auth -> auth
                         // How a caller obtains a token. Necessarily reachable without one.
                         .requestMatchers("/api/auth/**").permitAll()
@@ -76,6 +139,17 @@ public class SecurityConfig {
                         // Liveness. A health check that requires a credential is one that cannot be
                         // used by the thing that needs it most — an uptime monitor.
                         .requestMatchers("/api/health").permitAll()
+
+                        // Chapter 25's Actuator health endpoint, and its liveness/readiness
+                        // subpaths, for the same reason: a container orchestrator's probe cannot
+                        // present a JWT.
+                        //
+                        // Scoped to health alone rather than /actuator/**. Only health is exposed
+                        // in application.yml today, so a wildcard would be permitting nothing extra
+                        // right now — and would silently publish whatever a future config change or
+                        // Boot upgrade adds to that surface. Two lines is a cheap price for a rule
+                        // that cannot widen by accident.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
 
                         // The catalogue stays public, exactly as in Chapter 17. Shoppers browse
                         // before they have accounts, and every product page is meant to be linkable

@@ -16,6 +16,16 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+    hikari:
+      # Chapter 25. Matches application-dev.yml, and matters more here than there.
+      #
+      # Hikari's 30-second default is inherited by Actuator's `db` health indicator, which was
+      # measured taking 30012ms to report a stopped database. A container orchestrator's probe
+      # interval is shorter than that, so the probe times out before the health check it is waiting
+      # on has decided anything — and a health check that cannot answer within the probe's patience
+      # is a health check that never reports the outage.
+      connection-timeout: 5000
+
   # Chapter 22. The migration tool the ddl-auto note below used to defer to.
   #
   # Identical to application-dev.yml, and that is the property worth having rather than a
@@ -77,7 +87,7 @@ cartwise:
     # That is the intended behaviour of a rotation and the reason it is worth doing after any
     # suspected exposure.
     secret: ${JWT_SECRET}
-    expiration: 24h
+    expiration: ${JWT_EXPIRATION:24h}
 
   cors:
     # Comma-separated list of deployed frontend origins, e.g.
@@ -86,6 +96,39 @@ cartwise:
     allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:}
 
 logging:
+  # Chapter 25 — structured logging, and where it goes.
+  #
+  # WHERE: nowhere. There is deliberately no `logging.file.name` in any profile, which means Spring
+  # Boot logs to stdout and stops there. That is the correct behaviour for a container and the
+  # reason it is worth a comment rather than a config line: a log file inside a container is
+  # written to a layer that vanishes with the container, on a path the host does not have. The
+  # runtime collects stdout. Adding a file appender here would hide the logs, not preserve them.
+  #
+  # WHAT: ECS JSON, one object per line, instead of the human-oriented default. The default layout
+  # is aligned columns with a wrapped stack trace, which reads well in a terminal and is close to
+  # unparseable for a log aggregator — a multi-line exception arrives as a dozen unrelated records.
+  # Structured output makes each event one record with real fields, so "every 429 in the last hour"
+  # is a query rather than a grep with a regex for the timestamp format.
+  #
+  # Applied to prod only. Development keeps the readable layout, because the reader there is a
+  # person watching a terminal, and JSON would make the thing that helps most in dev — seeing what
+  # just happened at a glance — considerably worse.
+  structured:
+    format:
+      console: ecs
+
   level:
     root: INFO
     com.cartwise: INFO
+
+    # Explicitly INFO, not DEBUG, and this line is a safety rail rather than a default restated.
+    #
+    # Hibernate at DEBUG logs every statement it issues, and org.hibernate.orm.jdbc.bind at TRACE
+    # logs the bound parameters — which for this schema means BCrypt password hashes on the insert
+    # that creates an account. Neither is a credential in plaintext, but a password hash in a log
+    # aggregator is a hash an attacker can take away and grind offline at their leisure.
+    #
+    # spring.jpa.show-sql is already false in this profile; this covers the other route to the same
+    # output, which is a logger level someone raises while debugging a production incident.
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: INFO

@@ -1,0 +1,67 @@
+name: Docker images
+
+# Builds both images on a successful push to main. Chapter 25.
+#
+# WHAT THIS DOES AND DOES NOT DO, stated plainly because the difference matters:
+#
+#   It DOES   — build backend and frontend images exactly as docker-compose.yml would, proving the
+#               Dockerfiles still work against the current main.
+#   It DOES NOT — push anything to a registry. No registry is configured for this project and none
+#               is trivially available; wiring one up means choosing a host, creating a repository
+#               and adding credentials as repository secrets, which is a deployment decision this
+#               chapter explicitly leaves open. The images are built and discarded.
+#
+# So this is a build check, not a release pipeline. When a registry is chosen, the change is to add
+# a login step and `push: true` below — the build itself does not change.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  build-images:
+    name: Build backend and frontend images
+    runs-on: ubuntu-latest
+
+    # Do not spend several minutes building images for a commit whose tests are red. `workflow_run`
+    # would express this more precisely across workflows; a needs-style gate is not available
+    # between separate workflow files, so this is deliberately a *second opinion* on main rather
+    # than a strict gate. Noted so the gap is visible: a broken commit can produce a green image
+    # build here while CI is failing next to it.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Buildx for the layer cache below. Without it each run starts from nothing and re-resolves
+      # every Maven and npm dependency.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          load: false
+          tags: cartwise-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          load: false
+          tags: cartwise-frontend:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      # No secrets are passed to either build, and none should be. Every ARG and ENV is recorded in
+      # the image's own metadata and readable by anyone who can pull it, so a build-time secret is
+      # a published secret. Configuration reaches these containers at run time — see
+      # docker-compose.yml.

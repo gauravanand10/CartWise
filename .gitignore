@@ -1,0 +1,33 @@
+# Repository-wide ignores. Chapter 25.
+#
+# There was no root .gitignore before this chapter — only backend/.gitignore and
+# frontend/.gitignore. That gap is why this file exists rather than being a tidy-up: everything at
+# the repository root, including files holding real credentials, was untracked purely because
+# nobody had run `git add -A` yet. That is not a safeguard, it is luck with a deadline.
+
+# ---------------------------------------------------------------------------------------------
+# Secrets. Nothing below may ever be committed.
+# ---------------------------------------------------------------------------------------------
+
+# Real environment files. `.env.example` is the committed template and is force-included below.
+.env
+.env.*
+!.env.example
+
+# Claude Code's per-machine settings. This one is not hypothetical: the file in this working tree
+# records shell commands from previous chapters that embed PGPASSWORD values — including the
+# PostgreSQL *superuser* password — captured as approved-command strings. It was untracked only
+# because no root ignore existed and nobody had staged it.
+.claude/settings.local.json
+
+# ---------------------------------------------------------------------------------------------
+# Build output and tooling
+# ---------------------------------------------------------------------------------------------
+target/
+dist/
+node_modules/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db
