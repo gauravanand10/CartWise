@@ -107,6 +107,94 @@ describe("CataloguePage (integration)", () => {
     });
 
     /**
+     * ===================================================================
+     * CHAPTER 29 — the failed-request state, which was broken three ways.
+     *
+     * Measured against a genuinely stopped backend, not imagined:
+     *
+     *   1. the header said "Loading…" and kept saying it — the count line
+     *      was `status === "ready" ? count : "Loading…"`, so "error" fell
+     *      into the loading branch and the page claimed to still be working
+     *      nine seconds after it had given up;
+     *   2. the only error text was `error.message`, which for an
+     *      unreachable API is the fetch API's own TypeError — the reader
+     *      was shown the literal words "Failed to fetch";
+     *   3. there was no retry anywhere on the route, so the only recovery
+     *      was a full page reload.
+     *
+     * All three of the tests below fail against the previous code.
+     * ===================================================================
+     */
+    describe("when the catalogue request fails", () => {
+
+        /**
+         * A TRANSPORT failure, not an HTTP one. A handler that throws makes the
+         * `fetch` stub reject exactly as the real API does when the server is
+         * unreachable — which is the case that produced "Failed to fetch" on
+         * screen, and the only case where the raw message is worthless.
+         */
+        function renderFailing() {
+            const api = mockApi({
+                "/products": () => {
+                    throw new TypeError("Failed to fetch");
+                },
+                "/categories": { json: categories },
+            });
+            renderWithProviders(<CataloguePage />, { route: "/browse", signedInAs: TEST_USER_ID });
+            return api;
+        }
+
+        it("stops claiming to be loading", async () => {
+            renderFailing();
+
+            expect(await screen.findByText("Couldn't load the catalogue")).toBeInTheDocument();
+            expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+        });
+
+        it("shows a sentence a shopper can act on, not the raw fetch error", async () => {
+            renderFailing();
+
+            expect(
+                await screen.findByText("We couldn't load the catalogue just now."),
+            ).toBeInTheDocument();
+            expect(screen.queryByText(/Failed to fetch/i)).not.toBeInTheDocument();
+        });
+
+        /**
+         * The other half of the distinction: when the SERVER answered and said
+         * something specific, that message is the most useful thing on screen
+         * and must survive. Guards against "fixing" the transport case by
+         * blanketing every failure in generic copy.
+         */
+        it("still shows the server's own message when the API answered", async () => {
+            mockApi({
+                "/products": {
+                    status: 400,
+                    body: { code: "BAD_REQUEST", message: "sort must be one of: price-asc, name-asc", timestamp: "" },
+                },
+                "/categories": { json: categories },
+            });
+            renderWithProviders(<CataloguePage />, { route: "/browse?sort=newest" });
+
+            expect(await screen.findByRole("status"))
+                .toHaveTextContent("sort must be one of");
+        });
+
+        it("offers a retry that actually re-issues the request", async () => {
+            const user = userEvent.setup();
+            const api = renderFailing();
+
+            const retry = await screen.findByRole("button", { name: "Try again" });
+            const before = api.productRequestCount();
+
+            await user.click(retry);
+
+            await waitFor(() =>
+                expect(api.productRequestCount()).toBeGreaterThan(before));
+        });
+    });
+
+    /**
      * Integration test 2 — a filter click travels through FilterBar → URL → data hook → the request.
      *
      * This is the assertion that only works because the stub is at `fetch`: it checks the query

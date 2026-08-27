@@ -21,33 +21,68 @@ export default function WishlistEmpty({ suggestions }: WishlistEmptyProps) {
     return (
         <div className="space-y-8">
 
-            <section className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center sm:rounded-[24px] sm:py-20">
+            {/*
+                =================================================================
+                CHAPTER 29 — THE EMPTY STATE, REDESIGNED RATHER THAN DECORATED.
 
-                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
-                    <Heart size={26} strokeWidth={1.5} aria-hidden="true" />
+                It was a centred card with a rose-tinted heart in a rounded
+                square, a 18px heading and a sentence. Generic: the same block
+                every product ships, distinguishable from a competitor's only by
+                the words in it.
+
+                Three deliberate changes, all typographic or structural rather
+                than colour:
+
+                1. The heading is now the largest type on the page and set at
+                   display weight. An empty state is a whole screen; giving it a
+                   card-sized heading made it look like a dismissed notification
+                   rather than a place the reader had arrived at.
+
+                2. The heart is outlined in the neutral scale, not filled in
+                   rose. The filled rose heart was the same glyph and colour as
+                   the SAVED state on a product card — the empty screen was
+                   showing the reader the exact symbol that means "you have
+                   saved this", which is the opposite of what it says.
+
+                3. The instruction names the control and shows it. "Tap the
+                   heart" is only useful if the reader knows which heart; the
+                   glyph is inlined into the sentence so the two are the same
+                   object.
+                =================================================================
+            */}
+            <section className="rounded-2xl border border-line bg-card px-6 py-16 text-center sm:rounded-[24px] sm:py-24">
+
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-line bg-sunken text-ink-subtle">
+                    <Heart size={28} strokeWidth={1.25} aria-hidden="true" />
                 </span>
 
-                <h1 className="mt-6 text-lg font-semibold text-slate-900 sm:text-xl">
+                <h1 className="mt-8 text-2xl text-ink sm:text-3xl">
                     Nothing saved yet
                 </h1>
 
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                    Tap the heart on any product and it will appear here, ready
-                    to revisit, compare or buy when the price is right.
+                <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-muted">
+                    Press the{" "}
+                    <Heart
+                        size={13}
+                        className="inline align-[-1px] text-ink"
+                        aria-hidden="true"
+                    />{" "}
+                    on any product and it lands here — ready to revisit, compare
+                    or check again later.
                 </p>
 
-                <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
                     <Link
-                        to="/search"
-                        className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        to="/browse"
+                        className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                     >
                         <Search size={15} aria-hidden="true" />
-                        Browse all products
+                        Browse the catalogue
                     </Link>
 
                     <Link
                         to="/"
-                        className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="rounded-full border border-line-strong bg-card px-5 py-2.5 text-sm font-semibold text-ink transition duration-200 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                     >
                         Go to homepage
                     </Link>

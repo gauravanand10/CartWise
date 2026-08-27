@@ -35,7 +35,16 @@ export default function SearchStats({ results, query }: SearchStatsProps) {
     const stats: Stat[] = [
         {
             icon: Package,
-            label: query.trim() ? `Matches for "${query.trim()}"` : "Products",
+            /*
+             * Chapter 29: the no-query label was "Products", which read as a
+             * statement about the catalogue. It is not — this page searches a
+             * 20-product local file while the catalogue holds 100, so "Products
+             * 20" told the reader the shop was a fifth of its real size.
+             * "Results shown" describes what it actually counts. The 80
+             * missing products are a separate, larger problem; see the note in
+             * services/searchService.ts.
+             */
+            label: query.trim() ? `Matches for "${query.trim()}"` : "Results shown",
             value: String(results.length),
         },
         {
@@ -61,17 +70,18 @@ export default function SearchStats({ results, query }: SearchStatsProps) {
                 return (
                     <div
                         key={stat.label}
-                        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3"
+                        data-numeric
+                        className="flex items-center gap-3 rounded-2xl border border-line bg-card px-4 py-3"
                     >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sunken text-ink-subtle">
                             <Icon size={16} aria-hidden="true" />
                         </span>
 
                         <div className="min-w-0">
-                            <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                            <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-ink-muted">
                                 {stat.label}
                             </dt>
-                            <dd className="truncate text-sm font-semibold text-slate-900">
+                            <dd className="truncate text-sm font-semibold text-ink">
                                 {stat.value}
                             </dd>
                         </div>

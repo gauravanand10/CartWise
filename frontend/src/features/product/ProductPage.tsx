@@ -47,9 +47,17 @@ export default function ProductPage() {
     useEffect(() => {
         let cancelled = false;
 
-        void getPopularProducts().then((products) => {
-            if (!cancelled) setPopular(products);
-        });
+        // Chapter 29 added the `.catch`. This list feeds the NOT-FOUND screen,
+        // which makes an unhandled rejection here especially wrong: the one
+        // place it can fire is the page a reader has already reached by
+        // something going wrong.
+        void getPopularProducts()
+            .then((products) => {
+                if (!cancelled) setPopular(products);
+            })
+            .catch(() => {
+                if (!cancelled) setPopular([]);
+            });
 
         return () => {
             cancelled = true;

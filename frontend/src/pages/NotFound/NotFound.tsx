@@ -19,7 +19,7 @@ function NotFound() {
                 Error 404
             </p>
 
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="mt-3 text-3xl tracking-tight text-ink sm:text-4xl">
                 We couldn't find that page
             </h1>
 

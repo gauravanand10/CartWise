@@ -21,7 +21,7 @@ import { toCardModel } from "./utils/toCardModel";
  */
 export default function CataloguePage() {
     const params = useCatalogueParams();
-    const { status, page, error } = useCatalogue(params.query);
+    const { status, page, error, retry } = useCatalogue(params.query);
 
     const products = page?.content ?? [];
     const total = page?.totalElements ?? 0;
@@ -42,21 +42,56 @@ export default function CataloguePage() {
                         the current page and would claim "12 products" for a
                         catalogue of 400.
                     */}
+                    {/*
+                        CHAPTER 29 — this was `status === "ready" ? count :
+                        "Loading…"`, so on a FAILED request the page's headline
+                        line said "Loading…" and went on saying it forever.
+                        Measured against a stopped backend: nine seconds in,
+                        still "Loading…", with the only clue being the words
+                        "Failed to fetch" below the filter bar.
+
+                        A page that claims to be loading when it has already
+                        given up is worse than one that says nothing: the reader
+                        waits instead of retrying.
+                    */}
                     {status === "ready"
                         ? `${total} ${total === 1 ? "product" : "products"}`
-                        : "Loading…"}
+                        : status === "loading"
+                            ? "Loading…"
+                            : "Couldn't load the catalogue"}
                 </p>
             </header>
 
             <FilterBar params={params} />
 
+            {/*
+                CHAPTER 29 — was a bare <p> containing `error.message`, which in
+                the ordinary failure case rendered the string "Failed to fetch"
+                and offered nothing to do about it. A retry is the whole point
+                of an error state for a transient network fault, and there was
+                none anywhere on this route.
+            */}
             {status === "error" && (
-                <p
+                <div
                     role="status"
-                    className="rounded-2xl bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
+                    className="flex flex-col items-start gap-3 rounded-2xl border border-line bg-sunken px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                    {error}
-                </p>
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold text-ink">{error}</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">
+                            This is usually a connection problem and clears on a
+                            second try.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={retry}
+                        className="shrink-0 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                    >
+                        Try again
+                    </button>
+                </div>
             )}
 
             {status === "ready" && products.length === 0 && (

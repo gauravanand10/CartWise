@@ -21,33 +21,53 @@ export default function CompareEmpty({ suggestions }: CompareEmptyProps) {
     return (
         <div className="space-y-8">
 
-            <section className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center sm:rounded-[24px] sm:py-20">
+            {/*
+                CHAPTER 29 — matched to the wishlist empty state, deliberately.
 
-                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <Scale size={26} strokeWidth={1.5} aria-hidden="true" />
+                The two are the same moment on two features ("you have selected
+                nothing yet") and were drawn differently: this one had a blue
+                icon tile, that one rose, and both used a card-sized heading for
+                a whole-screen state. They now share one treatment — outlined
+                neutral glyph, display-weight heading as the largest type on the
+                page, and the control named in the sentence.
+
+                The glyph is the same scales icon the compare toggle uses on a
+                product card, for the same reason the wishlist state shows a
+                heart: the reader is being told which control to press, so it
+                should be the control they will actually see.
+            */}
+            <section className="rounded-2xl border border-line bg-card px-6 py-16 text-center sm:rounded-[24px] sm:py-24">
+
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-line bg-sunken text-ink-subtle">
+                    <Scale size={28} strokeWidth={1.25} aria-hidden="true" />
                 </span>
 
-                <h1 className="mt-6 text-lg font-semibold text-slate-900 sm:text-xl">
+                <h1 className="mt-8 text-2xl text-ink sm:text-3xl">
                     Nothing to compare yet
                 </h1>
 
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-                    Add {MIN_COMPARE} to {MAX_COMPARE} products and CartWise will
-                    line up their specifications, prices and store offers
-                    side-by-side, then tell you which one wins and why.
+                <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-ink-muted">
+                    Press the{" "}
+                    <Scale
+                        size={13}
+                        className="inline align-[-1px] text-ink"
+                        aria-hidden="true"
+                    />{" "}
+                    on {MIN_COMPARE} to {MAX_COMPARE} products and their
+                    specifications, prices and store offers line up side by side.
                 </p>
 
-                <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
                     <Link
-                        to="/search"
-                        className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        to="/browse"
+                        className="rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                     >
-                        Browse all products
+                        Browse the catalogue
                     </Link>
 
                     <Link
                         to="/"
-                        className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        className="rounded-full border border-line-strong bg-card px-5 py-2.5 text-sm font-semibold text-ink transition duration-200 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                     >
                         Go to homepage
                     </Link>

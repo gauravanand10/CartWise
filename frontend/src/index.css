@@ -1018,6 +1018,31 @@ select:focus {
    TYPOGRAPHY
    ========================================================= */
 
+/* =========================================================
+   CHAPTER 29 — TYPOGRAPHY WITH A POINT OF VIEW
+
+   The restraint passes of Chapters 26–28 removed everything that shouted.
+   What was left was correct and characterless: one weight (600) on every
+   heading, one tracking value (-0.01em) at every size, and body copy that
+   looked the same as the headings it sat under.
+
+   Distinctiveness here comes from three things, none of which is a colour:
+
+   1. WEIGHT CONTRAST. Headings go to 700 and body copy stays at 400. A
+      300-point gap is what makes a page look designed rather than defaulted;
+      600-against-400 reads as an accident. This is the single biggest change
+      and it costs nothing.
+
+   2. OPTICAL TRACKING. Letter-spacing is not one value — it is a function of
+      size. Large type needs negative tracking to stop looking loose, small
+      type needs positive tracking to stop looking cramped. A single -0.01em
+      everywhere is wrong at both ends. The grade below is applied per level.
+
+   3. BALANCED RAGGING. `text-wrap: balance` stops a two-line heading breaking
+      after one word. It is the detail that separates typeset from rendered,
+      and it is one line of CSS.
+   ========================================================= */
+
 h1,
 h2,
 h3,
@@ -1030,13 +1055,49 @@ h6 {
        which rendered headings near-black on dark/gradient hero panels. */
     color: inherit;
 
-    line-height: 1.2;
+    line-height: 1.15;
 
-    /* 600, not 900. The type scale relies on size and spacing for hierarchy;
-       black weight everywhere flattens that distinction and reads as shouty. */
-    font-weight: 600;
+    font-weight: 700;
 
-    letter-spacing: -0.01em;
+    /* Never breaks a heading to leave one orphaned word on the last line.
+       Capped by the spec at ~6 lines, so it is free on the short strings
+       headings actually are. */
+    text-wrap: balance;
+
+}
+
+/* The tracking grade. Tighter as the type gets larger, which is how optical
+   sizing works — at 56px, -0.01em still looks airy. */
+
+h1 { letter-spacing: -0.035em; }
+
+h2 { letter-spacing: -0.028em; }
+
+h3 { letter-spacing: -0.02em; }
+
+h4,
+h5,
+h6 { letter-spacing: -0.012em; }
+
+/* =========================================================
+   TABULAR NUMERALS
+
+   The one typographic decision that is about THIS product rather than about
+   taste. CartWise exists to put prices next to each other, and proportional
+   figures make that harder to read: in Inter's default set a "1" is narrower
+   than a "7", so ₹1,29,999 and ₹79,999 do not align on their digits and the
+   eye cannot compare column against column.
+
+   `tabular-nums` fixes every digit to the same advance width. Applied to the
+   comparison table, the store-offer rows and every price, which is where
+   columns of figures actually occur — not globally, because tabular figures
+   are slightly wider and look mechanical inside a sentence.
+   ========================================================= */
+
+table,
+[data-numeric] {
+
+    font-variant-numeric: tabular-nums;
 
 }
 
@@ -2278,6 +2339,263 @@ strong {
             #111827);
 
     color: white;
+
+}
+
+/* =========================================================
+   CHAPTER 29 — THE MOTION SYSTEM
+
+   Purposeful motion, and no new dependency to get it. `framer-motion` is
+   already in this project and is used where a component needs orchestration
+   (the category grid's stagger, the promo rail). Everything below is a state
+   change on one element, which is what CSS transitions are for — reaching for
+   a JS animation library to fade a skeleton would be weight for nothing.
+
+   THE RULES THIS SYSTEM FOLLOWS
+
+   - One easing curve for entrances, one for exits. Mixing curves is what makes
+     an interface feel assembled from different products.
+   - Nothing longer than 320ms. Motion that outlasts the user's intent stops
+     being feedback and becomes a wait.
+   - Motion says something. A heart that pops confirms the save registered; a
+     skeleton that dissolves into content says these are the same object, not
+     two screens. Decoration that says nothing is not here.
+   - Every one of them is off under `prefers-reduced-motion`. Not reduced —
+     off, with the end state applied instantly, so a reduced-motion user sees
+     the same interface rather than a degraded one.
+   ========================================================= */
+
+:root {
+
+    /* Decelerating. Things arriving on screen. */
+    --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Symmetric. Things changing in place — colour, border, opacity. */
+    --ease-state: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --duration-fast: 140ms;
+    --duration-base: 220ms;
+    --duration-slow: 320ms;
+
+}
+
+/* ---- Content arriving ------------------------------------------------
+   The skeleton-to-content reveal. Content does not appear, it settles: a
+   short rise plus a fade, which reads as "this was loading and now it is
+   here" rather than as a flash. */
+
+@keyframes cw-reveal {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(8px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: none;
+
+    }
+
+}
+
+.cw-reveal {
+
+    animation: cw-reveal var(--duration-slow) var(--ease-entrance) both;
+
+}
+
+/* Staggered variants, for a grid or rail whose items should not all land at
+   once. Four steps is enough — beyond that the last item is late enough to
+   feel broken. */
+
+.cw-reveal-1 { animation-delay: 40ms; }
+
+.cw-reveal-2 { animation-delay: 80ms; }
+
+.cw-reveal-3 { animation-delay: 120ms; }
+
+/* ---- Confirmation --------------------------------------------------------
+   The wishlist heart. A save is a write to a server the user cannot see, so
+   the only evidence it happened is this. Overshoot then settle — the shape of
+   a physical button being pressed, which is why it reads as confirmation
+   rather than as a wobble. */
+
+@keyframes cw-pop {
+
+    0% { transform: scale(1); }
+
+    40% { transform: scale(1.28); }
+
+    70% { transform: scale(0.94); }
+
+    100% { transform: scale(1); }
+
+}
+
+.cw-pop {
+
+    animation: cw-pop var(--duration-base) var(--ease-state);
+
+}
+
+/* ---- Page transition -----------------------------------------------------
+   Applied to the routed content, keyed on the pathname, so each navigation
+   replays it. Shorter and shallower than the content reveal above: a whole
+   page moving 8px would read as the layout shifting, which is alarming rather
+   than smooth. */
+
+@keyframes cw-page-in {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(4px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: none;
+
+    }
+
+}
+
+.cw-page {
+
+    animation: cw-page-in var(--duration-base) var(--ease-entrance) both;
+
+}
+
+/* ---- Skeleton ------------------------------------------------------------
+   Replaces the Chapter 8 `.skeleton` sweep below, which ran a hard white
+   gradient across a slate block on a 1.2s loop — high contrast, fast, and
+   visible in peripheral vision from across a room. A loading state should be
+   the calmest thing on the screen, not the most active.
+
+   This is a slow opacity breath between two neutrals from the token set. */
+
+@keyframes cw-skeleton {
+
+    0%, 100% { opacity: 1; }
+
+    50% { opacity: 0.55; }
+
+}
+
+.cw-skeleton {
+
+    background: var(--color-sunken);
+
+    animation: cw-skeleton 1.6s var(--ease-state) infinite;
+
+}
+
+/* ---- The reduced-motion contract -----------------------------------------
+   Everything above, off. The end state is what a reduced-motion user gets,
+   immediately — `animation: none` on a `both`-filled animation would leave
+   the element at its FROM state (invisible), so the properties are reset
+   explicitly. That is the trap this block exists to avoid: a careless
+   reduced-motion rule here would make content vanish for exactly the users
+   least able to work around it. */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .cw-reveal,
+    .cw-page,
+    .cw-pop {
+
+        animation: none;
+
+        opacity: 1;
+
+        transform: none;
+
+    }
+
+    .cw-skeleton {
+
+        animation: none;
+
+        opacity: 1;
+
+    }
+
+}
+
+/* =========================================================
+   CHAPTER 29 — THE SKIP LINK
+
+   Written as explicit CSS rather than as Tailwind's
+   `sr-only focus:not-sr-only`, because that combination was measured NOT
+   working here: the element took focus correctly but stayed at 1×1px, so a
+   sighted keyboard user got an invisible focus stop — which is a WCAG 2.4.7
+   (Focus Visible) failure layered on top of the 2.4.1 failure the link exists
+   to fix. Whether the cause is utility ordering or the variant not being
+   generated did not matter; a control this important should not depend on the
+   resolution order of two opposing utilities.
+
+   Off-screen rather than `display: none` or `visibility: hidden`: both of
+   those remove the element from the focus order entirely, which would make the
+   link unreachable by the exact input method it exists for.
+   ========================================================= */
+
+.skip-link {
+
+    position: absolute;
+
+    left: 1rem;
+
+    /* Off the top of the viewport, still in the DOM, still focusable. */
+    top: -4rem;
+
+    z-index: 100;
+
+    padding: .625rem 1.25rem;
+
+    border-radius: 999px;
+
+    background: var(--color-ink);
+
+    color: #fff;
+
+    font-size: .875rem;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: top var(--duration-base) var(--ease-entrance);
+
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+
+    top: 1rem;
+
+    outline: 2px solid var(--color-brand);
+
+    outline-offset: 2px;
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .skip-link {
+
+        transition: none;
+
+    }
 
 }
 

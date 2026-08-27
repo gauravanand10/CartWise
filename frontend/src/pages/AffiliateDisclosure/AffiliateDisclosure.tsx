@@ -67,7 +67,7 @@ export default function AffiliateDisclosure() {
                 Legal
             </p>
 
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            <h1 className="mt-3 text-3xl tracking-tight text-ink sm:text-4xl">
                 Affiliate disclosure
             </h1>
 
@@ -111,7 +111,7 @@ export default function AffiliateDisclosure() {
             <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-slate-700">
 
                 <section>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-xl tracking-tight text-ink">
                         What an affiliate link is
                     </h2>
 
@@ -144,7 +144,7 @@ export default function AffiliateDisclosure() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-xl tracking-tight text-ink">
                         Which links these are
                     </h2>
 
@@ -239,7 +239,7 @@ export default function AffiliateDisclosure() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-xl tracking-tight text-ink">
                         How this affects what you see — and what it doesn't
                     </h2>
 
@@ -262,7 +262,7 @@ export default function AffiliateDisclosure() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-xl tracking-tight text-ink">
                         What we record when you click
                     </h2>
 
@@ -301,7 +301,7 @@ export default function AffiliateDisclosure() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="text-xl tracking-tight text-ink">
                         What CartWise is not responsible for
                     </h2>
 

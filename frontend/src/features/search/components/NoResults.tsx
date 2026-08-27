@@ -33,7 +33,7 @@ export default function NoResults({
                 <SearchX size={26} strokeWidth={1.5} aria-hidden="true" />
             </span>
 
-            <h2 className="mt-6 text-lg font-semibold text-slate-900 sm:text-xl">
+            <h2 className="mt-8 text-2xl text-ink sm:text-3xl">
                 No products found
             </h2>
 

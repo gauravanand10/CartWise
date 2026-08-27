@@ -140,9 +140,16 @@ export function useComparison(): UseComparison {
     useEffect(() => {
         let cancelled = false;
 
-        void getSuggestions(activeProducts, slugs).then((next) => {
-            if (!cancelled) setSuggestions(next);
-        });
+        // Chapter 29 added the `.catch` — see the identical note in
+        // useWishlist. An unhandled rejection is not an acceptable failure mode
+        // for a supplementary picker list.
+        void getSuggestions(activeProducts, slugs)
+            .then((next) => {
+                if (!cancelled) setSuggestions(next);
+            })
+            .catch(() => {
+                if (!cancelled) setSuggestions([]);
+            });
 
         return () => {
             cancelled = true;

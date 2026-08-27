@@ -218,7 +218,14 @@ export default function StoreOfferCard({
             </div>
 
             <div className="flex items-center justify-between gap-3 sm:justify-end">
-                <div className="flex flex-col items-end gap-1">
+                {/*
+                    Chapter 29 — tabular figures. This is the list the whole
+                    feature exists for: five retailers' prices stacked in a
+                    column, meant to be compared at a glance. Proportional
+                    digits break that alignment; these are the rows where it
+                    matters most.
+                */}
+                <div data-numeric className="flex flex-col items-end gap-1">
                     <span className="text-lg font-semibold tracking-tight text-slate-900">
                         {formatPrice(offer.price)}
                     </span>

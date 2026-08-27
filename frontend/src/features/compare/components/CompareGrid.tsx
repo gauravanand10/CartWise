@@ -70,8 +70,12 @@ export default function CompareGrid({
                             <CompareProductColumn
                                 product={product}
                                 onRemove={() => onRemove(product.slug)}
-                                isBestOverall={verdict?.bestOverall === index}
-                                isBestValue={verdict?.bestValue === index}
+                                // Chapter 29: both are arrays now, because a
+                                // drawn verdict is a real state. Every tied
+                                // column gets the badge rather than the badge
+                                // going to whichever product was added first.
+                                isBestOverall={verdict?.bestOverall.includes(index) ?? false}
+                                isBestValue={verdict?.bestValue.includes(index) ?? false}
                             />
                         </div>
                     ))}

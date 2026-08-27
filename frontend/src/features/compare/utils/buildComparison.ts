@@ -70,6 +70,21 @@ function deriveSpecRows(
     }));
 }
 
+/**
+ * Rows that restate the product's price, and therefore share one vote.
+ *
+ * `price` is the current price, `lowest` is the best store price, and every
+ * `store-*` row is that same price multiplied by a fixed per-retailer offset.
+ * They are one fact wearing seven labels. See the note in `buildVerdict`.
+ */
+const PRICE_SIGNAL = "price";
+
+function signalFor(rowId: string): string | undefined {
+    if (rowId === "price" || rowId === "lowest") return PRICE_SIGNAL;
+    if (rowId.startsWith("store-")) return PRICE_SIGNAL;
+    return undefined;
+}
+
 function resolveRow(
     config: RowConfig,
     products: ProductDetail[],
@@ -89,6 +104,7 @@ function resolveRow(
         differs:
             present.length !== values.length ||
             new Set(values).size > 1,
+        signal: signalFor(config.id),
     };
 }
 
@@ -141,6 +157,9 @@ function buildStoreSection(products: ProductDetail[]): ResolvedSection | null {
             emphasis: false,
             winners: resolveWinners(metrics, "lower"),
             differs: new Set(values).size > 1,
+            // Same underlying number as the Price section's rows. Rendered in
+            // full, counted once. See `buildVerdict`.
+            signal: PRICE_SIGNAL,
         };
     });
 
@@ -184,34 +203,98 @@ export function buildSections(products: ProductDetail[]): ResolvedSection[] {
     return stores ? [...configured, stores] : configured;
 }
 
+/** Every index sharing the maximum of `scores`. Length > 1 is a genuine tie. */
+function topIndices(scores: number[]): number[] {
+    if (scores.length === 0) return [];
+
+    const max = Math.max(...scores);
+    return scores
+        .map((score, index) => ({ score, index }))
+        .filter((entry) => entry.score === max)
+        .map((entry) => entry.index);
+}
+
 /**
  * The overall recommendation.
  *
- * "Best overall" counts row wins rather than trusting a single score, so it is
- * traceable — the user can scroll the table and see where the wins came from.
- * "Best value" is AI score per rupee, which is what separates a good product
- * from a good purchase.
+ * "Best overall" counts wins rather than trusting a single score, so it stays
+ * traceable — the reader can scroll the table and see where the wins came from.
+ *
+ * ===========================================================================
+ * CHAPTER 29 — ONE VOTE PER SIGNAL, NOT PER ROW
+ *
+ * THE BUG. This counted one win per ranked ROW, and the table has seven rows
+ * that all measure the same thing. Per-store prices are `product.price` times a
+ * fixed per-retailer offset (see data/offers.ts), so all five `store-*` rows are
+ * won by whichever product is cheapest — and then "Current price" and "Best
+ * store price" award that same product twice more. Before a single
+ * specification was compared, the cheapest product had banked seven votes.
+ *
+ * Chapter 28 measured the consequence across all 12,605 same-category
+ * four-product comparisons the catalogue admits:
+ *
+ *     winner is the CHEAPEST product   83.7%
+ *     winner is the BEST-RATED         8.5%      (chance would be 25%)
+ *     winner is the WORST-RATED        59.2%
+ *
+ * A recommendation that names the worst-rated product more often than the
+ * best-rated one is not a weak recommendation, it is an inverted one. The
+ * Headphones example: boAt Nirvana 751 ANC (rated 4.1) beat the Sony
+ * WH-1000XM6 (rated 4.9) by nine wins to one, and seven of those nine were the
+ * same £-per-unit fact counted seven times.
+ *
+ * THE FIX. Rows carrying the same `signal` cast ONE vote between them, decided
+ * by the first such row encountered — which is "Current price", the canonical
+ * statement of the quantity. Every other row remains its own signal.
+ *
+ * THE RESULTING WEIGHT DISTRIBUTION, stated plainly:
+ *
+ *     price                     1 vote   (was 7)
+ *     customer rating           1 vote
+ *     number of ratings         1 vote
+ *     each comparable spec      1 vote each
+ *
+ * WHY EQUAL WEIGHTS RATHER THAN A TUNED CURVE. Any other split needs a number
+ * nobody can source — "price is worth 2.5 specifications" is exactly the kind
+ * of invented figure the last four chapters have been deleting. One vote per
+ * independent comparable dimension is a rule that can be stated in a sentence
+ * and checked against the table, which is the property that made row-counting
+ * worth keeping in the first place.
+ *
+ * The rows are all still RENDERED. Nothing is hidden from the reader; the five
+ * store rows are genuinely useful to look at. They simply stop voting seven
+ * times for one fact.
+ *
+ * TIES ARE NO LONGER HIDDEN. `bestOverall` and `bestValue` are arrays. The old
+ * `count > wins[best]` reduction silently handed a drawn verdict to whichever
+ * product sat earliest in the array — that is, whichever the user added to the
+ * comparison first. See the note on CompareVerdict.
+ * ===========================================================================
  */
 export function buildVerdict(
     products: ProductDetail[],
     sections: ResolvedSection[],
 ): CompareVerdict {
     const wins = products.map(() => 0);
-    let comparableRows = 0;
+    const countedSignals = new Set<string>();
+    let comparableSignals = 0;
 
     for (const section of sections) {
         for (const row of section.rows) {
             if (row.winners.length === 0) continue;
 
-            comparableRows += 1;
+            if (row.signal) {
+                // Already voted for by an earlier row measuring the same thing.
+                if (countedSignals.has(row.signal)) continue;
+                countedSignals.add(row.signal);
+            }
+
+            comparableSignals += 1;
             for (const index of row.winners) wins[index] += 1;
         }
     }
 
-    const bestOverall = wins.reduce(
-        (best, count, index) => (count > wins[best] ? index : best),
-        0,
-    );
+    const bestOverall = topIndices(wins);
 
     /*
      * "Best value" — quality per rupee.
@@ -228,10 +311,7 @@ export function buildVerdict(
         (product) => product.rating / Math.max(1, product.price),
     );
 
-    const bestValue = valuePerRupee.reduce(
-        (best, score, index) => (score > valuePerRupee[best] ? index : best),
-        0,
-    );
+    const bestValue = topIndices(valuePerRupee);
 
-    return { bestOverall, bestValue, wins, comparableRows };
+    return { bestOverall, bestValue, wins, comparableSignals };
 }

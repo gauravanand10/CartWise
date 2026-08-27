@@ -291,6 +291,19 @@ export default function ProductCard({
                         on #1D1D1F, 16.83:1. The compare toggle below keeps the
                         accent, so the two active states stay distinguishable by
                         colour as well as by glyph. */}
+                    {/*
+                        CHAPTER 29 — `key={String(wishlisted)}` on the glyph.
+
+                        Saving is a write to a server the user cannot see, so
+                        the fill is the only evidence it landed. Remounting the
+                        icon when the state flips replays `cw-pop` — a 220ms
+                        overshoot-and-settle — which reads as a press being
+                        registered. Without the key React reuses the element and
+                        the animation never runs a second time.
+
+                        On the icon, not the button: animating the 36px hit area
+                        would move the thing the pointer is over.
+                    */}
                     <button
                         type="button"
                         onClick={() => toggleWishlist(product.slug)}
@@ -323,7 +336,12 @@ export default function ProductCard({
                             }
                         `}
                     >
-                        <Heart size={15} fill={wishlisted ? "currentColor" : "none"} />
+                        <Heart
+                            key={String(wishlisted)}
+                            size={15}
+                            fill={wishlisted ? "currentColor" : "none"}
+                            className={wishlisted ? "cw-pop" : undefined}
+                        />
                     </button>
 
                     {/*
@@ -471,7 +489,18 @@ export default function ProductCard({
                 )}
 
                 <div className="mt-auto pt-4">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    {/*
+                        Chapter 29: `data-numeric` switches this block to
+                        tabular figures. In a grid of cards the prices sit in a
+                        column, and proportional digits mean ₹1,29,999 and
+                        ₹79,999 do not line up — the eye cannot scan down and
+                        compare, which on a price-comparison site is the one
+                        thing the layout exists to support.
+                    */}
+                    <div
+                        data-numeric
+                        className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
+                    >
                         <span className="text-lg font-semibold tracking-tight text-ink">
                             {formatPrice(product.price)}
                         </span>

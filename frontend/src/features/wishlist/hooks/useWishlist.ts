@@ -132,9 +132,25 @@ export function useWishlist(): UseWishlist {
     useEffect(() => {
         let cancelled = false;
 
-        void getWishlistSuggestions(slugs).then((next) => {
-            if (!cancelled) setSuggestions(next);
-        });
+        /*
+         * Chapter 29 added the `.catch`. It was `void promise.then(...)`, which
+         * silences the floating-promise lint without handling anything — a
+         * rejection here became an unhandled promise rejection in the console
+         * and, in a browser with "pause on unhandled rejections", a stop.
+         *
+         * It survives today only because `getPopularProducts` happens to catch
+         * internally and resolve with `[]`. That is one `try` in another
+         * module's implementation away from being a live bug, and this hook
+         * should not depend on it. Suggestions are supplementary: an empty list
+         * is the correct failure, and WishlistEmpty already renders it.
+         */
+        void getWishlistSuggestions(slugs)
+            .then((next) => {
+                if (!cancelled) setSuggestions(next);
+            })
+            .catch(() => {
+                if (!cancelled) setSuggestions([]);
+            });
 
         return () => {
             cancelled = true;

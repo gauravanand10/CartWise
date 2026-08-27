@@ -65,6 +65,15 @@ export interface ResolvedRow {
     winners: number[];
     /** True when the products do not all share the same value. */
     differs: boolean;
+    /**
+     * Which underlying quantity this row measures, when it shares one with other
+     * rows. Rows carrying the same signal cast ONE vote between them in
+     * `buildVerdict` — see the long note there.
+     *
+     * Undefined means the row is its own independent signal, which is the case
+     * for every specification and both rating rows.
+     */
+    signal?: string;
 }
 
 export interface ResolvedSection {
@@ -78,15 +87,45 @@ export interface ResolvedSection {
     differenceCount: number;
 }
 
-/** The overall recommendation drawn from the resolved comparison. */
+/**
+ * The overall recommendation drawn from the resolved comparison.
+ *
+ * ---------------------------------------------------------------------------
+ * CHAPTER 29 — BOTH VERDICTS ARE NOW ARRAYS, AND THAT IS THE POINT.
+ *
+ * They were single indices, which made a genuine tie unrepresentable: the old
+ * `bestOverall` was computed with `count > wins[best]` scanning left to right,
+ * so when two products drew, the one the user happened to add to the comparison
+ * FIRST silently took the crown and the UI presented it as a decisive result.
+ * Chapter 28's sweep measured 447 of 12,605 four-product comparisons in exactly
+ * that state — 3.5% of verdicts were a coin flip wearing a certainty.
+ *
+ * An array cannot hide that. One entry is a winner; more than one is a tie, and
+ * the card is obliged to say so.
+ * ---------------------------------------------------------------------------
+ */
 export interface CompareVerdict {
-    /** Index of the product winning the most comparable rows. */
-    bestOverall: number;
-    /** Index of the cheapest product with the highest AI score per rupee. */
-    bestValue: number;
-    /** Row wins per product, by index. */
+    /**
+     * Indices of the product(s) winning the most comparable signals.
+     * Length > 1 is a genuine tie and must be rendered as one.
+     */
+    bestOverall: number[];
+    /**
+     * Indices of the product(s) with the best customer rating per rupee.
+     * Length > 1 is a genuine tie.
+     */
+    bestValue: number[];
+    /** Signal wins per product, by index. */
     wins: number[];
-    comparableRows: number;
+    /**
+     * How many independent signals were comparable.
+     *
+     * Renamed from `comparableRows` in Chapter 29 because it is no longer a row
+     * count: the seven rows that all restate the product's price now contribute
+     * one signal between them, so rows and signals are different numbers and
+     * calling this "rows" would overstate what the verdict weighed.
+     */
+    comparableSignals: number;
 }
 
 /** What the Compare page should render right now. */

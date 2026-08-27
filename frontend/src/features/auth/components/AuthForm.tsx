@@ -124,7 +124,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
     return (
         <div className="mx-auto w-full max-w-md">
             <header className="text-center">
-                <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+                <h1 className="text-2xl tracking-tight text-ink sm:text-3xl">
                     {isLogin ? "Sign in to CartWise" : "Create your account"}
                 </h1>
                 <p className="mt-2 text-sm leading-relaxed text-ink-muted">

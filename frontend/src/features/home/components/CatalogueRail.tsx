@@ -141,7 +141,23 @@ export default function CatalogueRail({
                 </Link>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+            {/*
+                CHAPTER 29 — the skeleton-to-content reveal.
+
+                `aria-busy` on the container is what actually tells assistive
+                technology this region is loading; the skeletons themselves are
+                aria-hidden, because announcing four empty boxes is noise.
+
+                Each card carries `cw-reveal` with a staggered delay, so the row
+                settles left to right over ~160ms instead of four cards
+                appearing simultaneously. The stagger caps at three steps: past
+                that the last item is late enough to read as broken rather than
+                as considered.
+            */}
+            <div
+                className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6"
+                aria-busy={products === null}
+            >
                 {products === null
                     ? Array.from({ length: count }, (_, index) => (
                         <Skeleton
@@ -149,8 +165,13 @@ export default function CatalogueRail({
                             className="h-[360px] rounded-2xl"
                         />
                     ))
-                    : products.map((product) => (
-                        <ProductCard key={product.slug} product={product} />
+                    : products.map((product, index) => (
+                        <div
+                            key={product.slug}
+                            className={`cw-reveal ${index > 0 ? `cw-reveal-${Math.min(index, 3)}` : ""}`}
+                        >
+                            <ProductCard product={product} />
+                        </div>
                     ))}
             </div>
 

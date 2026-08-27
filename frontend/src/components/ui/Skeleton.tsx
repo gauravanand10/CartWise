@@ -15,6 +15,29 @@ const roundedStyles = {
     full: "rounded-full",
 };
 
+/**
+ * A loading placeholder.
+ *
+ * ---------------------------------------------------------------------------
+ * CHAPTER 29 — CALMER, AND ANNOUNCED.
+ *
+ * It was a slate gradient running Tailwind's `animate-pulse` on a 1.5s loop,
+ * with a second `motion-safe:animate-[pulse…]` layered on top of the first — a
+ * duplicate that did nothing except make the rule harder to read.
+ *
+ * Two changes. The animation is now `cw-skeleton`: one flat neutral from the
+ * token set breathing between full and 55% opacity over 1.6s. A loading state
+ * should be the quietest thing on a screen, and a high-contrast gradient
+ * sweeping left to right is the most eye-catching motion an interface can make
+ * — it pulled attention to the part of the page with the least information on
+ * it.
+ *
+ * And `aria-hidden`. A skeleton is a picture of content that does not exist
+ * yet; announcing a screenful of empty boxes to a screen reader is noise. The
+ * components that own them mark the region `aria-busy`, which is the property
+ * that actually carries "this is loading" to assistive technology.
+ * ---------------------------------------------------------------------------
+ */
 export default function Skeleton({
     className,
     rounded = "md",
@@ -22,12 +45,8 @@ export default function Skeleton({
 }: SkeletonProps) {
     return (
         <div
-            className={cn(
-                "animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%]",
-                "motion-safe:animate-[pulse_1.5s_ease-in-out_infinite]",
-                roundedStyles[rounded],
-                className
-            )}
+            aria-hidden="true"
+            className={cn("cw-skeleton", roundedStyles[rounded], className)}
             {...props}
         />
     );

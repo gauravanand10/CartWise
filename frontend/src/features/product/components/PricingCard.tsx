@@ -27,15 +27,55 @@ interface PricingCardProps {
 export default function PricingCard({ product }: PricingCardProps) {
     const saving = (product.originalPrice ?? product.price) - product.price;
 
-    const isLowest = product.lowestPrice >= product.price;
-    const cheapestStore = product.stores.reduce((best, store) =>
-        store.price < best.price ? store : best,
-    );
+    /*
+     * =====================================================================
+     * CHAPTER 29 — THIS LINE CRASHED THE WHOLE APPLICATION.
+     *
+     * It was:
+     *
+     *     const cheapestStore = product.stores.reduce(
+     *         (best, store) => (store.price < best.price ? store : best));
+     *
+     * A `reduce` with no seed throws "Reduce of empty array with no initial
+     * value" on an empty array, and `product.stores` can genuinely be empty:
+     * it is `buildStoreOffers(base, retailers)` mapped over whatever
+     * `GET /api/affiliate/retailers` returns, and that endpoint returns `[]`
+     * whenever `cartwise.affiliate.retailers` configures none — a legitimate
+     * deployment, and the default for any environment that has not set the
+     * affiliate properties up.
+     *
+     * REAL-WORLD IMPACT: not a broken card, a broken site. Until this chapter
+     * the application had no error boundary at all, so a throw during render
+     * unmounted the entire React tree and left a blank white page with no
+     * navigation and no way back. Every product page was one unconfigured
+     * environment variable away from that.
+     *
+     * Two fixes, deliberately both: the seed here so the expression cannot
+     * throw, and `components/common/ErrorBoundary` so that the next component
+     * to throw degrades to a recovery screen instead of a white one.
+     *
+     * `stores[0]` as the seed rather than a synthetic zero-price object: a
+     * fabricated retailer with a made-up price is precisely what the last four
+     * chapters have been removing. When there are no offers there is no
+     * cheapest one, and the badge below simply does not render.
+     * =====================================================================
+     */
+    const cheapestStore = product.stores.length > 0
+        ? product.stores.reduce((best, store) =>
+            store.price < best.price ? store : best)
+        : null;
+
+    // `cheapestStore` is part of the condition now, so the badge cannot render
+    // without a retailer to name. `lowestPrice` is 0 for an empty offer list,
+    // which already made `isLowest` false — but relying on that coincidence is
+    // what made the crash above possible in the first place.
+    const isLowest = cheapestStore !== null && product.lowestPrice >= product.price;
 
     return (
         <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:rounded-[20px] sm:p-5">
 
-            <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+            {/* Chapter 29 — tabular figures. See the note in ProductCard. */}
+            <div data-numeric className="flex flex-wrap items-end gap-x-3 gap-y-1">
                 <span className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                     {formatPrice(product.price)}
                 </span>
