@@ -50,11 +50,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final TokenBucket authBucket;
     private final TokenBucket writeBucket;
     private final TokenBucket adminBucket;
+    private final TokenBucket clickBucket;
 
     public RateLimitInterceptor(RateLimitProperties properties) {
         this.authBucket = new TokenBucket(properties.authCapacity(), properties.authRefill());
         this.writeBucket = new TokenBucket(properties.writeCapacity(), properties.writeRefill());
         this.adminBucket = new TokenBucket(properties.adminCapacity(), properties.adminRefill());
+        this.clickBucket = new TokenBucket(properties.clickCapacity(), properties.clickRefill());
     }
 
     @Override
@@ -71,6 +73,13 @@ public class RateLimitInterceptor implements HandlerInterceptor {
 
         if (isAuthEndpoint(path)) {
             bucket = authBucket;
+            key = clientIp(request);
+        } else if (isAffiliateClick(path)) {
+            // Per IP, not per user. Most clicks are anonymous by design — the endpoint is public
+            // because a comparison site's outbound links have to be — so principalKey would collapse
+            // essentially all traffic into one shared bucket and the first busy minute would lock
+            // every visitor out of every retailer link at once.
+            bucket = clickBucket;
             key = clientIp(request);
         } else if (isImageBackfill(path)) {
             bucket = adminBucket;
@@ -101,6 +110,25 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     /** Login and signup. Public by necessity, which is exactly why they are limited hardest. */
     private static boolean isAuthEndpoint(String path) {
         return path.startsWith("/api/auth/");
+    }
+
+    /**
+     * Chapter 26's outbound click tracking — both the redirect and the JSON variant.
+     *
+     * <p>Deliberately covers {@code /api/affiliate/click/**} and {@code /api/affiliate/clicks}
+     * together, because they write the same row and limiting one would just move the abuse to the
+     * other. {@code /api/affiliate/retailers} is excluded: it is a read of five configuration
+     * entries with nothing to inflate.
+     *
+     * <p>The threat is specific and worth naming. This endpoint's output is the number a commercial
+     * arrangement is settled on, it needs no account, and a loop over it costs an attacker nothing —
+     * which is a different problem from the auth bucket's (guessing a password) or the admin
+     * bucket's (spending a third party's quota). Fabricated clicks would not defraud a retailer,
+     * since no commission is paid without a real purchase, but they would corrupt CartWise's own
+     * report of which products and retailers people actually use.
+     */
+    private static boolean isAffiliateClick(String path) {
+        return path.startsWith("/api/affiliate/click");
     }
 
     /**
@@ -185,5 +213,6 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         authBucket.evictFullBuckets();
         writeBucket.evictFullBuckets();
         adminBucket.evictFullBuckets();
+        clickBucket.evictFullBuckets();
     }
 }

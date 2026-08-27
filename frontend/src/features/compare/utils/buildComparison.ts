@@ -213,8 +213,19 @@ export function buildVerdict(
         0,
     );
 
+    /*
+     * "Best value" — quality per rupee.
+     *
+     * Chapter 26.5 changed the numerator and not the idea. It was
+     * `product.ai.score`, a fabricated 0–100 CartWise score; it is now the real
+     * customer rating the API carries. The rating's range is 0–5 rather than
+     * 0–100, which is irrelevant here: this array is only ever compared against
+     * itself to find a maximum, so a uniform change of scale cannot change the
+     * winner. What DOES change is that the number is now something a reader
+     * could verify.
+     */
     const valuePerRupee = products.map(
-        (product) => product.ai.score / Math.max(1, product.price),
+        (product) => product.rating / Math.max(1, product.price),
     );
 
     const bestValue = valuePerRupee.reduce(

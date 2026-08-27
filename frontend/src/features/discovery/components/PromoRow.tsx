@@ -16,10 +16,27 @@ const PROMOS = [
         to: "/compare",
         gradient: "from-tile-sky to-tile-lilac",
     },
+    /*
+     * CHAPTER 27 — this card promised price tracking.
+     *
+     * It read "Watch the number" / "Track price drops" / "Save anything you are
+     * undecided about and come back when it moves."
+     *
+     * The number does not move. Prices are static rows in the products table;
+     * there is no price-history table, no scheduled fetch and nothing that could
+     * ever change one — which is precisely why Chapter 26.5 deleted the
+     * PriceDrops rail and its "lowest price of the last 90 days" line. The same
+     * claim survived here, on the same page, three sections lower, wearing the
+     * heading of the feature that had just been removed for not existing.
+     *
+     * What the wishlist genuinely does is hold a per-user shortlist on the
+     * server (Chapter 23.5), so that is what the card now says. The route, the
+     * call to action and the card's position are unchanged.
+     */
     {
-        eyebrow: "Watch the number",
-        heading: "Track price drops",
-        body: "Save anything you are undecided about and come back when it moves.",
+        eyebrow: "Keep a shortlist",
+        heading: "Save what you're deciding between",
+        body: "Anything you save stays on your account, ready to reopen or compare later.",
         cta: "Open wishlist",
         to: "/wishlist",
         gradient: "from-tile-mint to-tile-butter",

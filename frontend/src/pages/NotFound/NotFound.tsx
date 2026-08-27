@@ -11,11 +11,11 @@ function NotFound() {
     return (
         <section className="flex min-h-[55vh] flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center">
 
-            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 text-white shadow-sm">
+            <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                 <Compass size={28} strokeWidth={1.75} />
             </span>
 
-            <p className="mt-8 text-sm font-semibold uppercase tracking-[0.14em] text-blue-600">
+            <p className="mt-8 text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">
                 Error 404
             </p>
 
@@ -37,7 +37,7 @@ function NotFound() {
                         items-center
                         gap-2
                         rounded-full
-                        bg-slate-900
+                        bg-blue-600
                         px-6
                         py-3
                         text-sm
@@ -45,7 +45,7 @@ function NotFound() {
                         text-white
                         transition
                         duration-200
-                        hover:bg-blue-600
+                        hover:bg-blue-700
                         focus-visible:outline-none
                         focus-visible:ring-2
                         focus-visible:ring-blue-500

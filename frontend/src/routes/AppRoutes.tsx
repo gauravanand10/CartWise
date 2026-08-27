@@ -6,6 +6,8 @@ import Home from "../pages/Home/Home";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Product from "../pages/Product/Product";
 import NotFound from "../pages/NotFound/NotFound";
+import AffiliateDisclosure from "../pages/AffiliateDisclosure/AffiliateDisclosure";
+import AffiliateClicks from "../pages/Admin/AffiliateClicks";
 
 import { SearchPage } from "../features/search";
 import { ComparePage } from "../features/compare";
@@ -59,6 +61,15 @@ export default function AppRoutes() {
                     page has to remember to apply.
                 */}
 
+                {/* Chapter 26. Public, and it has to be: the disclosure is a
+                    legal notice about links a signed-out visitor can click, so
+                    putting it behind a login would defeat its purpose. */}
+
+                <Route
+                    path="/affiliate-disclosure"
+                    element={<AffiliateDisclosure />}
+                />
+
                 <Route element={<ProtectedRoute />}>
 
                     <Route
@@ -69,6 +80,26 @@ export default function AppRoutes() {
                     <Route
                         path="/wishlist"
                         element={<Wishlist />}
+                    />
+
+                    {/*
+                        Chapter 26's click report.
+
+                        ProtectedRoute only asks "is anyone signed in" — it
+                        cannot ask for a role, because the frontend never learns
+                        one: AuthResponse carries an id, an email and a token,
+                        and nothing decodes the token client-side. That is not a
+                        gap being tolerated. The report is served by
+                        /api/admin/affiliate/clicks, which SecurityConfig gates
+                        with hasRole("ADMIN"), so a signed-in non-admin who types
+                        this URL gets a 403 from the server and a page that says
+                        so. The route gate is convenience; the server is the
+                        control.
+                    */}
+
+                    <Route
+                        path="/admin/affiliate-clicks"
+                        element={<AffiliateClicks />}
                     />
 
                 </Route>

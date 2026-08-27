@@ -3,7 +3,10 @@ import type { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import SafeImage from "./SafeImage";
-import { discountPercent, formatCount, formatPrice } from "../../lib/currency";
+// `discountPercent` was imported here until Chapter 27 removed the discount
+// pill — see the note beside the badge below. It is still used by the product
+// page's PricingCard and by the comparison table, so the helper stays.
+import { formatCount, formatPrice } from "../../lib/currency";
 import { useCompareSelection } from "../../features/compare";
 import { useWishlistSelection } from "../../features/wishlist";
 import type { ProductCardModel } from "../../types/product";
@@ -110,8 +113,6 @@ export default function ProductCard({
     store,
     fallbackIcon,
 }: ProductCardProps) {
-    const discount = discountPercent(product.price, product.originalPrice);
-
     const { toggle, isComparing, isFull } = useCompareSelection();
     const comparing = isComparing(product.slug);
 
@@ -159,36 +160,44 @@ export default function ProductCard({
                 />
 
                 {/*
-                    Stacked rather than overlaid. The discount badge is computed
-                    and semantic; `badge` is a caller-supplied section label and
-                    neutral. Before the Chapter 23 merge these two lived in the
-                    same corner of two different components and could never
-                    collide; now that one component renders both, a column with
-                    a gap is what keeps a discounted "Trending" product from
-                    printing one on top of the other.
-                */}
-                {(discount > 0 || badge) && (
-                    <div className="absolute left-3 top-3 z-10 flex flex-col items-start gap-1">
-                        {/* Semantic, not decorative: success means "this costs
-                            less than it did". The same green cannot be used
-                            ornamentally anywhere else on the card, or it stops
-                            carrying that meaning. */}
-                        {discount > 0 && (
-                            <span className="rounded-full bg-success px-2 py-1 text-[11px] font-bold text-white">
-                                {discount}% off
-                            </span>
-                        )}
+                    =====================================================
+                    CHAPTER 27 — THE GREEN "N% off" PILL IS GONE
 
-                        {/* Neutral by design. A section label is not a claim
-                            about the product, so it must not borrow success or
-                            danger — "Bestseller" in green would read as a price
-                            drop. */}
-                        {badge && (
-                            <span className="rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold text-ink-muted shadow-sm backdrop-blur-sm">
-                                {badge}
-                            </span>
-                        )}
-                    </div>
+                    It was `bg-success` (#146C43) with bold white text, in
+                    the top-left corner of every card that had an original
+                    price. Eight of them on the homepage. Up to a hundred
+                    on /browse, in a two-column grid on a phone.
+
+                    A saturated discount chip repeated down a scrolling
+                    grid is the single most recognisable piece of
+                    fast-fashion-marketplace styling there is, and this
+                    was a faithful copy of it. The defence in the comment
+                    that used to sit here — that the green is semantic
+                    rather than decorative — was true and did not help:
+                    the pattern is the repetition and the saturation, not
+                    the honesty of the number.
+
+                    NOTHING IS LOST BY REMOVING IT. The percentage was
+                    derived from `price` and `originalPrice`, and BOTH are
+                    already printed at the bottom of this card, the second
+                    one struck through. The card still says ₹4,499 against
+                    ₹7,999; it no longer also shouts "44% off" over the
+                    photograph.
+
+                    It is REMOVED, not recoloured. A grey "44% off" chip
+                    would be the same pattern with the volume down, which
+                    is the thing this chapter was told not to build.
+                    =====================================================
+
+                    `badge` stays. It is a caller-supplied section label
+                    and it was always neutral; it now has the corner to
+                    itself, which is why the wrapping column collapses to
+                    a single element.
+                */}
+                {badge && (
+                    <span className="absolute left-3 top-3 z-10 rounded-full bg-card/90 px-2.5 py-1 text-[11px] font-semibold text-ink-muted shadow-sm backdrop-blur-sm">
+                        {badge}
+                    </span>
                 )}
 
                 {/*
@@ -221,9 +230,29 @@ export default function ProductCard({
                     </span>
                 )}
 
+                {/*
+                    Chapter 27: the veil stays, the shouting does not.
+
+                    This was bold UPPERCASE `text-danger` printed straight onto
+                    the dimmed photograph. Out-of-stock is a real state and it
+                    has to be unmissable, but at 360px the browse grid is two
+                    columns and every unavailable product put a saturated red
+                    word across its own image — a second competing colour in a
+                    grid that had just lost its green one.
+
+                    Dimming the picture is what actually communicates
+                    "unavailable"; the label only has to name it. So the veil is
+                    unchanged and the words become an ordinary pill in ink on
+                    white — 16.83:1, and legible at a glance without being the
+                    loudest thing on the screen. The state is still conveyed
+                    twice over: this label, and the "See availability" call to
+                    action at the foot of the card.
+                */}
                 {!product.inStock && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-card/75 text-xs font-bold uppercase tracking-wide text-danger backdrop-blur-[1px]">
-                        Out of stock
+                    <span className="absolute inset-0 flex items-center justify-center bg-card/75 backdrop-blur-[1px]">
+                        <span className="rounded-full bg-card px-3 py-1.5 text-xs font-semibold text-ink shadow-sm">
+                            Out of stock
+                        </span>
                     </span>
                 )}
 
@@ -251,7 +280,17 @@ export default function ProductCard({
                     `}
                 >
                     {/* Filled heart plus `aria-pressed` so the saved state is
-                        conveyed both visually and to assistive technology. */}
+                        conveyed both visually and to assistive technology.
+
+                        Chapter 27: the saved state was `bg-danger` — the same
+                        red the design system reserves for out-of-stock and
+                        destructive actions. Saving something is neither, so the
+                        colour was decorative there, and using a semantic colour
+                        decoratively is exactly what stops it meaning anything
+                        where it IS semantic. It fills with ink instead: white
+                        on #1D1D1F, 16.83:1. The compare toggle below keeps the
+                        accent, so the two active states stay distinguishable by
+                        colour as well as by glyph. */}
                     <button
                         type="button"
                         onClick={() => toggleWishlist(product.slug)}
@@ -279,8 +318,8 @@ export default function ProductCard({
                             md:h-8
                             md:w-8
                             ${wishlisted
-                                ? "bg-danger text-white"
-                                : "bg-card/95 text-ink-muted hover:bg-danger hover:text-white"
+                                ? "bg-ink text-white"
+                                : "bg-card/95 text-ink-muted hover:bg-ink hover:text-white"
                             }
                         `}
                     >
@@ -353,8 +392,18 @@ export default function ProductCard({
                 */}
                 {(product.brand || product.aiScore !== undefined) && (
                     <div className="flex items-center justify-between gap-2">
+                        {/*
+                            Chapter 26.5: the brand line below was
+                            `text-accent-primary`. A brand name is a label, not
+                            an action, and the catalogue grid renders up to a
+                            hundred of them at once — which made the accent the
+                            most common colour on the busiest screen in the app
+                            and stripped it of any meaning. Muted ink now; the
+                            accent is spent on the compare toggle and the focus
+                            ring instead.
+                        */}
                         {product.brand && (
-                            <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-accent-primary">
+                            <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
                                 {product.brand}
                             </p>
                         )}
@@ -439,6 +488,21 @@ export default function ProductCard({
                         card's activation, so this must not be a second focus
                         stop announcing the same destination.
                     */}
+                    {/*
+                        Chapter 26.5: was a solid `bg-ink` pill that turned
+                        accent on hover. The catalogue grid is the screen this
+                        design is really judged on, and at 100 products that was
+                        a hundred near-black slabs marching down the page — the
+                        heaviest single element in the app, repeated more than
+                        anything else, for an affordance the whole card already
+                        provides (the stretched link above activates it).
+
+                        A hairline pill states the affordance without competing
+                        with the product photograph or the price, and it fills
+                        with ink on hover so the card still responds. Nothing
+                        about activation changed: this is still aria-hidden and
+                        still not a focus stop.
+                    */}
                     <span
                         aria-hidden="true"
                         className="
@@ -446,14 +510,17 @@ export default function ProductCard({
                             block
                             w-full
                             rounded-full
-                            bg-ink
+                            border
+                            border-line-strong
                             py-2.5
                             text-center
                             text-[13px]
                             font-semibold
-                            text-white
+                            text-ink
                             transition
-                            group-hover:bg-accent-primary
+                            group-hover:border-ink
+                            group-hover:bg-ink
+                            group-hover:text-white
                         "
                     >
                         {product.inStock ? "View details" : "See availability"}

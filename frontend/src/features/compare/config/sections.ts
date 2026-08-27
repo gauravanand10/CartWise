@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 
 import { specValue } from "../utils/metrics";
-import { discountPercent, formatCount, formatPrice } from "../../../lib/currency";
-import { monthlyEmi } from "../../product/utils/pricing";
+// `discountPercent` was imported here for the ranked "Discount" row Chapter 28
+// removed — see the note in the Price section below.
+import { formatCount, formatPrice } from "../../../lib/currency";
 import type { SectionConfig } from "../types/compare";
 
 /**
@@ -47,24 +48,25 @@ export const COMPARISON_SECTIONS: SectionConfig[] = [
                 label: "Highlights",
                 value: (p) => p.tags.join(", "),
             },
+            /*
+             * Chapter 26.5.
+             *
+             * "In stock (18 units)" is gone. The unit count came from
+             * `stockCount`, a number invented per product in a local file, and
+             * CartWise has no inventory feed from any retailer — so it was a
+             * specific false statement about someone else's warehouse dressed
+             * up as a comparison metric. The row survives on the `inStock`
+             * boolean the API genuinely carries, and loses its `metric`/`better`
+             * pair because "in stock" is not a quantity one product can beat
+             * another at.
+             *
+             * The "Released" row is gone entirely: `releasedAt` was never
+             * researched for any product.
+             */
             {
                 id: "availability",
                 label: "Availability",
-                value: (p) =>
-                    p.inStock ? `In stock (${p.stockCount} units)` : "Out of stock",
-                metric: (p) => p.stockCount,
-                better: "higher",
-            },
-            {
-                id: "released",
-                label: "Released",
-                value: (p) =>
-                    new Date(p.releasedAt).toLocaleDateString("en-IN", {
-                        month: "short",
-                        year: "numeric",
-                    }),
-                metric: (p) => Date.parse(p.releasedAt),
-                better: "higher",
+                value: (p) => (p.inStock ? "In stock" : "Out of stock"),
             },
         ],
     },
@@ -87,16 +89,30 @@ export const COMPARISON_SECTIONS: SectionConfig[] = [
                 label: "Original price",
                 value: (p) => (p.originalPrice ? formatPrice(p.originalPrice) : ""),
             },
-            {
-                id: "discount",
-                label: "Discount",
-                value: (p) => {
-                    const percent = discountPercent(p.price, p.originalPrice);
-                    return percent > 0 ? `${percent}% off` : "No discount";
-                },
-                metric: (p) => discountPercent(p.price, p.originalPrice),
-                better: "higher",
-            },
+            /*
+             * Chapter 28 removed the "Discount" row.
+             *
+             * It rendered "17% off" or "No discount" per column, and — because
+             * it carried `metric` and `better: "higher"` — it was also RANKED.
+             * The table did not merely state a discount, it awarded a win to
+             * whichever product was marked down furthest, and `buildVerdict`
+             * counts those wins into "Best overall".
+             *
+             * That is the part worth removing rather than merely restyling. A
+             * larger percentage off a higher original price is not evidence
+             * that a product is better; the "original price" it is measured
+             * against is a manufacturer's list figure, and ranking by distance
+             * from it rewards whoever set the higher list price. The two rows
+             * that remain — "Current price" ranked lower-is-better, and
+             * "Original price" stated without a ranking — carry the same two
+             * numbers with no inference drawn from them.
+             *
+             * CONSEQUENCE, STATED: the comparison now has one fewer comparable
+             * row, so a product that used to win on discount alone no longer
+             * banks that win. "Best overall" can therefore differ from what it
+             * was for the same four products. That is a change in the verdict's
+             * inputs, and it is the intended effect rather than a side effect.
+             */
             {
                 id: "lowest",
                 label: "Best store price",
@@ -104,13 +120,13 @@ export const COMPARISON_SECTIONS: SectionConfig[] = [
                 metric: (p) => p.lowestPrice,
                 better: "lower",
             },
-            {
-                id: "emi",
-                label: "EMI per month",
-                value: (p) => formatPrice(monthlyEmi(p.price)),
-                metric: (p) => monthlyEmi(p.price),
-                better: "lower",
-            },
+            /*
+             * Chapter 26.5 removed the "EMI per month" row, which was
+             * `price ÷ 12` presented as a monthly instalment and ranked
+             * "lower is better" — so the table did not merely state a
+             * financing figure, it recommended a product on the strength of
+             * one. CartWise arranges no credit; there is no instalment.
+             */
         ],
     },
 
@@ -134,20 +150,19 @@ export const COMPARISON_SECTIONS: SectionConfig[] = [
                 metric: (p) => p.reviewCount,
                 better: "higher",
             },
-            {
-                id: "ai-score",
-                label: "CartWise AI score",
-                value: (p) => `${p.ai.score} / 100`,
-                metric: (p) => p.ai.score,
-                better: "higher",
-            },
-            {
-                id: "ai-confidence",
-                label: "AI confidence",
-                value: (p) => `${p.ai.confidence}%`,
-                metric: (p) => p.ai.confidence,
-                better: "higher",
-            },
+            /*
+             * Chapter 26.5 removed "CartWise AI score" and "AI confidence".
+             *
+             * No model produced either number. The score was a literal in a
+             * hand-written file and the confidence was
+             * `80 + log10(reviewCount) * 4` — an arithmetic expression over the
+             * rating count, presented as a system's certainty about a verdict.
+             *
+             * Deleting them cost this section nothing it could substantiate:
+             * the two rows above are the real customer rating and the real
+             * count behind it, which is the whole of what CartWise knows about
+             * how a product is received.
+             */
         ],
     },
 

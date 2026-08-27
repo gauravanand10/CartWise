@@ -123,7 +123,31 @@ cartwise:
     client-id: ${OPENVERSE_CLIENT_ID:}
     client-secret: ${OPENVERSE_CLIENT_SECRET:}
 
-  # Chapter 25. See RateLimitProperties for what each bucket protects and why the three differ.
+    # Chapter 26.5. Written out explicitly at 20, which is OpenverseProperties' own default, and
+    # pinned here with the reason so nobody raises it again.
+    #
+    # The backfill runs one search per CATEGORY and hands the results out round-robin, so the number
+    # of DISTINCT photographs a category can show is capped by this value. Doubling the catalogue to
+    # 100 made the largest category (Smartphone) 22 products, so 20 now means two of them share a
+    # photograph. The obvious fix was to raise this to 50. It was tried, and it fails:
+    #
+    #     GET /v1/images/?q=smartphone&page_size=50&license_type=commercial
+    #     401  {"detail":"page_size may not exceed 20 for anonymous requests"}
+    #
+    # 20 is a hard upstream ceiling for unauthenticated callers, not a client-side default. The
+    # failure is also worth recording because of its SHAPE: OpenverseImageClient turns a non-2xx
+    # into an empty result list, so the backfill did not error — it reported every one of the 52
+    # products as "unmatched" and left them on placeholders. A configuration change produced a
+    # silent, complete data outage that looked like Openverse having no pictures of laptops.
+    #
+    # Raising it is possible, but only with credentials: OPENVERSE_CLIENT_ID/SECRET above lift the
+    # ceiling. Registering for those is the documented path and is out of this chapter's scope, so
+    # the catalogue lives with a small amount of repeated photography in its two largest categories.
+    # That repetition is recorded in the chapter report rather than hidden.
+    page-size: ${OPENVERSE_PAGE_SIZE:20}
+
+  # Chapter 25, extended in Chapter 26. See RateLimitProperties for what each bucket protects and
+  # why they differ.
   rate-limit:
     auth-capacity: ${RATE_LIMIT_AUTH_CAPACITY:10}
     auth-refill-seconds: ${RATE_LIMIT_AUTH_REFILL_SECONDS:60}
@@ -131,3 +155,117 @@ cartwise:
     write-refill-seconds: ${RATE_LIMIT_WRITE_REFILL_SECONDS:60}
     admin-capacity: ${RATE_LIMIT_ADMIN_CAPACITY:3}
     admin-refill-seconds: ${RATE_LIMIT_ADMIN_REFILL_SECONDS:3600}
+    click-capacity: ${RATE_LIMIT_CLICK_CAPACITY:30}
+    click-refill-seconds: ${RATE_LIMIT_CLICK_REFILL_SECONDS:60}
+
+  # ---------------------------------------------------------------------------------------------
+  # Chapter 26 — affiliate outbound links.
+  # ---------------------------------------------------------------------------------------------
+  #
+  # NO REAL AFFILIATE CREDENTIAL IS PRESENT IN THIS FILE OR ANYWHERE IN THIS REPOSITORY.
+  #
+  # `cartwise-test-00` is an obvious placeholder and is meant to be recognisable as one on sight. It
+  # is not a tag issued by anybody, it tracks nothing, and a purchase made through a link carrying it
+  # earns CartWise nothing. Getting a real one is a process a human has to complete and a build
+  # cannot: Amazon Associates evaluates an application and only confirms it after three qualifying
+  # sales inside 180 days, and Flipkart has not accepted direct affiliate sign-ups since 5 May 2018 —
+  # its catalogue is reachable only through a network (Cuelinks, EarnKaro, CJ and similar), which is
+  # its own application.
+  #
+  # WHAT "ZERO CODE CHANGES TO GO LIVE" MEANS HERE, CONCRETELY
+  #
+  # Every field that would have to change on approval is an environment variable:
+  #
+  #   tag        the credential itself
+  #   tag-param  the query parameter it goes in — `tag` for Amazon, `affid` for Flipkart, and
+  #              genuinely unknown for the three Indian electronics chains, whose programmes run
+  #              through networks rather than a documented first-party parameter. Theirs is left
+  #              EMPTY rather than guessed: an invented parameter name would produce a link that
+  #              looks tagged, is not, and is described to the user as an affiliate link — a false
+  #              disclosure, which is worse than no disclosure.
+  #   search-url the destination. Overridable because a retailer joined through a network is not
+  #              linked at its own domain at all; the link goes through the network's redirector.
+  #              Without this, the one route currently open for four of these five retailers would
+  #              still require a code change.
+  #
+  # A retailer with no tag-param still gets a working, tracked link to its own search page. The
+  # click is recorded, the shopper reaches the right place, and CartWise earns nothing — which is
+  # the true state of affairs and what /api/affiliate/retailers reports.
+  #
+  # URL SHAPES, MEASURED RATHER THAN ASSUMED
+  #
+  #   Amazon.in    /s?k=<term>&tag=<associate tag>   — `tag` is the Associates tracking parameter
+  #   Flipkart     /search?q=<term>&affid=<affiliate id>  — `affid` per Flipkart's affiliate API docs
+  #   Croma        /searchB?q=<term>:relevance&text=<term>
+  #   Reliance     /products?q=<term>
+  #   Vijay Sales  /search-listing?q=<term>
+  #
+  # THE LAST THREE WERE WRONG ON THE FIRST ATTEMPT, AND HTTP 200 IS WHY.
+  #
+  # The obvious guesses — reliancedigital.in/search?q= and vijaysales.com/search?q= — both answer
+  # 200 to curl, and both are wrong. Reliance renders "Oops! The page was not found" inside that
+  # 200; Vijay Sales renders a search page listing gaming laptops, having ignored the parameter
+  # entirely. Croma answers 403 to curl outright (a WAF), and in a browser its one-parameter form
+  # returns a page titled "Search null" with no results, because the storefront reads the human
+  # search term from `text` and treats `q` as a facet expression.
+  #
+  # All five were therefore established by driving each retailer's own search box in a real browser
+  # and reading the URL it produced. A status code is not evidence that a search worked, and for a
+  # monetised link the failure is silent in both directions: the shopper lands somewhere plausible
+  # and the referral is simply worthless.
+  #
+  # Links point at each retailer's SEARCH, not at a specific listing. CartWise has no mapping from
+  # its catalogue to any retailer's SKU (no ASIN, no Flipkart PID), and a deep link built from a
+  # guess would land the shopper on the wrong product. See AffiliateLinkService.
+  affiliate:
+    # The value that means "this is not a real account". A retailer configured with it is reported
+    # as PLACEHOLDER rather than PAID, which is what stops the disclosure page telling readers that
+    # CartWise earns a commission it does not earn. Change this only if you change the stand-in
+    # below; setting it to a real tag would suppress the honest answer.
+    placeholder-tag: cartwise-test-00
+
+    retailers:
+      amazon:
+        display-name: Amazon
+        search-url: ${AFFILIATE_AMAZON_SEARCH_URL:https://www.amazon.in/s}
+        query-param: k
+        tag-param: ${AFFILIATE_AMAZON_TAG_PARAM:tag}
+        tag: ${AFFILIATE_AMAZON_TAG:cartwise-test-00}
+
+      flipkart:
+        display-name: Flipkart
+        search-url: ${AFFILIATE_FLIPKART_SEARCH_URL:https://www.flipkart.com/search}
+        query-param: q
+        tag-param: ${AFFILIATE_FLIPKART_TAG_PARAM:affid}
+        tag: ${AFFILIATE_FLIPKART_TAG:cartwise-test-00}
+
+      # The three below have NO tag by default, and that is the honest position rather than an
+      # incomplete one. None publishes a first-party affiliate parameter; each is reachable only
+      # through an affiliate network, which issues its own link format. Both halves are
+      # configurable, so joining one is still a deployment change and not a code change.
+      croma:
+        display-name: Croma
+        search-url: ${AFFILIATE_CROMA_SEARCH_URL:https://www.croma.com/searchB}
+        query-param: q
+        # `q` carries the facet expression, `text` carries the human search term. Both are
+        # required — `q` alone renders "Search null" and no results.
+        query-suffix: ":relevance"
+        secondary-query-param: text
+        tag-param: ${AFFILIATE_CROMA_TAG_PARAM:}
+        tag: ${AFFILIATE_CROMA_TAG:}
+
+      reliance-digital:
+        display-name: Reliance Digital
+        # /products, not /search. /search?q= returns HTTP 200 with a "page was not found" body.
+        search-url: ${AFFILIATE_RELIANCE_SEARCH_URL:https://www.reliancedigital.in/products}
+        query-param: q
+        tag-param: ${AFFILIATE_RELIANCE_TAG_PARAM:}
+        tag: ${AFFILIATE_RELIANCE_TAG:}
+
+      vijay-sales:
+        display-name: Vijay Sales
+        # /search-listing, not /search. /search?q= returns 200 and ignores the term.
+        search-url: ${AFFILIATE_VIJAY_SALES_SEARCH_URL:https://www.vijaysales.com/search-listing}
+        query-param: q
+        tag-param: ${AFFILIATE_VIJAY_SALES_TAG_PARAM:}
+        tag: ${AFFILIATE_VIJAY_SALES_TAG:}

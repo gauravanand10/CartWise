@@ -69,7 +69,13 @@ export default function ProductNotFound({
                         id="not-found-suggestions"
                         className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl"
                     >
-                        Popular right now
+                        {/* Chapter 26.5: was "Popular right now". These come
+                            from `getPopularProducts`, which is
+                            `sort=rating-desc` — highest rated, not most
+                            visited. CartWise records no view counts, so it
+                            cannot know what is popular right now. The heading
+                            now names the ordering it actually uses. */}
+                        Highest rated
                     </h2>
 
                     <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

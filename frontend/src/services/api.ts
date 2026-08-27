@@ -584,3 +584,133 @@ export function removeFromComparison(
 export function clearComparison(userId: number): Promise<void> {
     return request<void>(`/users/${userId}/comparison`, { method: "DELETE" });
 }
+
+/*
+ * ---------------------------------------------------------------------------
+ * AFFILIATE  (Chapter 26)
+ *
+ * The outbound path. CartWise earns a commission when a visitor clicks through
+ * to a retailer and buys there; it does not process payment and does not fulfil
+ * orders.
+ *
+ * THE AFFILIATE TAG IS NOT IN THIS FILE, AND MUST NOT BE.
+ *
+ * Nothing here builds a retailer URL. The frontend names a retailer and a
+ * product and the backend returns the finished link, because the tag is a
+ * credential and anything in this bundle is served to every visitor. That is
+ * also why `AffiliateRetailer` below carries a boolean rather than a value:
+ * the UI needs to know *whether* a link is paid so its disclosure is true, and
+ * has no use whatsoever for the tag itself.
+ * ---------------------------------------------------------------------------
+ */
+
+/**
+ * What an outbound link to a retailer is honestly worth.
+ *
+ * Three states rather than a boolean, and the middle one is why. The shipped
+ * configuration carries an obvious placeholder credential, so links to Amazon
+ * and Flipkart *do* carry an affiliate parameter while earning nothing at all —
+ * no approved account exists behind the value. A boolean collapsed that into
+ * "yes, affiliate", and the disclosure page duly told readers CartWise was paid
+ * a commission it was not paid. On the one page a reader is entitled to a true
+ * answer, that is the wrong kind of wrong.
+ *
+ * - `PAID`        — a real credential; a purchase may genuinely earn commission.
+ * - `PLACEHOLDER` — structurally an affiliate link, commercially worthless.
+ * - `NONE`        — tracked, but CartWise has no arrangement with this retailer.
+ */
+export type AffiliateStatus = "PAID" | "PLACEHOLDER" | "NONE";
+
+/** One retailer CartWise links out to, from `GET /api/affiliate/retailers`. */
+export interface AffiliateRetailer {
+    /** The id used in click URLs, e.g. `"reliance-digital"`. */
+    id: string;
+    name: string;
+    /** What links to this retailer are worth — never the credential itself. */
+    status: AffiliateStatus;
+}
+
+/** What `POST /api/affiliate/clicks` answers with. */
+export interface AffiliateClick {
+    /** The finished outbound URL, affiliate parameter already applied server-side. */
+    url: string;
+    retailer: string;
+    status: AffiliateStatus;
+}
+
+/** The admin click report, from `GET /api/admin/affiliate/clicks`. */
+export interface AffiliateClickStats {
+    totalClicks: number;
+    /** How many clicks were made by a signed-in user. */
+    attributedClicks: number;
+    anonymousClicks: number;
+    byProduct: { slug: string; name: string; clicks: number }[];
+    byRetailer: { retailer: string; clicks: number }[];
+    /** ISO `YYYY-MM-DD`, UTC, most recent first, at most 30 entries. */
+    byDay: { day: string; clicks: number }[];
+}
+
+/**
+ * The tracking redirect's own URL — a real address, not a route in this app.
+ *
+ * This is what a "Visit store" `<a href>` points at, and it has to be absolute
+ * because the API lives on a different origin from the dev server. Following it
+ * records the click and answers 302 to the retailer.
+ *
+ * It exists alongside `recordAffiliateClick` below rather than instead of it,
+ * for a browser reason rather than a stylistic one: a top-level navigation sends
+ * no `Authorization` header, so a signed-in user who simply followed this link
+ * would be recorded as anonymous. The href is the fallback that keeps the link
+ * real — copyable, middle-clickable, working with JavaScript off — while the
+ * click handler takes the attributed path.
+ */
+export function affiliateClickUrl(retailer: string, productSlug: string): string {
+    return `${API_BASE_URL}/affiliate/click/${encodeURIComponent(retailer)}`
+        + `/${encodeURIComponent(productSlug)}`;
+}
+
+/**
+ * `POST /api/affiliate/clicks` — record the click, and get back where to go.
+ *
+ * Public: an anonymous visitor gets the same URL, and their click is recorded
+ * with no user attached. Sends the session token when there is one, which is the
+ * entire reason this exists rather than the plain redirect — see
+ * `affiliateClickUrl`.
+ *
+ * Throws `ApiRequestError` with status 404 for an unknown retailer or slug, and
+ * 429 when the click rate limit has been spent. Callers are expected to fall
+ * back to the plain redirect URL rather than stranding the user.
+ */
+export function recordAffiliateClick(
+    retailer: string,
+    productSlug: string,
+): Promise<AffiliateClick> {
+    return request<AffiliateClick>("/affiliate/clicks", {
+        method: "POST",
+        body: JSON.stringify({ retailer, productSlug }),
+    });
+}
+
+/**
+ * `GET /api/affiliate/retailers` — who CartWise links to, and which links are paid.
+ *
+ * Public, and read by the disclosure page so that the page states this
+ * deployment's real position instead of a list somebody typed into the copy and
+ * forgot to update. A legally-required disclosure that has drifted from the
+ * truth is worse than one that is merely brief.
+ */
+export function fetchAffiliateRetailers(): Promise<AffiliateRetailer[]> {
+    return request<AffiliateRetailer[]>("/affiliate/retailers");
+}
+
+/**
+ * `GET /api/admin/affiliate/clicks` — the aggregate click report.
+ *
+ * Throws `ApiRequestError` with status 401 without a token and **403 with a
+ * valid non-admin token**. The 403 is the one a caller must handle rather than
+ * treat as a bug: this endpoint is genuinely protected server-side, and hiding
+ * the link in the UI is a courtesy, not the protection.
+ */
+export function fetchAffiliateClickStats(): Promise<AffiliateClickStats> {
+    return request<AffiliateClickStats>("/admin/affiliate/clicks");
+}

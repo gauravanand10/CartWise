@@ -166,6 +166,23 @@ public class SecurityConfig {
                         // anyRequest().authenticated() and the home page's category tiles get 401.
                         .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 
+                        // Chapter 26 — the affiliate outbound path, public by necessity.
+                        //
+                        // A comparison site whose "Visit store" links required an account would have
+                        // no outbound traffic and therefore no revenue, so these cannot sit behind
+                        // authentication. They are still *recognised* when a token happens to be
+                        // present: the filter chain runs first either way, so a signed-in caller's
+                        // click is attributed and an anonymous one is not, without either needing a
+                        // separate route.
+                        //
+                        // Enumerated by method and path rather than /api/affiliate/** for the same
+                        // reason the catalogue above is: the admin click report lives at
+                        // /api/admin/affiliate/clicks precisely so that it is covered by the ADMIN
+                        // rule below and can never be reached through a widened public wildcard here.
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/affiliate/retailers", "/api/affiliate/click/*/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/affiliate/clicks").permitAll()
+
                         // CORS preflight. Belt and braces alongside .cors() above: the browser sends
                         // it without credentials, and it reveals nothing.
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

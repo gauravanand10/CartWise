@@ -518,16 +518,18 @@ export function buildSpecGroups(base: ProductBase): SpecGroup[] {
         })),
     }));
 
-    const released = new Date(base.releasedAt).toLocaleDateString("en-IN", {
-        month: "long",
-        year: "numeric",
-    });
-
+    // Chapter 26.5 removed the "Released" row that used to sit here.
+    //
+    // It read `base.releasedAt`, an ISO date that existed only in the local
+    // catalogue file and had never been researched for any product — the values
+    // were plausible-looking and invented. A release date is a checkable fact
+    // about someone else's product, which makes inventing one worse than
+    // omitting it, so the field and this row went together. Brand stays: it
+    // comes from the database.
     const last = groups.at(-1);
     if (last) {
         last.items = [
             ...last.items,
-            { label: "Released", value: released },
             { label: "Brand", value: base.brand },
         ];
     }

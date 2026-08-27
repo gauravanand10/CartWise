@@ -78,7 +78,7 @@ export default function CompareVerdictCard({
                     </p>
 
                     <p className="mt-0.5 text-xs text-slate-500">
-                        {formatPrice(overall.price)} · AI score {overall.ai.score} ·{" "}
+                        {formatPrice(overall.price)} · Rated {overall.rating} of 5 ·{" "}
                         {verdict.wins[verdict.bestOverall]} row wins
                     </p>
 
@@ -101,8 +101,8 @@ export default function CompareVerdictCard({
                     </p>
 
                     <p className="mt-0.5 text-xs text-slate-500">
-                        {formatPrice(value.price)} · AI score {value.ai.score} ·
-                        cheapest per point
+                        {formatPrice(value.price)} · Rated {value.rating} of 5 ·
+                        best rating per rupee
                     </p>
 
                     <Link

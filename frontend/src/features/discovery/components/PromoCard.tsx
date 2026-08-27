@@ -80,6 +80,11 @@ export default function PromoCard({
                 <p className="mt-2 text-sm leading-relaxed text-ink-muted">{body}</p>
             </div>
 
+            {/*
+                Chapter 26.5. Matched to HeroBanner's demoted CTA for the same
+                reason: PromoRow renders four of these at once, and four solid
+                pills is four things shouting. Quiet pill, accent kept for focus.
+            */}
             <Link
                 to={to}
                 className="
@@ -88,17 +93,19 @@ export default function PromoCard({
                     w-fit
                     items-center
                     rounded-full
-                    bg-ink
+                    border
+                    border-line-strong
+                    bg-card
                     px-5
                     py-2.5
                     text-sm
-                    font-bold
-                    text-white
+                    font-semibold
+                    text-ink
                     transition
-                    hover:bg-accent-primary
+                    hover:border-ink
                     focus-visible:outline-none
                     focus-visible:ring-2
-                    focus-visible:ring-ink
+                    focus-visible:ring-accent-primary
                     focus-visible:ring-offset-2
                 "
             >

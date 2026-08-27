@@ -50,11 +50,27 @@ const SLIDES = [
         to: "/compare",
         gradient: "from-tile-lilac to-tile-sky",
     },
+    /*
+     * CHAPTER 27 — the same false promise PromoRow carried, on /browse.
+     *
+     * "Save more" / "Track price drops" / "check back when the number moves."
+     * CartWise stores no price history and no price ever moves; see the longer
+     * note in PromoRow, which had a near-identical card.
+     *
+     * This slide is strictly outside this chapter's stated scope — the brief was
+     * the homepage and the global chrome, and this rail renders on the catalogue
+     * page. It is corrected anyway because it is the *same claim*, and leaving a
+     * known-false one standing one click away is the exact failure this chapter
+     * was opened to investigate. Only the three strings changed; the id, the
+     * route, the call to action and the slide's position are untouched, so the
+     * dots, the geometry and every navigation assertion are unaffected. The one
+     * test that named the old heading is updated alongside it.
+     */
     {
         id: "price",
-        eyebrow: "Save more",
-        heading: "Track price drops",
-        body: "Save what you are watching and check back when the number moves.",
+        eyebrow: "Keep a shortlist",
+        heading: "Save what you're deciding between",
+        body: "Anything you save stays on your account, ready to reopen or compare later.",
         cta: "View wishlist",
         to: "/wishlist",
         gradient: "from-tile-mint to-tile-butter",
@@ -240,6 +256,29 @@ export default function HeroBanner() {
                             </p>
                         </div>
 
+                        {/*
+                            Chapter 26.5 — DEMOTED, deliberately.
+
+                            This was `bg-accent-primary` with white text. The rail
+                            shows three cards at desktop width, so that rendered
+                            three or four filled accent pills in a row on the
+                            first screen of the homepage. Each of them is a
+                            shortcut to a section of the app, and none of them is
+                            the thing the page most wants the reader to do — the
+                            search field above is. Four equally loud CTAs make the
+                            accent mean "this is a link" rather than "act on
+                            this", which is the failure mode this pass exists to
+                            fix.
+
+                            It is now a quiet pill on the card's surface. The
+                            accent survives where it is earned: the focus ring,
+                            and the active dot on the rail's own control.
+
+                            Behaviour is untouched — same `to`, same rendered
+                            role and accessible name, so the tests that find this
+                            by `getByRole("link", { name: "Open compare" })` are
+                            asserting the same thing they were.
+                        */}
                         <Link
                             to={slide.to}
                             className="
@@ -247,17 +286,19 @@ export default function HeroBanner() {
                                 w-fit
                                 items-center
                                 rounded-full
-                                bg-accent-primary
+                                border
+                                border-line-strong
+                                bg-card
                                 px-5
                                 py-2.5
                                 text-sm
-                                font-bold
-                                text-white
+                                font-semibold
+                                text-ink
                                 transition
-                                hover:bg-ink
+                                hover:border-ink
                                 focus-visible:outline-none
                                 focus-visible:ring-2
-                                focus-visible:ring-ink
+                                focus-visible:ring-accent-primary
                                 focus-visible:ring-offset-2
                             "
                         >

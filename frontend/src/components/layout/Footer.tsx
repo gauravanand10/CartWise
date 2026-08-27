@@ -1,7 +1,8 @@
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import Container from "./Container";
+import { STORES } from "../../features/product/constants";
 
 /*
  * ---------------------------------------------------------------------------
@@ -34,11 +35,23 @@ const linkColumns = [
         heading: "Shop",
         links: [
             { label: "All categories", to: "/browse" },
-            // No "discount" filter exists server-side; cheapest-first is the
-            // closest honest reading of "deals" the catalogue can answer.
-            { label: "Today's deals", to: "/browse?sort=price-asc" },
+            /*
+             * Chapter 26.5 renamed two of these to what they do.
+             *
+             * "Today's deals" pointed at `sort=price-asc` — the cheapest
+             * products in the catalogue, which is not a deal and has nothing
+             * to do with today. The comment that used to sit here called it
+             * "the closest honest reading of deals the catalogue can answer",
+             * which is the argument this chapter kept rejecting elsewhere: a
+             * proxy under a title that claims something else.
+             *
+             * "New arrivals" pointed at `sort=name-asc` — alphabetical order.
+             * The API has no `created-desc` sort (see CatalogueRail), so there
+             * is no arrivals ordering to link to at all.
+             */
+            { label: "Lowest priced", to: "/browse?sort=price-asc" },
             { label: "Top rated", to: "/browse?sort=rating-desc" },
-            { label: "New arrivals", to: "/browse?sort=name-asc" },
+            { label: "A to Z", to: "/browse?sort=name-asc" },
         ],
     },
     {
@@ -52,15 +65,29 @@ const linkColumns = [
     },
 ];
 
-const stores = [
-    "Amazon",
-    "Flipkart",
-    "Croma",
-    "Reliance Digital",
-    "Blinkit",
-    "Zepto",
-    "Instamart",
-];
+/*
+ * ---------------------------------------------------------------------------
+ * CHAPTER 27 — this list was hand-written and wrong in both directions.
+ *
+ * It named seven shops under the heading "Reference prices shown for", which
+ * makes it a statement of fact rather than decoration. CartWise compares five.
+ *
+ *   Blinkit, Zepto, Instamart   listed here, compared nowhere. They are not in
+ *                               `STORES`, no offer is ever built for them, and
+ *                               no price on this site has anything to do with
+ *                               them. Three ten-minute grocery apps named as
+ *                               price sources for televisions and laptops.
+ *   Vijay Sales                 actually compared, and missing from the list.
+ *
+ * The homepage hero said "nine retailers" on the same page load. Three numbers,
+ * none of them five.
+ *
+ * So the list is no longer a list. It is derived from `STORES` — the same array
+ * the product page builds its offer rows from — which means the footer cannot
+ * disagree with the comparison again without the comparison itself changing.
+ * ---------------------------------------------------------------------------
+ */
+const stores = STORES.map((store) => store.name);
 
 export default function Footer() {
     return (
@@ -68,103 +95,46 @@ export default function Footer() {
 
             <Container className="py-12 sm:py-16 lg:py-20">
 
-                {/* Newsletter */}
+                {/*
+                    =======================================================
+                    CHAPTER 27 — THE NEWSLETTER BLOCK IS DELETED
 
-                <div
-                    className="
-                        flex
-                        flex-col
-                        gap-8
-                        rounded-[22px]
-                        border
-                        border-white/10
-                        bg-gradient-to-br
-                        from-blue-600/15
-                        via-violet-600/10
-                        to-transparent
-                        p-6
-                        sm:rounded-[28px]
-                        sm:p-8
-                        lg:flex-row
-                        lg:items-center
-                        lg:justify-between
-                        lg:p-10
-                    "
-                >
-                    <div className="max-w-md">
-                        <h2 className="text-2xl font-semibold tracking-tight text-white">
-                            Never overpay again
-                        </h2>
+                    It was the largest single element in the footer: a
+                    gradient panel, a 24px headline, an email field and a
+                    white "Subscribe" pill that grew on hover. It read:
 
-                        <p className="mt-2 text-sm leading-relaxed">
-                            Weekly price drops and AI picks, straight to your
-                            inbox. No spam, unsubscribe anytime.
-                        </p>
-                    </div>
+                        "Never overpay again"
+                        "Weekly price drops and AI picks, straight to your
+                         inbox. No spam, unsubscribe anytime."
 
-                    <form
-                        className="flex w-full max-w-md flex-col gap-2 sm:flex-row"
-                        onSubmit={(event) => event.preventDefault()}
-                    >
-                        <label htmlFor="newsletter-email" className="sr-only">
-                            Email address
-                        </label>
+                    Four claims, and every one of them false.
 
-                        <input
-                            id="newsletter-email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="you@example.com"
-                            className="
-                                h-12
-                                min-w-0
-                                flex-1
-                                rounded-full
-                                border
-                                border-white/15
-                                bg-white/5
-                                px-5
-                                text-sm
-                                text-white
-                                outline-none
-                                transition
-                                placeholder:text-slate-500
-                                focus:border-blue-400
-                                focus:bg-white/10
-                            "
-                        />
+                      Weekly            nothing is sent weekly, or ever.
+                      price drops       CartWise stores no price history —
+                                        Chapter 26.5 deleted the PriceDrops
+                                        rail for exactly this reason.
+                      AI picks          there is no AI. The fabricated 0-100
+                                        "AI score" was removed from the
+                                        product page, the comparison table,
+                                        the homepage rails and the logo
+                                        strapline. This outlived all of them.
+                      unsubscribe
+                        anytime         from a list nobody is ever added to.
 
-                        <button
-                            type="submit"
-                            className="
-                                inline-flex
-                                h-12
-                                shrink-0
-                                items-center
-                                justify-center
-                                gap-2
-                                rounded-full
-                                bg-white
-                                px-6
-                                text-sm
-                                font-semibold
-                                text-slate-900
-                                transition-transform
-                                duration-200
-                                hover:scale-[1.03]
-                                focus-visible:outline-none
-                                focus-visible:ring-2
-                                focus-visible:ring-white
-                                focus-visible:ring-offset-2
-                                focus-visible:ring-offset-slate-950
-                            "
-                        >
-                            Subscribe
-                            <ArrowRight size={16} />
-                        </button>
-                    </form>
-                </div>
+                    And the form itself was inert: `onSubmit` was
+                    `event.preventDefault()` and nothing else. No endpoint,
+                    no state, no confirmation. A visitor who typed their
+                    address and pressed Subscribe watched the page do
+                    nothing and had every reason to believe they had signed
+                    up. That is worse than a dead link — a dead link fails
+                    visibly.
+
+                    DELETED RATHER THAN REWORDED. There is no honest
+                    version: an email capture with nothing behind it is
+                    dishonest whatever the headline says, and building the
+                    list is a feature, which this chapter is not for.
+                    =======================================================
+                */}
 
                 {/* Links */}
 
@@ -174,7 +144,13 @@ export default function Footer() {
                 {/* Two link columns now rather than three — see the note above
                     the Company column's removal. */}
 
-                <div className="mt-12 grid gap-10 sm:grid-cols-2 sm:gap-12 lg:mt-16 lg:grid-cols-[1.4fr_repeat(2,1fr)]">
+                {/* `mt-12 lg:mt-16` used to sit here. It was the gap between
+                    this grid and the newsletter panel above it — with the panel
+                    deleted it became leading whitespace, and the footer opened
+                    with an empty band roughly 64px deep before the logo. The
+                    Container's own `py-12 sm:py-16 lg:py-20` is the top padding
+                    now, which is what it was always for. */}
+                <div className="grid gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-[1.4fr_repeat(2,1fr)]">
 
                     <div className="max-w-xs">
                         <Link
@@ -190,10 +166,24 @@ export default function Footer() {
                             </span>
                         </Link>
 
+                        {/*
+                        Chapter 27: this claimed "an AI score on every result".
+
+                        It is the last surviving copy of the claim. Chapter 26.5
+                        removed the fabricated 0-100 score from the product page,
+                        the comparison table and the homepage rails, and changed
+                        the navbar strapline from "AI shopping assistant" —
+                        and then missed the footer, which repeats it on every
+                        route in the application.
+
+                        "Every major Indian store" went with it for the same
+                        reason the retailer chips below did: it is five, and they
+                        are named.
+                    */}
                         <p className="mt-5 text-sm leading-relaxed">
-                            One search across every major Indian store, with an
-                            AI score on every result — so you always know
-                            whether the price you're seeing is actually good.
+                            One catalogue, five retailers, and the price each of
+                            them is listed at side by side — so you can see for
+                            yourself which is cheapest before you click through.
                         </p>
                     </div>
 
@@ -224,7 +214,7 @@ export default function Footer() {
 
                 <div className="mt-12 border-t border-white/10 pt-8 lg:mt-14">
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                        Prices tracked across
+                        Reference prices shown for
                     </p>
 
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -247,14 +237,31 @@ export default function Footer() {
                     </p>
 
                     {/*
-                        "Privacy" and "Terms" both linked to "/" and are gone
-                        for the same reason as the Company column: neither page
-                        exists. These two are worth calling out separately
-                        because a footer legal link is the one place a dead
-                        link is actively misleading rather than merely useless
-                        — it implies a policy has been published. Restore them
-                        when there is something real to link to.
+                        CHAPTER 26 — the first of the removed legal links comes
+                        back, and only this one.
+
+                        Chapter 24 removed "Privacy", "Terms" and "How scoring
+                        works" because none of those pages existed and a footer
+                        legal link is the one place a dead link is actively
+                        misleading rather than merely useless — it implies a
+                        policy has been published. That reasoning has not
+                        changed and those three are still absent.
+
+                        "Affiliate disclosure" is different now because the page
+                        behind it is real, and because unlike the others it is
+                        not optional: CartWise is paid for outbound clicks, and
+                        the FTC's Endorsement Guides require that to be
+                        disclosed. Note it is NOT the whole disclosure —
+                        AffiliateNotice renders that directly above the links
+                        themselves, since a disclosure reachable only from a
+                        footer does not meet the standard.
                     */}
+                    <Link
+                        to="/affiliate-disclosure"
+                        className="font-medium text-slate-300 underline underline-offset-2 transition-colors hover:text-white"
+                    >
+                        Affiliate disclosure
+                    </Link>
                 </div>
 
             </Container>

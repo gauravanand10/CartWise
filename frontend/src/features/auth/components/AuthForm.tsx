@@ -71,6 +71,18 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 return "That email and password don't match an account.";
             case "EMAIL_ALREADY_REGISTERED":
                 return "An account with that email already exists. Try signing in instead.";
+            case "RATE_LIMIT_EXCEEDED":
+                // Chapter 26.5. This case was missing, and its absence was found
+                // by the colour-remap audit rather than by a test: exhausting
+                // Chapter 25's auth bucket (10 attempts per minute) produced
+                // "Something went wrong. Please try again." from the default
+                // below — advice that is actively wrong, because trying again is
+                // the one thing that will not work.
+                //
+                // The server's message names the wait in seconds and is
+                // generated from configuration rather than from input, so it is
+                // safe to show verbatim, exactly as BAD_REQUEST's is.
+                return caught.message;
             case "BAD_REQUEST":
                 // The server's own message names the rule that failed — the
                 // password length bounds, the address shape — and is safe to
@@ -212,16 +224,16 @@ export default function AuthForm({ mode }: AuthFormProps) {
                         justify-center
                         gap-2
                         rounded-full
-                        bg-ink
+                        bg-accent-primary
                         px-5
                         text-sm
                         font-semibold
                         text-white
                         transition
-                        hover:bg-accent-primary
+                        hover:bg-blue-700
                         focus-visible:outline-none
                         focus-visible:ring-2
-                        focus-visible:ring-ink
+                        focus-visible:ring-accent-primary
                         focus-visible:ring-offset-2
                         disabled:cursor-not-allowed
                         disabled:opacity-60

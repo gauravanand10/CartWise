@@ -10,10 +10,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.cartwise.common.dto.AffiliateClickStats;
+import com.cartwise.common.dto.DayClickCount;
+import com.cartwise.common.dto.ProductClickCount;
+import com.cartwise.common.dto.RetailerClickCount;
 import com.cartwise.common.dto.UserDto;
 import com.cartwise.entity.Role;
+import com.cartwise.service.AffiliateAnalyticsService;
 import com.cartwise.service.ProductImageService;
 import com.cartwise.service.UserAdminService;
+import java.time.LocalDate;
 import com.cartwise.testsupport.ControllerTestBase;
 import com.cartwise.testsupport.WithCartwiseSecurity;
 import jakarta.persistence.EntityNotFoundException;
@@ -53,6 +59,14 @@ class AdminControllerTest extends ControllerTestBase {
      */
     @MockitoBean
     private ProductImageService productImageService;
+
+    /*
+     * Chapter 26. GET /api/admin/affiliate/clicks lives on this controller rather than beside the
+     * three public affiliate routes, precisely so that the /api/admin/** rule covers it — see the
+     * Analytics nested class below, which asserts that it does.
+     */
+    @MockitoBean
+    private AffiliateAnalyticsService affiliateAnalyticsService;
 
     private static UserDto user(long id, String email, Role role) {
         return new UserDto(id, email, role, Instant.parse("2026-08-15T09:00:00Z"));
@@ -279,6 +293,85 @@ class AdminControllerTest extends ControllerTestBase {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"role\":\"ADMIN\"}"))
                     .andExpect(status().isBadRequest());
+        }
+    }
+
+    /**
+     * Chapter 26's affiliate click report.
+     *
+     * <p>The authorization assertions here are not a redundant copy of the matrix above. This route
+     * is the one place in the affiliate feature where the access rule is <em>different</em> from its
+     * neighbours: {@code AffiliateController}'s three routes are all {@code permitAll}, and this one
+     * is not. Putting the report under {@code /api/admin} is what keeps it that way, and a test that
+     * a non-admin is refused is the thing that would catch someone "tidying" it back beside the rest
+     * of the feature.
+     */
+    @Nested
+    @DisplayName("GET /api/admin/affiliate/clicks")
+    class Analytics {
+
+        private static AffiliateClickStats stats() {
+            return AffiliateClickStats.of(
+                    5L,
+                    2L,
+                    List.of(new ProductClickCount("iphone-16-pro", "iPhone 16 Pro", 3L)),
+                    List.of(new RetailerClickCount("amazon", 4L)),
+                    List.of(new DayClickCount(LocalDate.parse("2026-08-17"), 5L)));
+        }
+
+        @Test
+        @DisplayName("returns the aggregates to an admin")
+        void adminSeesTheReport() throws Exception {
+            when(affiliateAnalyticsService.stats()).thenReturn(stats());
+
+            mockMvc.perform(get("/api/admin/affiliate/clicks")
+                            .header(HttpHeaders.AUTHORIZATION, bearerAdmin(1L)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalClicks").value(5))
+                    .andExpect(jsonPath("$.attributedClicks").value(2))
+                    // Derived rather than queried, so it cannot disagree with the other two.
+                    .andExpect(jsonPath("$.anonymousClicks").value(3))
+                    .andExpect(jsonPath("$.byProduct[0].slug").value("iphone-16-pro"))
+                    .andExpect(jsonPath("$.byProduct[0].clicks").value(3))
+                    .andExpect(jsonPath("$.byRetailer[0].retailer").value("amazon"))
+                    .andExpect(jsonPath("$.byDay[0].day").value("2026-08-17"));
+        }
+
+        @Test
+        @DisplayName("a valid USER token is refused, and the report is never run")
+        void ordinaryUserIsForbidden() throws Exception {
+            mockMvc.perform(get("/api/admin/affiliate/clicks")
+                            .header(HttpHeaders.AUTHORIZATION, bearerUser(2L)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
+            verifyNoInteractions(affiliateAnalyticsService);
+        }
+
+        @Test
+        @DisplayName("no token is 401, and the report is never run")
+        void anonymousIsUnauthorized() throws Exception {
+            mockMvc.perform(get("/api/admin/affiliate/clicks"))
+                    .andExpect(status().isUnauthorized());
+
+            verifyNoInteractions(affiliateAnalyticsService);
+        }
+
+        /**
+         * No route returns an individual click and none may. The report exists to measure referral
+         * traffic in aggregate; a per-user click history would be a different feature built quietly
+         * on data collected for this one.
+         */
+        @Test
+        @DisplayName("exposes no per-click or per-user detail")
+        void reportsAggregatesOnly() throws Exception {
+            when(affiliateAnalyticsService.stats()).thenReturn(stats());
+
+            mockMvc.perform(get("/api/admin/affiliate/clicks")
+                            .header(HttpHeaders.AUTHORIZATION, bearerAdmin(1L)))
+                    .andExpect(jsonPath("$.clicks").doesNotExist())
+                    .andExpect(jsonPath("$.byProduct[0].userId").doesNotExist())
+                    .andExpect(jsonPath("$..email").isEmpty());
         }
     }
 }

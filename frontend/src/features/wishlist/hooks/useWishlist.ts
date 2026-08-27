@@ -126,10 +126,20 @@ export function useWishlist(): UseWishlist {
         [activeProducts, sort],
     );
 
-    const suggestions = useMemo(
-        () => getWishlistSuggestions(slugs),
-        [slugs],
-    );
+    // Chapter 26.5 — see the identical note in useComparison. Async now.
+    const [suggestions, setSuggestions] = useState<ProductCardModel[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        void getWishlistSuggestions(slugs).then((next) => {
+            if (!cancelled) setSuggestions(next);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [slugs]);
 
     const retry = useCallback(() => setAttempt((value) => value + 1), []);
 

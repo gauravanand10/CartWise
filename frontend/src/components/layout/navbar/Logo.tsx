@@ -45,8 +45,18 @@ export default function Logo() {
                     CartWise
                 </span>
 
+                {/*
+                    Chapter 26.5: this read "AI shopping assistant" on every
+                    page of the site. There is no AI anywhere in CartWise — the
+                    only thing that ever wore the name was the fabricated 0-100
+                    "AI score", which this chapter deleted from the product
+                    page, the comparison table and the homepage. A strapline
+                    claiming a capability the application does not have is the
+                    same problem as a rail claiming a price history it does not
+                    keep, and it was the most repeated instance of it.
+                */}
                 <span className="block text-[11px] font-medium leading-tight text-slate-500">
-                    AI shopping assistant
+                    Compare before you buy
                 </span>
             </span>
         </Link>

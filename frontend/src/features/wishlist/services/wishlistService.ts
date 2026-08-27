@@ -58,7 +58,6 @@ export async function getWishlistProducts(
             reviews: product.reviewCount,
             inStock: product.inStock,
             image: product.images[0]?.src ?? "",
-            aiScore: product.aiScore,
         });
     }
 
@@ -66,13 +65,14 @@ export async function getWishlistProducts(
 }
 
 /** Products to offer when the wishlist is empty. */
-export function getWishlistSuggestions(
+export async function getWishlistSuggestions(
     excludeSlugs: string[] = [],
     limit = WISHLIST_SUGGESTIONS,
-): ProductCardModel[] {
+): Promise<ProductCardModel[]> {
     const exclude = new Set(excludeSlugs);
 
-    return getPopularProducts(100)
+    // Async as of Chapter 26.5 — see the note in compareService.getSuggestions.
+    return (await getPopularProducts(100))
         .filter((product) => !exclude.has(product.slug))
         .slice(0, limit);
 }

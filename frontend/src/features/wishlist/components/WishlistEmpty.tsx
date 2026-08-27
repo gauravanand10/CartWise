@@ -65,7 +65,10 @@ export default function WishlistEmpty({ suggestions }: WishlistEmptyProps) {
                         className="flex items-center gap-2 text-lg font-semibold tracking-tight text-slate-900 sm:text-xl"
                     >
                         <Sparkles size={17} className="text-violet-600" aria-hidden="true" />
-                        Popular right now
+                        {/* Chapter 26.5: was "Popular right now", ordered by
+                            `sort=rating-desc`. Highest rated is not most
+                            popular, and CartWise counts no views. */}
+                        Highest rated
                     </h2>
 
                     <p className="mt-1.5 text-sm text-slate-500">

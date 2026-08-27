@@ -52,15 +52,18 @@ export async function getComparisonProducts(
  * technically possible but never what someone wants — then popular products to
  * fill the list out.
  */
-export function getSuggestions(
+export async function getSuggestions(
     selected: ProductDetail[],
     excludeSlugs: string[],
     limit = 8,
-): ProductCardModel[] {
+): Promise<ProductCardModel[]> {
     const exclude = new Set(excludeSlugs);
     const categories = new Set(selected.map((product) => product.category));
 
-    const pool = getPopularProducts(100).filter(
+    // Async as of Chapter 26.5: `getPopularProducts` reads the real catalogue
+    // over HTTP now that the local 23-record array is gone, so this cannot be
+    // synchronous any more. 100 is capped by the API's own page-size ceiling.
+    const pool = (await getPopularProducts(100)).filter(
         (candidate) => !exclude.has(candidate.slug),
     );
 

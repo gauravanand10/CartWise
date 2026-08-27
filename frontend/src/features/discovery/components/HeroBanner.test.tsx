@@ -188,7 +188,10 @@ describe("HeroBanner", () => {
          */
         it("labels each dot with its slide's heading", () => {
             expect(dots()[0]).toHaveAccessibleName("Show Compare specs side by side");
-            expect(dots()[1]).toHaveAccessibleName("Show Track price drops");
+            // Chapter 27 reworded slide 2 — it promised price tracking that
+            // does not exist. The assertion is still "the dot is named after
+            // its slide's heading"; only the heading changed.
+            expect(dots()[1]).toHaveAccessibleName("Show Save what you're deciding between");
         });
 
         it("keeps exactly one dot marked current", async () => {

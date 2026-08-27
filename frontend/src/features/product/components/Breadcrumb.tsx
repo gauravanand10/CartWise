@@ -12,26 +12,44 @@ interface BreadcrumbProps {
  * The category crumb deep-links into the existing search page with the category
  * pre-selected, so "up one level" lands somewhere useful instead of on a route
  * that does not exist yet.
+ *
+ * ---------------------------------------------------------------------------
+ * WHY THIS IS INLINE FLOW RATHER THAN A FLEX ROW
+ *
+ * It renders as inline text — `<li className="inline">` with chevrons between —
+ * instead of the flex row this used to be. That started as a workaround for a
+ * bug whose cause had not been found: every crumb measured exactly 40px wide
+ * regardless of its text, and the trail rendered as "SmartphoniPhone 16".
+ *
+ * The cause is known now, and it was not this component. A `--spacing-block`
+ * token in index.css was generating `.inline-block { inline-size: 2.5rem }`,
+ * which overrode Tailwind's `inline-block` DISPLAY utility everywhere in the
+ * application — see the long note in index.css. The token is gone.
+ *
+ * The inline version is kept because it is the better markup for a breadcrumb
+ * anyway: the trail wraps as text at narrow widths instead of squeezing its
+ * items, and it no longer depends on `inline-block` resolving correctly.
+ * ---------------------------------------------------------------------------
  */
 export default function Breadcrumb({ category, name }: BreadcrumbProps) {
     // `-my-1 py-1` lifts the tap target from 18px to 26px, clearing the WCAG
     // 2.2 minimum, while the negative margin hands the padding back to the
     // layout so the trail's spacing is unchanged.
     const linkClass =
-        "-my-1 inline-block rounded py-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+        "inline whitespace-nowrap rounded py-1 align-middle text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
 
     return (
         <nav aria-label="Breadcrumb">
-            <ol className="flex flex-wrap items-center gap-1.5 text-sm">
+            <ol className="text-sm leading-7">
 
-                <li>
+                <li className="inline">
                     <Link to="/" className={linkClass}>
                         Home
                     </Link>
                 </li>
 
-                <li aria-hidden="true" className="text-slate-300">
-                    <ChevronRight size={14} />
+                <li aria-hidden="true" className="inline px-2 align-middle text-slate-400">
+                    <ChevronRight size={14} className="inline" />
                 </li>
 
                 {/*
@@ -52,7 +70,7 @@ export default function Breadcrumb({ category, name }: BreadcrumbProps) {
                     is the form `GET /api/categories` publishes and the
                     catalogue filter compares against.
                 */}
-                <li>
+                <li className="inline">
                     <Link
                         to={`/browse?category=${encodeURIComponent(category.toLowerCase())}`}
                         className={linkClass}
@@ -61,16 +79,16 @@ export default function Breadcrumb({ category, name }: BreadcrumbProps) {
                     </Link>
                 </li>
 
-                <li aria-hidden="true" className="text-slate-300">
-                    <ChevronRight size={14} />
+                <li aria-hidden="true" className="inline px-2 align-middle text-slate-400">
+                    <ChevronRight size={14} className="inline" />
                 </li>
 
                 {/* Current page: not a link, and marked as the current location
                     so a screen reader announces where the trail ends. */}
-                <li>
+                <li className="inline">
                     <span
                         aria-current="page"
-                        className="font-medium text-slate-900"
+                        className="inline align-middle font-medium text-slate-900"
                     >
                         {name}
                     </span>

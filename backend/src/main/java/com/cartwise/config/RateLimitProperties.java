@@ -22,6 +22,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       different reason from the others: it spends a <em>third party's</em> rate allowance. One
  *       operator holding the button down could exhaust the Openverse daily quota for everyone.
  *       Three per hour is more than a backfill is ever legitimately run.
+ *   <li><strong>click</strong> — Chapter 26's affiliate click tracking. Public, unauthenticated, and
+ *       the one endpoint here whose output is a <em>number someone is paid on</em>: click counts are
+ *       what a commercial arrangement is judged by, so inflating them is the obvious attack and it
+ *       needs no account to attempt. Keyed per client IP, because most clicks legitimately have no
+ *       user to key on. Thirty a minute is far above real use — a shopper comparing five retailers
+ *       across a few products does not approach it — and far below what fabricating a plausible
+ *       traffic figure would need.
  * </ul>
  *
  * <p>A capacity of zero or less disables the bucket. That is deliberate and worth keeping: it means
@@ -34,6 +41,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param writeRefillSeconds  how long the write window is
  * @param adminCapacity       requests permitted per window on the image backfill
  * @param adminRefillSeconds  how long the admin window is
+ * @param clickCapacity       requests permitted per window on the affiliate click endpoints
+ * @param clickRefillSeconds  how long the click window is
  */
 @ConfigurationProperties(prefix = "cartwise.rate-limit")
 public record RateLimitProperties(
@@ -42,7 +51,9 @@ public record RateLimitProperties(
         int writeCapacity,
         long writeRefillSeconds,
         int adminCapacity,
-        long adminRefillSeconds) {
+        long adminRefillSeconds,
+        int clickCapacity,
+        long clickRefillSeconds) {
 
     public Duration authRefill() {
         return Duration.ofSeconds(authRefillSeconds);
@@ -54,5 +65,9 @@ public record RateLimitProperties(
 
     public Duration adminRefill() {
         return Duration.ofSeconds(adminRefillSeconds);
+    }
+
+    public Duration clickRefill() {
+        return Duration.ofSeconds(clickRefillSeconds);
     }
 }

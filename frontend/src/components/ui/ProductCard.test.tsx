@@ -96,30 +96,41 @@ describe("ProductCard", () => {
                 .toHaveAttribute("href", "/product/iphone-16-pro");
         });
 
-        it("shows the discount as a rounded percentage off", () => {
+        /**
+         * Chapter 27 deleted the green "N% off" pill from this card. These three tests used to
+         * assert it rendered, did not render at 0%, and did not render without an original price.
+         *
+         * They are not deleted with it, because what they were really protecting is still true and
+         * still worth protecting: the card has to show BOTH prices, since the struck-through
+         * original is now the only thing on the card carrying "this costs less than it did". A
+         * future edit that tidied away the second price would silently drop that information, and
+         * nothing else in the suite would notice.
+         *
+         * The last of the three is inverted into a standing guard against the pattern coming back.
+         */
+        it("shows the price and the original price struck through", () => {
             renderWithProviders(
                 <ProductCard product={make({ price: 100, originalPrice: 125 })} />,
             );
 
-            expect(screen.getByText("20% off")).toBeInTheDocument();
+            expect(screen.getByText("₹100")).toBeInTheDocument();
+            expect(screen.getByText("₹125")).toBeInTheDocument();
         });
 
-        /**
-         * `discountPercent` returns 0 rather than a negative when the "original" is not higher, so a
-         * mispriced row shows no badge instead of "−15% off".
-         */
-        it("shows no discount badge when the original price is not higher", () => {
-            renderWithProviders(
-                <ProductCard product={make({ price: 100, originalPrice: 100 })} />,
-            );
-
-            expect(screen.queryByText(/% off/)).not.toBeInTheDocument();
-        });
-
-        it("shows no discount badge when there is no original price", () => {
+        it("shows only the one price when there is no original price", () => {
             renderWithProviders(<ProductCard product={make({ originalPrice: undefined })} />);
 
-            expect(screen.queryByText(/% off/)).not.toBeInTheDocument();
+            expect(screen.getByText("₹1,19,900")).toBeInTheDocument();
+            expect(screen.queryByText("₹1,34,900")).not.toBeInTheDocument();
+        });
+
+        it("renders no discount chip, at any discount", () => {
+            renderWithProviders(
+                <ProductCard product={make({ price: 100, originalPrice: 125 })} />,
+            );
+
+            expect(screen.queryByText(/% off/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/save/i)).not.toBeInTheDocument();
         });
 
         it("marks an out-of-stock product and changes its call to action", () => {
@@ -166,11 +177,15 @@ describe("ProductCard", () => {
         });
 
         /**
-         * The reason the two badges are stacked in a column rather than sharing a corner. Before the
-         * merge neither component could produce this state: the homepage card had no computed
-         * discount, and this one had no section label.
+         * This used to assert the discount pill and the section badge rendered together — the state
+         * that made them a stacked column rather than one corner. Chapter 27 removed the pill, so
+         * the column collapsed to a single element and the collision it guarded against can no
+         * longer occur.
+         *
+         * What is asserted instead is that the section label survived the removal: it shared that
+         * wrapper, and deleting a wrapper's first child is a normal way to lose its second.
          */
-        it("shows the discount and the section badge together", () => {
+        it("still shows the section badge on a discounted product", () => {
             renderWithProviders(
                 <ProductCard
                     product={make({ price: 100, originalPrice: 125 })}
@@ -178,8 +193,8 @@ describe("ProductCard", () => {
                 />,
             );
 
-            expect(screen.getByText("20% off")).toBeInTheDocument();
             expect(screen.getByText("Bestseller")).toBeInTheDocument();
+            expect(screen.getByText("₹125")).toBeInTheDocument();
         });
 
         it("renders the cheapest store when one is given", () => {

@@ -186,6 +186,576 @@
     --color-text-muted: #94a3b8;
 
     --color-border: #e2e8f0;
+
+    /* =====================================================================
+       CHAPTER 26.5 — THE RESTRAINT PASS
+
+       One accent colour. Everything else neutral. Contrast measured, not
+       judged by eye — every ratio quoted below was computed with the WCAG 2.1
+       relative-luminance formula against the actual hex pairs and is
+       reproduced so a future change can be re-checked rather than re-guessed.
+
+       WHY THIS BLOCK EXISTS RATHER THAN A REWRITE
+
+       Chapters 8–15 styled components with stock Tailwind palette classes —
+       `text-slate-900`, `bg-blue-600`, `from-fuchsia-600 to-violet-600` — and
+       there are roughly seven hundred of them across ~200 files. Chapter 20's
+       token set (the pastel tiles and two accents above) only ever covered the
+       discovery zone, so the project has had two colour systems and the larger
+       one was un-designed.
+
+       The naive fix is to hand-edit seven hundred class names. That is a very
+       large diff whose every line is an opportunity to change a layout, a
+       state or a conditional by accident — in a chapter whose explicit rule is
+       that no behaviour may change.
+
+       So the palette is redefined at its source instead. In Tailwind v4 a
+       `--color-<family>-<shade>` declared in `@theme` REPLACES the stock value,
+       and every utility already written against that name picks up the new
+       colour with no edit. `text-slate-900` still says `text-slate-900` in the
+       markup and now renders #1D1D1F. `from-fuchsia-600 to-violet-600` still
+       says what it said and now renders a flat accent blue, because both ends
+       resolve to the same value — the gradient does not need removing, it
+       stops being a gradient.
+
+       That is what makes a restraint pass possible without a rewrite: the
+       colours collapse first, then the components that still look noisy get
+       edited by hand for spacing, weight and borders. The families below are
+       the ones this project actually uses; anything unused is left stock.
+
+       READ THE RAMPS AS A DESIGN, NOT A FIND-AND-REPLACE. Each family is
+       remapped onto ONE of four roles:
+
+           slate / gray / zinc / neutral   -> the neutral scale
+           blue / indigo / violet /
+             purple / fuchsia / sky / cyan -> the single accent
+           emerald / green / teal          -> success
+           red / rose / pink               -> danger
+           amber / yellow / orange         -> rating & the disclosure panel
+
+       Collapsing seven cool hues onto one accent is the single biggest
+       decision in this chapter, and it is deliberate: the app previously used
+       blue for focus rings, violet for headings, fuchsia for hero gradients
+       and indigo for buttons, none of which meant anything different from the
+       others. One accent means an accented thing is a thing the reader should
+       act on.
+       ===================================================================== */
+
+    /* ---- The neutral scale ----------------------------------------------
+       Very slightly cool grey, near-black rather than black for text. The
+       page ground is #FBFBFD and cards are pure white, so a card reads as
+       lifted without needing a shadow or a border to say so — which is where
+       most of the removed chrome went.
+
+           ink        on canvas  16.28:1   on white  16.83:1
+           ink-muted  on canvas   4.88:1   on white   5.07:1   (AA body text)
+           ink-subtle on canvas   3.51:1                       (NOT body text)
+
+       ink-subtle fails AA for normal text at 3.51:1 and that is recorded as a
+       constraint rather than a defect: it is for icons, rules and disabled
+       glyphs, all of which are judged against WCAG 1.4.11's 3:1 non-text
+       threshold, which it clears. Anything carrying information uses
+       ink-muted or darker. */
+
+    --color-canvas: #FBFBFD;
+    --color-sunken: #F5F5F7;
+    --color-line: #E8E8ED;
+    --color-line-strong: #D2D2D7;
+    --color-ink-subtle: #86868B;
+
+    /* ---- The one accent -------------------------------------------------
+       An electric blue that is dark enough to carry white text AND light
+       enough to read as text on the page ground, which is the property that
+       lets a single hue serve a filled CTA and a text link without a second
+       colour:
+
+           white       on brand    5.36:1
+           brand       on canvas   5.18:1
+           brand       on white    5.36:1
+           brand       on sunken   4.92:1
+           white       on brand-hover    6.83:1
+           white       on brand-active   9.02:1
+           brand       on brand-tint     4.73:1
+
+       All seven clear AA for normal text. brand-tint is the badge and
+       selected-state background — "Best price", "In wishlist", the active
+       filter chip — and pairing it with `brand` text at 4.73:1 is what keeps
+       those badges readable without a border.
+
+       WHERE IT IS ALLOWED. Primary CTAs, the active/selected state, focus
+       rings, and the two badges named above. Nothing else. A heading is ink.
+       A card is white. A price is ink. If everything is accented nothing is,
+       and the audit for that is in the chapter report rather than a promise
+       made here. */
+
+    --color-brand: #0A5AFF;
+    --color-brand-hover: #0A4ED6;
+    --color-brand-active: #0A3FAD;
+    --color-brand-tint: #EAF1FF;
+
+    /* ---- Type scale ------------------------------------------------------
+       Seven sizes, not a dozen. Tailwind v4 turns each into `text-<name>`.
+
+       The jump from body to title to heading to display is deliberately large
+       — 16 -> 20 -> 28 -> 40 -> 56 — because the calm this chapter is after
+       comes from a small number of confident sizes with real distance between
+       them, not from a smooth ramp where every heading is nearly the size of
+       the one above it. */
+
+    --text-caption: 0.75rem;      /* 12px — labels, legal, metadata          */
+    --text-body-sm: 0.875rem;     /* 14px — secondary copy, dense UI         */
+    --text-body: 1rem;            /* 16px — the default                      */
+    --text-title: 1.25rem;        /* 20px — card and section titles          */
+    --text-heading: 1.75rem;      /* 28px — page headings                    */
+    --text-display: 2.5rem;       /* 40px — hero headings                    */
+    --text-hero: 3.5rem;          /* 56px — the one line per page that shouts*/
+
+    /* ---- Spacing scale — WITHDRAWN, AND WHY -------------------------------
+
+       This block declared three named steps:
+
+           --spacing-gutter: 1.5rem;
+           --spacing-block:  2.5rem;
+           --spacing-section: 5rem;
+
+       The middle one broke the entire site, quietly, for the whole of this
+       chapter.
+
+       Tailwind v4's `--spacing-*` namespace generates a utility per key across
+       every size property — and one of those properties is `inline-size`,
+       whose utility prefix is `inline-`. So `--spacing-block` generated:
+
+           .inline-block { inline-size: var(--spacing-block) }
+
+       which is a NAME COLLISION with Tailwind's own `inline-block` DISPLAY
+       utility. This @theme block is declared after Tailwind's own, so the
+       generated rule won, and every `inline-block` element in the application
+       — buttons, breadcrumb segments, badges, links — was pinned to a width of
+       exactly 40px, wrapping its text and overflowing its own box.
+
+       Two visible symptoms were chased separately before the cause was found:
+       the breadcrumb rendering as "SmartphoniPhone 16", and the compare page's
+       "View details" buttons collapsing into 40px circles. Both measured 40px.
+       Both were this.
+
+       The tokens are removed rather than renamed because nothing referenced
+       them: a grep for `p-gutter`, `gap-block`, `mt-section` and the rest of
+       the generated set found no component using any of the three. They were
+       a scale declared for a future that had not arrived, and the cost of
+       having them was a site-wide layout bug.
+
+       The lesson worth keeping: a key added to a Tailwind v4 namespace is not
+       inert. It generates utilities, those utilities have names, and a name
+       that already means something else silently takes it over. Spacing keys
+       must not be words that appear in another utility's grammar — `block`,
+       `flex`, `grid`, `table`, `inline` and `contents` are all display values
+       first. Check what a new key generates before adding it.
+       ---------------------------------------------------------------------- */
+
+    /* =====================================================================
+       REMAPPED STOCK PALETTE
+
+       Everything below replaces a Tailwind default. No component changes.
+       ===================================================================== */
+
+    /* ---- Neutrals. slate is the one this project actually wrote; gray, zinc
+       and neutral are mapped identically so a stray class cannot reintroduce
+       a second grey. ---- */
+
+    --color-slate-50: #F5F5F7;
+    --color-slate-100: #F0F0F3;
+    --color-slate-200: #E8E8ED;
+    --color-slate-300: #D2D2D7;
+    --color-slate-400: #86868B;
+    --color-slate-500: #6E6E78;
+    --color-slate-600: #57575E;
+    --color-slate-700: #3F3F46;
+    --color-slate-800: #2B2B30;
+    --color-slate-900: #1D1D1F;
+    --color-slate-950: #121214;
+
+    --color-gray-50: #F5F5F7;
+    --color-gray-100: #F0F0F3;
+    --color-gray-200: #E8E8ED;
+    --color-gray-300: #D2D2D7;
+    --color-gray-400: #86868B;
+    --color-gray-500: #6E6E78;
+    --color-gray-600: #57575E;
+    --color-gray-700: #3F3F46;
+    --color-gray-800: #2B2B30;
+    --color-gray-900: #1D1D1F;
+    --color-gray-950: #121214;
+
+    --color-zinc-50: #F5F5F7;
+    --color-zinc-100: #F0F0F3;
+    --color-zinc-200: #E8E8ED;
+    --color-zinc-300: #D2D2D7;
+    --color-zinc-400: #86868B;
+    --color-zinc-500: #6E6E78;
+    --color-zinc-600: #57575E;
+    --color-zinc-700: #3F3F46;
+    --color-zinc-800: #2B2B30;
+    --color-zinc-900: #1D1D1F;
+    --color-zinc-950: #121214;
+
+    --color-neutral-50: #F5F5F7;
+    --color-neutral-100: #F0F0F3;
+    --color-neutral-200: #E8E8ED;
+    --color-neutral-300: #D2D2D7;
+    --color-neutral-400: #86868B;
+    --color-neutral-500: #6E6E78;
+    --color-neutral-600: #57575E;
+    --color-neutral-700: #3F3F46;
+    --color-neutral-800: #2B2B30;
+    --color-neutral-900: #1D1D1F;
+    --color-neutral-950: #121214;
+
+    /* ---- The accent. Seven cool families collapse onto one ramp.
+
+       The shade numbers are chosen so the classes already in the codebase land
+       where they should without being edited:
+
+           bg-blue-50   -> brand-tint   badge and selected-row backgrounds
+           ring-blue-500-> brand        focus rings (69 uses, the most common
+                                        single colour class in the project)
+           bg-blue-600  -> brand        filled CTAs
+           text-blue-700-> brand-hover  accent text on white, 6.83:1
+       ---- */
+
+    --color-blue-50: #EAF1FF;
+    --color-blue-100: #DCE8FF;
+    --color-blue-200: #C2D6FF;
+    --color-blue-300: #97B8FF;
+    --color-blue-400: #4D8DFF;
+    --color-blue-500: #0A5AFF;
+    --color-blue-600: #0A5AFF;
+    --color-blue-700: #0A4ED6;
+    --color-blue-800: #0A3FAD;
+    --color-blue-900: #0A3080;
+    --color-blue-950: #071F52;
+
+    --color-indigo-50: #EAF1FF;
+    --color-indigo-100: #DCE8FF;
+    --color-indigo-200: #C2D6FF;
+    --color-indigo-300: #97B8FF;
+    --color-indigo-400: #4D8DFF;
+    --color-indigo-500: #0A5AFF;
+    --color-indigo-600: #0A5AFF;
+    --color-indigo-700: #0A4ED6;
+    --color-indigo-800: #0A3FAD;
+    --color-indigo-900: #0A3080;
+    --color-indigo-950: #071F52;
+
+    --color-violet-50: #EAF1FF;
+    --color-violet-100: #DCE8FF;
+    --color-violet-200: #C2D6FF;
+    --color-violet-300: #97B8FF;
+    --color-violet-400: #4D8DFF;
+    --color-violet-500: #0A5AFF;
+    --color-violet-600: #0A5AFF;
+    --color-violet-700: #0A4ED6;
+    --color-violet-800: #0A3FAD;
+    --color-violet-900: #0A3080;
+    --color-violet-950: #071F52;
+
+    --color-purple-50: #EAF1FF;
+    --color-purple-100: #DCE8FF;
+    --color-purple-200: #C2D6FF;
+    --color-purple-300: #97B8FF;
+    --color-purple-400: #4D8DFF;
+    --color-purple-500: #0A5AFF;
+    --color-purple-600: #0A5AFF;
+    --color-purple-700: #0A4ED6;
+    --color-purple-800: #0A3FAD;
+    --color-purple-900: #0A3080;
+    --color-purple-950: #071F52;
+
+    --color-fuchsia-50: #EAF1FF;
+    --color-fuchsia-100: #DCE8FF;
+    --color-fuchsia-200: #C2D6FF;
+    --color-fuchsia-300: #97B8FF;
+    --color-fuchsia-400: #4D8DFF;
+    --color-fuchsia-500: #0A5AFF;
+    --color-fuchsia-600: #0A5AFF;
+    --color-fuchsia-700: #0A4ED6;
+    --color-fuchsia-800: #0A3FAD;
+    --color-fuchsia-900: #0A3080;
+    --color-fuchsia-950: #071F52;
+
+    --color-sky-50: #EAF1FF;
+    --color-sky-100: #DCE8FF;
+    --color-sky-200: #C2D6FF;
+    --color-sky-300: #97B8FF;
+    --color-sky-400: #4D8DFF;
+    --color-sky-500: #0A5AFF;
+    --color-sky-600: #0A5AFF;
+    --color-sky-700: #0A4ED6;
+    --color-sky-800: #0A3FAD;
+    --color-sky-900: #0A3080;
+    --color-sky-950: #071F52;
+
+    --color-cyan-50: #EAF1FF;
+    --color-cyan-100: #DCE8FF;
+    --color-cyan-200: #C2D6FF;
+    --color-cyan-300: #97B8FF;
+    --color-cyan-400: #4D8DFF;
+    --color-cyan-500: #0A5AFF;
+    --color-cyan-600: #0A5AFF;
+    --color-cyan-700: #0A4ED6;
+    --color-cyan-800: #0A3FAD;
+    --color-cyan-900: #0A3080;
+    --color-cyan-950: #071F52;
+
+    /* ---- Success. Kept as a distinct hue because "in stock" and "price
+       drop" are information, not decoration — the two-zone rule Chapter 20
+       set up still holds. Darker than stock emerald for the same reason
+       Chapter 20 gave: `bg-emerald-500` with white text sat at 2.9:1.
+
+           white          on green-600   6.45:1
+           green-600 text on white       6.45:1
+           green-700 text on white       8.03:1
+           green-700 text on green-50    6.12:1
+       ---- */
+
+    --color-emerald-50: #ECFDF3;
+    --color-emerald-100: #D7F5E3;
+    --color-emerald-200: #A9E9C4;
+    --color-emerald-300: #6FD79E;
+    --color-emerald-400: #2FB874;
+    --color-emerald-500: #178A54;
+    --color-emerald-600: #146C43;
+    --color-emerald-700: #115C39;
+    --color-emerald-800: #0E4A2F;
+    --color-emerald-900: #0B3B26;
+    --color-emerald-950: #062617;
+
+    --color-green-50: #ECFDF3;
+    --color-green-100: #D7F5E3;
+    --color-green-200: #A9E9C4;
+    --color-green-300: #6FD79E;
+    --color-green-400: #2FB874;
+    --color-green-500: #178A54;
+    --color-green-600: #146C43;
+    --color-green-700: #115C39;
+    --color-green-800: #0E4A2F;
+    --color-green-900: #0B3B26;
+    --color-green-950: #062617;
+
+    --color-teal-50: #ECFDF3;
+    --color-teal-100: #D7F5E3;
+    --color-teal-200: #A9E9C4;
+    --color-teal-300: #6FD79E;
+    --color-teal-400: #2FB874;
+    --color-teal-500: #178A54;
+    --color-teal-600: #146C43;
+    --color-teal-700: #115C39;
+    --color-teal-800: #0E4A2F;
+    --color-teal-900: #0B3B26;
+    --color-teal-950: #062617;
+
+    /* ---- Danger. Out of stock, destructive actions, form errors.
+
+           white        on red-600    6.57:1
+           red-600 text on white      6.57:1
+           red-700 text on white      8.66:1
+           red-700 text on red-50     6.05:1
+       ---- */
+
+    --color-red-50: #FEF3F2;
+    --color-red-100: #FEE4E2;
+    --color-red-200: #FECDCA;
+    --color-red-300: #FDA29B;
+    --color-red-400: #F04438;
+    --color-red-500: #D92D20;
+    --color-red-600: #B42318;
+    --color-red-700: #912018;
+    --color-red-800: #7A271A;
+    --color-red-900: #55160C;
+    --color-red-950: #3A0E07;
+
+    --color-rose-50: #FEF3F2;
+    --color-rose-100: #FEE4E2;
+    --color-rose-200: #FECDCA;
+    --color-rose-300: #FDA29B;
+    --color-rose-400: #F04438;
+    --color-rose-500: #D92D20;
+    --color-rose-600: #B42318;
+    --color-rose-700: #912018;
+    --color-rose-800: #7A271A;
+    --color-rose-900: #55160C;
+    --color-rose-950: #3A0E07;
+
+    --color-pink-50: #FEF3F2;
+    --color-pink-100: #FEE4E2;
+    --color-pink-200: #FECDCA;
+    --color-pink-300: #FDA29B;
+    --color-pink-400: #F04438;
+    --color-pink-500: #D92D20;
+    --color-pink-600: #B42318;
+    --color-pink-700: #912018;
+    --color-pink-800: #7A271A;
+    --color-pink-900: #55160C;
+    --color-pink-950: #3A0E07;
+
+    /* ---- Rating stars and the affiliate disclosure panel.
+
+       This family is kept for exactly two jobs and both are semantic: a filled
+       review star, and the amber panel AffiliateNotice renders above every set
+       of outbound links. The panel's colour is not decoration — the FTC
+       guidance that component quotes asks for a disclosure that "stands out
+       from any accompanying text", so it is the one place in this design where
+       something is deliberately NOT calmed down.
+
+       Shade 300 is the pale fill and measures 2.17:1 on white, below WCAG
+       1.4.11's 3:1 for graphics, so nothing informational may use it. The
+       shades the codebase actually applies to stars and text are darker:
+
+           amber-400 (#C77B0A) on white    3.35:1   (non-text, clears 3:1)
+           amber-500 (#B25E09) on white    4.67:1   (AA text)
+           amber-700 (#8A430A) on amber-50 6.88:1   (the panel's icon)
+           amber-900 (#4D1D09) on amber-50 13.29:1  (the panel's body copy)
+       ---- */
+
+    --color-amber-50: #FFF8EB;
+    --color-amber-100: #FDECC8;
+    --color-amber-200: #FBD990;
+    --color-amber-300: #E8A317;
+    --color-amber-400: #C77B0A;
+    --color-amber-500: #B25E09;
+    --color-amber-600: #A05308;
+    --color-amber-700: #8A430A;
+    --color-amber-800: #6B3208;
+    --color-amber-900: #4D1D09;
+    --color-amber-950: #3A1607;
+
+    --color-yellow-50: #FFF8EB;
+    --color-yellow-100: #FDECC8;
+    --color-yellow-200: #FBD990;
+    --color-yellow-300: #E8A317;
+    --color-yellow-400: #C77B0A;
+    --color-yellow-500: #B25E09;
+    --color-yellow-600: #A05308;
+    --color-yellow-700: #8A430A;
+    --color-yellow-800: #6B3208;
+    --color-yellow-900: #4D1D09;
+    --color-yellow-950: #3A1607;
+
+    --color-orange-50: #FFF8EB;
+    --color-orange-100: #FDECC8;
+    --color-orange-200: #FBD990;
+    --color-orange-300: #E8A317;
+    --color-orange-400: #C77B0A;
+    --color-orange-500: #B25E09;
+    --color-orange-600: #A05308;
+    --color-orange-700: #8A430A;
+    --color-orange-800: #6B3208;
+    --color-orange-900: #4D1D09;
+    --color-orange-950: #3A1607;
+}
+
+/* =========================================================
+   CHAPTER 26.5 — TOKEN OVERRIDES FOR CHAPTERS 20 AND 8–15
+
+   Declared in a SECOND @theme block rather than edited in place above, so the
+   original values and the reasoning that produced them stay readable. A later
+   declaration of the same custom property wins, which is all this needs.
+
+   Two groups, for two different reasons.
+   ========================================================= */
+
+@theme {
+
+    /* ---- Chapter 20's palette, re-pointed at the new system ----
+
+       ink / ink-muted / surface / card were a dark violet-grey on a warm
+       off-white. They become the neutral scale: same roles, same names, same
+       component code, calmer values. The warm ground in particular had to go —
+       #FFFBF6 was chosen to let six pastel tiles sit in it, and the tiles are
+       no longer pastel.
+
+           ink        on canvas  16.28:1     ink-muted on canvas  4.88:1
+           ink        on card    16.83:1     ink-muted on card    5.07:1
+
+       accent-primary and accent-secondary were a purple and a teal. There is
+       one accent now, so both point at it. Nothing that used `bg-accent-*`
+       needs editing and nothing that used it changes meaning — a CTA is still
+       a CTA, it is just no longer a different colour from the focus ring
+       beside it.
+
+       success / danger / rating keep their meanings and move onto the ramps
+       defined above so that `bg-success` and `bg-emerald-600` are finally the
+       same colour instead of two greens three points apart. */
+
+    --color-ink: #1D1D1F;
+    --color-ink-muted: #6E6E78;
+    --color-surface: #FBFBFD;
+    --color-card: #FFFFFF;
+
+    --color-accent-primary: #0A5AFF;
+    --color-accent-secondary: #0A5AFF;
+
+    --color-success: #146C43;
+    --color-danger: #B42318;
+    --color-rating: #B25E09;
+
+    /* ---- The six pastel tiles collapse to one neutral ----
+
+       This is the most visible single change in the chapter and the one most
+       worth arguing about, so: Chapter 20 gave the discovery zone six pastels
+       — mint, butter, blush, sky, lilac, peach — one per category tile. They
+       were well chosen and individually accessible (every one measured above
+       12:1 against ink). They are also six competing hues on one screen, which
+       is precisely the noise this pass exists to remove.
+
+       All six now resolve to #F5F5F7. The tiles are still tiles: they still
+       have their own surface, their own icon and their own label, and they are
+       still distinguishable from each other — by what they SAY, which is the
+       information the reader actually needs, rather than by a colour that
+       encoded nothing. A `from-tile-mint to-tile-sky` gradient becomes a flat
+       neutral panel without that gradient needing to be deleted.
+
+       What is lost: the discovery grid is less playful. That is a real cost
+       and it is recorded in the chapter report rather than glossed over. What
+       is gained: on a page that now has exactly one saturated colour, the
+       accent means something. */
+
+    --color-tile-mint: #F5F5F7;
+    --color-tile-butter: #F5F5F7;
+    --color-tile-blush: #F5F5F7;
+    --color-tile-sky: #F5F5F7;
+    --color-tile-lilac: #F5F5F7;
+    --color-tile-peach: #F5F5F7;
+
+    /* ---- The Chapters 8–15 legacy names ----
+
+       These back `@layer base` — body, ::selection, the input focus ring — and
+       the `.btn-*` / `.badge-*` / `.gradient-*` classes below. They are still
+       live on every page through the base layer, so they are re-pointed rather
+       than left as the last surviving copy of the old palette.
+
+       The five composite `--gradient-*` values in :root are NOT touched. They
+       are `linear-gradient(...)` strings rather than colours, they are read
+       only by `.gradient-blue` and friends, and grep finds no component using
+       those classes. Rewriting dead declarations would be churn. */
+
+    --color-primary: #0A5AFF;
+    --color-primary-dark: #0A4ED6;
+    --color-secondary: #0A5AFF;
+    --color-accent: #B25E09;
+    --color-warning: #B25E09;
+
+    --color-legacy-success: #146C43;
+    --color-legacy-danger: #B42318;
+
+    --color-background: #FBFBFD;
+    --color-legacy-surface: #FFFFFF;
+    --color-surface-soft: #F5F5F7;
+
+    --color-text-primary: #1D1D1F;
+    --color-text-secondary: #57575E;
+    --color-text-muted: #86868B;
+
+    --color-border: #E8E8ED;
 }
 
 /* =========================================================
@@ -426,9 +996,13 @@ select:focus {
 
 ::-webkit-scrollbar-thumb {
 
-    background: #cbd5e1;
+    /* Chapter 26.5: the last two literal hex values under src/. They were
+       slate-300/slate-400 from the old palette and were invisible to the token
+       remap because they are values, not class names. The track border is the
+       page ground rather than white so the thumb reads as inset. */
+    background: var(--color-line-strong);
 
-    border: 3px solid #ffffff;
+    border: 3px solid var(--color-canvas);
 
     border-radius: 999px;
 
@@ -436,7 +1010,7 @@ select:focus {
 
 ::-webkit-scrollbar-thumb:hover {
 
-    background: #94a3b8;
+    background: var(--color-ink-subtle);
 
 }
 

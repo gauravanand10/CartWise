@@ -1,7 +1,9 @@
 package com.cartwise.controller;
 
+import com.cartwise.common.dto.AffiliateClickStats;
 import com.cartwise.common.dto.ChangeRoleRequest;
 import com.cartwise.common.dto.UserDto;
+import com.cartwise.service.AffiliateAnalyticsService;
 import com.cartwise.service.ProductImageService;
 import com.cartwise.service.UserAdminService;
 import java.util.List;
@@ -59,12 +61,39 @@ public class AdminController {
 
     private final UserAdminService userAdminService;
     private final ProductImageService productImageService;
+    private final AffiliateAnalyticsService affiliateAnalyticsService;
 
     public AdminController(
             UserAdminService userAdminService,
-            ProductImageService productImageService) {
+            ProductImageService productImageService,
+            AffiliateAnalyticsService affiliateAnalyticsService) {
         this.userAdminService = userAdminService;
         this.productImageService = productImageService;
+        this.affiliateAnalyticsService = affiliateAnalyticsService;
+    }
+
+    /**
+     * {@code GET /api/admin/affiliate/clicks} — the outbound click report. Chapter 26.
+     *
+     * <p>Mapped here, in the class the {@code /api/admin/**} rule already covers, rather than added
+     * to {@code AffiliateController} where the rest of the affiliate feature lives. That is the
+     * decision worth defending: the other three affiliate routes are {@code permitAll}, so a report
+     * placed beside them would be one authorization line away from publishing which products
+     * CartWise's visitors are actually buying — competitive information, and information about
+     * traffic patterns, handed to anyone who asked. Grouping by <em>who may call it</em> beats
+     * grouping by <em>what it is about</em> exactly when the answer is "only administrators".
+     *
+     * <p>200 with an {@link AffiliateClickStats}. 401 without a token, 403 with a {@code USER} one,
+     * both answered inside the filter chain before this method exists.
+     *
+     * <p>Aggregates only — counts per product, per retailer and per day, plus how many clicks came
+     * from a signed-in user at all. No route here returns an individual click, and the repository
+     * has no method that could: the table records who clicked so that signed-in referral traffic is
+     * measurable, not so that one person's outbound browsing can be read back.
+     */
+    @GetMapping("/affiliate/clicks")
+    public ResponseEntity<AffiliateClickStats> affiliateClicks() {
+        return ResponseEntity.ok(affiliateAnalyticsService.stats());
     }
 
     /**

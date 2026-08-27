@@ -1,10 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 
-import AiInsights from "./components/AiInsights";
 import Breadcrumb from "./components/Breadcrumb";
 import ProductDescription from "./components/ProductDescription";
 import ProductHero from "./components/ProductHero";
-import ProductReviews from "./components/ProductReviews";
 import ProductSpecs from "./components/ProductSpecs";
 import RelatedProducts from "./components/RelatedProducts";
 import StoreComparison from "./components/StoreComparison";
@@ -14,6 +12,7 @@ import ProductNotFound from "./components/states/ProductNotFound";
 import ProductSkeleton from "./components/states/ProductSkeleton";
 
 import { getPopularProducts } from "./services/productService";
+import type { ProductCardModel } from "./types/product";
 import { useProduct } from "./hooks/useProduct";
 
 /**
@@ -33,7 +32,29 @@ export default function ProductPage() {
         window.scrollTo({ top: 0, behavior: "instant" });
     }, [slug]);
 
-    const popular = useMemo(() => getPopularProducts(), []);
+    /*
+     * Suggestions for the not-found screen.
+     *
+     * `useState` + `useEffect` rather than `useMemo`, because Chapter 26.5 made
+     * `getPopularProducts` asynchronous — it reads the real catalogue over HTTP
+     * now that the local array is gone. The initial value is an empty list and
+     * `ProductNotFound` renders fine with one, so the recovery screen appears
+     * immediately and fills in a moment later instead of waiting on a request
+     * it may not even need.
+     */
+    const [popular, setPopular] = useState<ProductCardModel[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        void getPopularProducts().then((products) => {
+            if (!cancelled) setPopular(products);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     if (status === "loading") {
         return <ProductSkeleton />;
@@ -57,6 +78,7 @@ export default function ProductPage() {
             <StoreComparison
                 stores={product.stores}
                 productName={product.name}
+                productSlug={product.slug}
             />
 
             <ProductSpecs groups={product.specGroups} />
@@ -64,18 +86,28 @@ export default function ProductPage() {
             <ProductDescription
                 overview={product.overview}
                 highlights={product.highlights}
-                features={product.features}
-                boxContents={product.boxContents}
+                note={product.note}
             />
 
-            <AiInsights ai={product.ai} productName={product.name} />
+            {/*
+                Chapter 26.5 removed two sections from this page.
 
-            <ProductReviews
-                rating={product.rating}
-                reviewCount={product.reviewCount}
-                buckets={product.ratingBuckets}
-                reviews={product.reviews}
-            />
+                <AiInsights> rendered a 0-100 "CartWise AI score", a confidence
+                percentage, and pros/cons/who-should-buy paragraphs. No model
+                produced any of it.
+
+                <ProductReviews> rendered named customer reviews with dates,
+                ratings, "verified purchase" badges and helpful-vote counts, all
+                generated from the product's slug. Fabricated consumer reviews
+                are not a styling problem — they fall under the same FTC
+                Endorsement Guides regime as the affiliate disclosure Chapter 26
+                built, which treats a fake consumer endorsement as deceptive.
+
+                What replaces them is one honest paragraph inside
+                <ProductDescription>: CartWise's own note, written as CartWise
+                and labelled as such, saying only what the catalogue's figures
+                support — including that CartWise has never handled the product.
+            */}
 
             <RelatedProducts related={related} />
 

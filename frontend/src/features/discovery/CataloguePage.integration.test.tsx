@@ -79,8 +79,15 @@ describe("CataloguePage (integration)", () => {
         // The out-of-stock veil comes from the API's `inStock: false`, through toCardModel.
         expect(screen.getByText("Out of stock")).toBeInTheDocument();
 
-        // The discount badge is computed from price vs originalPrice, not sent by the server.
-        expect(screen.getByText("11% off")).toBeInTheDocument();
+        /*
+         * Chapter 27 removed the "11% off" pill this line used to assert — see the
+         * note in ProductCard. The point of the assertion survives it: the card has
+         * to render BOTH numbers the API sent for a discounted product, because the
+         * struck-through original is now the only thing carrying "this costs less
+         * than it did". Same two fields, same adapter, formatted by lib/currency.
+         */
+        expect(screen.getByText("₹1,19,900")).toBeInTheDocument();
+        expect(screen.getByText("₹1,34,900")).toBeInTheDocument();
     });
 
     /**

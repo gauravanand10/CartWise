@@ -125,10 +125,29 @@ export function useComparison(): UseComparison {
         [activeProducts, sections],
     );
 
-    const suggestions = useMemo(
-        () => getSuggestions(activeProducts, slugs),
-        [activeProducts, slugs],
-    );
+    /*
+     * Chapter 26.5: `getSuggestions` became asynchronous when the local
+     * catalogue was retired, so this moved from `useMemo` to state filled by an
+     * effect. The starting value is an empty array, which the empty-state
+     * component already renders correctly — the picker simply populates a
+     * moment after the page, rather than the page waiting on it.
+     *
+     * `cancelled` guards the usual race: changing the comparison twice quickly
+     * would otherwise let a slower earlier response overwrite a newer one.
+     */
+    const [suggestions, setSuggestions] = useState<ProductCardModel[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        void getSuggestions(activeProducts, slugs).then((next) => {
+            if (!cancelled) setSuggestions(next);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [activeProducts, slugs]);
 
     const differenceCount = useMemo(
         () =>

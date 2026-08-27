@@ -42,8 +42,8 @@ export default function SearchHeader({ children }: SearchHeaderProps) {
                 </h1>
 
                 <p className="mx-auto mt-3 max-w-xl text-[15px] leading-relaxed text-fuchsia-100 sm:text-base">
-                    Search once and compare specifications, ratings and live
-                    prices across every major retailer.
+                    Search once and compare specifications, ratings and
+                    reference prices across every major retailer.
                 </p>
 
                 {/* The dropdown overlays content below, so this wrapper owns a

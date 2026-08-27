@@ -24,6 +24,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 // same way, from the same file, and one @EnableConfigurationProperties listing both is easier to
 // read than a second @Configuration that exists only to hold one annotation.
 @EnableConfigurationProperties({
+        AffiliateProperties.class,
         CorsProperties.class,
         OpenverseProperties.class,
         RateLimitProperties.class})

@@ -1,7 +1,6 @@
-import { CheckCircle2, PackageX, Sparkles, Star } from "lucide-react";
+import { CheckCircle2, PackageX, Star } from "lucide-react";
 
 import { formatCount } from "../../../lib/currency";
-import { stockLabel } from "../utils/pricing";
 import type { ProductDetail } from "../types/product";
 
 interface ProductSummaryProps {
@@ -17,8 +16,6 @@ interface ProductSummaryProps {
  * pricing card is how stores end up with abandoned carts.
  */
 export default function ProductSummary({ product }: ProductSummaryProps) {
-    const lowStock = product.inStock && product.stockCount <= 5;
-
     return (
         <div>
 
@@ -57,30 +54,46 @@ export default function ProductSummary({ product }: ProductSummaryProps) {
                     <span className="font-semibold text-slate-900">
                         {product.rating}
                     </span>
-                    {/* `-my-1 py-1` for a 28px tap target without changing the
-                        row's visual height. */}
-                    <a
-                        href="#reviews"
-                        className="-my-1 inline-block rounded py-1 text-slate-500 underline-offset-2 transition hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    >
-                        {formatCount(product.reviewCount)} reviews
-                    </a>
+                    {/*
+                        Chapter 26.5: this was `<a href="#reviews">`, jumping to
+                        the review section further down the page. That section
+                        is gone, so the link had nowhere to land — a control
+                        that looks clickable and does nothing. It is plain text
+                        now.
+
+                        The count itself stays because it is a real column
+                        (`products.review_count`) rather than a tally of reviews
+                        CartWise holds — which is exactly why it must not look
+                        like a link to them. The wording says "ratings", not
+                        "reviews", for the same reason.
+                    */}
+                    <span className="text-slate-500">
+                        {formatCount(product.reviewCount)} ratings
+                    </span>
                 </span>
 
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                    <Sparkles size={12} aria-hidden="true" />
-                    AI score {product.ai.score}
-                </span>
+                {/*
+                    Chapter 26.5 removed the "AI score 96" chip that stood here.
+                    No model produced the number — it was a literal in a
+                    hand-written catalogue file — and rendering an invented
+                    figure beside a sparkles icon is the most confident-looking
+                    way to state something untrue. Nothing replaces it: the
+                    rating and rating count to the left are the real signal.
+                */}
 
+                {/*
+                    "Only 3 left!" is gone with `stockCount`. CartWise holds no
+                    inventory and receives no stock feed, so a unit count was a
+                    false claim about a retailer's warehouse — and an urgency
+                    cue, which makes inventing it worse than careless. The
+                    boolean below is what the database actually stores.
+                */}
                 {product.inStock ? (
                     <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${lowStock
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-emerald-50 text-emerald-700"
-                            }`}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
                     >
                         <CheckCircle2 size={12} aria-hidden="true" />
-                        {stockLabel(product.stockCount)}
+                        In stock
                     </span>
                 ) : (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
