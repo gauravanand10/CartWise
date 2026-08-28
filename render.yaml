@@ -74,13 +74,22 @@ services:
       - key: JWT_EXPIRATION
         value: 24h
 
-      # CORS. The frontend's Render URL, PLUS the two Capacitor origins from Chapter 30 — see the
-      # long comment on this exact variable in application-prod.yml for why a mobile build's
-      # WebView origin is a bare "https://localhost" and not a URL naming this deployment at all.
-      # The frontend host below must be updated to match wherever the frontend service actually
-      # ends up, for the same reason backendUrl is called out above.
+      # CORS. Three origins, appended to rather than replacing one another as each chapter added a
+      # place this app can be served from:
+      #
+      #   - https://cartwise-frontend.onrender.com — this Blueprint's OWN frontend service, if used.
+      #   - https://localhost                       — Chapter 30's Capacitor Android build. See the
+      #     long comment on this exact variable in application-prod.yml for why a mobile app's
+      #     WebView origin is a bare scheme+"localhost" and not a URL naming this deployment.
+      #   - https://gauravanand10.github.io          — Chapter 30.1's GitHub Pages deploy. An
+      #     origin is scheme+host only, never a path, so this covers the site regardless of which
+      #     repository it is served under (.../CartWise/, .../whatever-it-gets-renamed-to/, ...).
+      #
+      # All three can be true at once — nothing here requires picking exactly one frontend. The
+      # Render frontend host must be updated to match wherever that service actually ends up, for
+      # the same reason backendUrl is called out above; the other two are stable.
       - key: CARTWISE_ALLOWED_ORIGINS
-        value: https://cartwise-frontend.onrender.com,https://localhost
+        value: https://cartwise-frontend.onrender.com,https://localhost,https://gauravanand10.github.io
 
       # OPENVERSE. Optional. Blank means the image backfill calls Openverse anonymously, which is
       # the supported default — see application.yml. Set these only if higher rate limits from a

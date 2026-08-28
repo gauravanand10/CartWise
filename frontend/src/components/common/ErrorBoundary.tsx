@@ -124,9 +124,21 @@ export default class ErrorBoundary extends Component<
                         be no router context here to navigate with. A full page
                         load is also the more reliable recovery from a broken
                         render tree.
+
+                        CHAPTER 30.1 — `href={import.meta.env.BASE_URL}`, not a
+                        hardcoded "/". This app is not always served from a
+                        domain's root: a GitHub Pages project site lives at
+                        `https://<user>.github.io/<repo>/`, and `BASE_URL` is
+                        Vite's own build-time constant for exactly that prefix —
+                        it reads `vite.config.ts`'s `base` and is `"/"` when
+                        unset, so this is a no-op everywhere this app was
+                        deployed before. A literal "/" here would have sent a
+                        recovering user to the GitHub Pages ACCOUNT root instead
+                        of back into the app — the one link on this screen whose
+                        entire job is getting them somewhere that works.
                     */}
                     <a
-                        href="/"
+                        href={import.meta.env.BASE_URL}
                         className="rounded-full border border-line-strong bg-card px-5 py-2.5 text-sm font-semibold text-ink transition hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
                     >
                         Go to homepage

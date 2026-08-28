@@ -5,8 +5,15 @@ command shown or by checking the exact page of the platform's own documentation,
 chapter nor any automated tool has created an account, entered payment information, or deployed
 this application anywhere. The owner does that, by hand, following the steps below.
 
-Two platforms are covered. **Railway is the recommendation** — see "Railway or Render?" for why.
-Render is a complete, equally real alternative for an owner who already has an account there.
+Two platforms are covered for the BACKEND. **Railway is the recommendation** — see "Railway or
+Render?" for why. Render is a complete, equally real alternative for an owner who already has an
+account there.
+
+This document is the backend half. The frontend has a third option beyond the Docker-image
+deploys below: **GitHub Pages**, free and requiring no platform account at all since it deploys
+through this repository's own GitHub Actions — see `GITHUB_PAGES.md`. It is a static host and
+cannot run the backend, so a Pages deployment still needs one of the two backends below to actually
+call; `GITHUB_PAGES.md` assumes this document's backend steps are done first.
 
 ---
 
@@ -106,7 +113,7 @@ respectively, which this table does not repeat but does rely on.
 
 | Variable | What it is | Where the value comes from |
 |---|---|---|
-| `CARTWISE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist | The frontend's deployed URL, once you know it (chicken-and-egg with deploy order — see the ordered steps below). If the Android app in Chapter 30's Part D is ever shipped, this list must also include the literal `https://localhost` — see the long comment on this exact variable in `application-prod.yml` for why. |
+| `CARTWISE_ALLOWED_ORIGINS` | Comma-separated CORS allowlist | The frontend's deployed URL, once you know it (chicken-and-egg with deploy order — see the ordered steps below). If the Android app in Chapter 30's Part D is ever shipped, this list must also include the literal `https://localhost` — see the long comment on this exact variable in `application-prod.yml` for why. If the GitHub Pages frontend from Chapter 30.1 is used, add `https://<your-github-username>.github.io` (host only, no `/<repo-name>/` — an origin is scheme+host, never a path) — see `GITHUB_PAGES.md`. Any combination of these can be listed together; none of them replaces another. |
 
 ### Backend — optional, safe to leave unset
 
@@ -154,7 +161,9 @@ respectively, which this table does not repeat but does rely on.
    once the frontend exists, then redeploy the backend. A CORS misconfiguration here is silent —
    the frontend loads and every API call fails, exactly as Chapter 30's own Android emulator run did
    before this was diagnosed — so treat "does the deployed frontend actually load data" as the real
-   verification, not "did the backend build".
+   verification, not "did the backend build". If GitHub Pages (`GITHUB_PAGES.md`) is the frontend
+   instead of a Railway-deployed one, add `https://<your-github-username>.github.io` here too — it
+   is additive, not a replacement, and steps 4–5 below then describe a frontend you don't need.
 
 4. **Create the frontend service.**
    Same project, "+ New → GitHub Repo" (same repo, second service):

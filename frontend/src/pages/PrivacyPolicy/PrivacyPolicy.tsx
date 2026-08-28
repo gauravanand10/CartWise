@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 /**
  * The privacy policy. Chapter 30.
  *
@@ -133,12 +135,12 @@ export default function PrivacyPolicy() {
                         only if you were signed in when you clicked. A
                         signed-out click is recorded with no identity attached
                         at all. See{" "}
-                        <a
-                            href="/affiliate-disclosure"
+                        <Link
+                            to="/affiliate-disclosure"
                             className="font-medium text-blue-700 underline underline-offset-2"
                         >
                             the affiliate disclosure page
-                        </a>{" "}
+                        </Link>{" "}
                         for the complete detail on this — it's the same table,
                         described once rather than twice.
                     </p>

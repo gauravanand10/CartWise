@@ -1,0 +1,179 @@
+name: Deploy frontend to GitHub Pages
+
+# Chapter 30.1.
+#
+# Publishes the frontend — and only the frontend, from a static-file host that cannot run either —
+# leaving Chapter 30's Railway/Render setup as the only place the actual backend and database run.
+# See DEPLOYMENT.md for that half; see the repository README or this file's own comments below for
+# the two settings this chapter cannot flip on the owner's behalf: enabling Pages itself, and
+# telling this workflow which deployed backend to build against.
+#
+# Path-filtered to `frontend/**` and this file. A push that only touches `backend/` or `docs/`
+# would otherwise trigger a full install-test-build-deploy cycle to republish a frontend that did
+# not change — harmless, but a genuine waste of the same Actions minutes CI already spends on that
+# push.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-pages.yml'
+  # Manual re-run with no code change — e.g. the backend was just deployed for the first time and
+  # VITE_API_URL was only just set, so the frontend needs rebuilding against it even though nothing
+  # in `frontend/` changed. Standard on every official GitHub Pages workflow template for this
+  # reason.
+  workflow_dispatch:
+
+# GitHub's own recommendation for Pages specifically, and deliberately the opposite of ci.yml's
+# `cancel-in-progress: true`. Cancelling a deployment mid-upload can leave Pages serving a half
+# -written artifact; queuing a second run behind the first is the safe way to let a rapid double
+# -push resolve to the newer one still winning, without ever serving a torn build in between.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# `pages: write` and `id-token: write` are what actions/deploy-pages needs to publish anything at
+# all — GitHub Pages deployments are authenticated via a short-lived OIDC token this workflow
+# requests for itself, not via a stored credential. `contents: read` is the checkout.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+
+  # ---------------------------------------------------------------------------------------------
+  # Build: everything ci.yml's frontend job already does, plus the actual production build. Kept
+  # as one job with the checks first — a type error or a failing test must stop this workflow
+  # before it produces anything for the deploy job to publish, not after.
+  # ---------------------------------------------------------------------------------------------
+  build:
+    name: Build (gated on tsc, eslint, vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # Same three checks as ci.yml's frontend job, same reasoning (see that file's comments on
+      # why `tsc -b` rather than `tsc --noEmit`). Deliberately duplicated rather than made to
+      # depend on that workflow's run: a workflow cannot depend on another workflow's job, and
+      # gating this one on "did CI pass" would mean trusting a status check by name rather than by
+      # actually running it — which is exactly the gap a differently-configured branch protection
+      # rule could leave open. Three extra minutes here buys not having to make that argument.
+      - name: TypeScript
+        working-directory: ./frontend
+        run: npx tsc -b
+
+      - name: ESLint
+        working-directory: ./frontend
+        run: npx eslint .
+
+      - name: Unit tests
+        working-directory: ./frontend
+        run: npx vitest run
+
+      # THE TWO VARIABLES THAT MAKE THIS BUILD DIFFERENT FROM EVERY OTHER ONE IN THIS REPOSITORY.
+      #
+      # VITE_API_URL — read from a repository VARIABLE, not a secret, and that is a deliberate
+      # choice rather than the safer-looking default. frontend/Dockerfile's own comment says why:
+      # "a VITE_* variable is not a way to pass a secret to a browser app — it is compiled into the
+      # bundle and is readable in devtools." A backend's public URL is not sensitive, so storing it
+      # as a Secret would just make it harder to read in this workflow's own logs for no security
+      # benefit. Unset — before the owner has deployed a backend and configured this — the build
+      # still succeeds: `services/api.ts` falls back to `http://localhost:8080/api`, so the
+      # published site would come up and call nothing reachable rather than fail to build. That is
+      # the "prepare everything, deploy nothing live" shape this chapter asks for; see this
+      # workflow's own summary step below, which says so out loud on every run until it is set.
+      #
+      # VITE_BASE_PATH — NOT a secret or a variable, computed from the repository's own name.
+      # A GitHub Pages PROJECT site is served from `/<repo-name>/`, not the domain root (see
+      # frontend/vite.config.ts's long comment on why this matters and how it was verified). Deriving
+      # it from `github.event.repository.name` rather than hardcoding "/CartWise/" means this
+      # workflow keeps building the right thing across a repository rename without anyone having
+      # to remember this file exists.
+      - name: Build (production, GitHub Pages base path)
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Report whether VITE_API_URL was actually set
+        run: |
+          if [ -z "${{ vars.VITE_API_URL }}" ]; then
+            MSG="VITE_API_URL repository variable is unset. This build was published pointed at the default http://localhost:8080/api, which will not resolve for any real visitor. Deploy the backend (see DEPLOYMENT.md), set the VITE_API_URL repository variable to its /api URL, then re-run this workflow."
+            echo "::warning::$MSG"
+          else
+            echo "Built against VITE_API_URL=${{ vars.VITE_API_URL }}"
+          fi
+
+      # GITHUB PAGES SPA FALLBACK.
+      #
+      # GitHub Pages has no server-side rewrite rule — a direct load or a hard refresh of any route
+      # this app defines client-side (e.g. `/CartWise/privacy`) does not correspond to a real file,
+      # so Pages answers with its own 404 rather than `index.html`. React Router never gets the
+      # chance to run.
+      #
+      # The standard fix for a BrowserRouter app: publish a `404.html` that IS the app shell. Pages
+      # still answers that request with an HTTP 404 status, but the response BODY is this app, so
+      # the browser loads it, executes the bundle, and BrowserRouter reads the real (deep) URL from
+      # `window.location` on mount and renders the matching route — the wrong status code with the
+      # right content, which is what makes it work.
+      #
+      # This was not assumed. Chapter 30.1 built this exact output, served it from a subpath with a
+      # standalone static server that reproduces both Pages behaviours (files served from the real
+      # path, and any unmatched path answered with 404.html at a 404 status), and loaded
+      # `/CartWise/privacy` directly against it — confirmed rendering the actual Privacy Policy
+      # page rather than a blank screen or Pages' default 404 text.
+      - name: Add SPA fallback (404.html) for client-side routes
+        working-directory: ./frontend
+        run: cp dist/index.html dist/404.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  # ---------------------------------------------------------------------------------------------
+  # Deploy: the official action, not a manual `gh-pages` branch push.
+  #
+  # A `gh-pages` branch push (via peaceiris/actions-gh-pages or similar) is the older pattern and
+  # still common, but it requires Pages to be configured to build from a branch, writes build
+  # output into git history as commits on that branch, and needs a PAT or deploy key with write
+  # access to push there. actions/deploy-pages instead uploads the artifact straight to GitHub's
+  # Pages infrastructure over the OIDC token this job requests (see `permissions` above) — no
+  # branch, no extra commits, no additional credential to provision or rotate. It is also the
+  # action GitHub's own Pages settings UI generates when "GitHub Actions" is chosen as the deploy
+  # source, which is the setting this chapter's handoff asks the owner to choose.
+  # ---------------------------------------------------------------------------------------------
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Publishes the deployment URL to the run's summary and to the repository's Environments tab.
+    # `steps.deployment.outputs.page_url` is what actions/deploy-pages sets after actually
+    # publishing, which is why this environment's `url` reads from it rather than a literal string
+    # here — it stays correct if the owner ever attaches a custom domain.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
