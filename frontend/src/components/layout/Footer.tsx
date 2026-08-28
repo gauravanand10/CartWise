@@ -238,16 +238,16 @@ export default function Footer() {
 
                     {/*
                         CHAPTER 26 — the first of the removed legal links comes
-                        back, and only this one.
+                        back, and only this one at the time.
 
                         Chapter 24 removed "Privacy", "Terms" and "How scoring
                         works" because none of those pages existed and a footer
                         legal link is the one place a dead link is actively
                         misleading rather than merely useless — it implies a
-                        policy has been published. That reasoning has not
-                        changed and those three are still absent.
+                        policy has been published. "Terms" and "How scoring
+                        works" are still absent for that reason.
 
-                        "Affiliate disclosure" is different now because the page
+                        "Affiliate disclosure" was different because the page
                         behind it is real, and because unlike the others it is
                         not optional: CartWise is paid for outbound clicks, and
                         the FTC's Endorsement Guides require that to be
@@ -255,13 +255,32 @@ export default function Footer() {
                         AffiliateNotice renders that directly above the links
                         themselves, since a disclosure reachable only from a
                         footer does not meet the standard.
+
+                        CHAPTER 30 — "Privacy" is back too, for the same reason:
+                        the page it points to now exists and says only true
+                        things about what this application collects, checked
+                        against the code while it was written rather than
+                        assumed. It stopped being optional the moment a Play
+                        Store submission needed a real policy URL to link.
                     */}
-                    <Link
-                        to="/affiliate-disclosure"
-                        className="font-medium text-slate-300 underline underline-offset-2 transition-colors hover:text-white"
+                    <nav
+                        aria-label="Legal"
+                        className="flex flex-wrap items-center gap-x-6 gap-y-2"
                     >
-                        Affiliate disclosure
-                    </Link>
+                        <Link
+                            to="/affiliate-disclosure"
+                            className="font-medium text-slate-300 underline underline-offset-2 transition-colors hover:text-white"
+                        >
+                            Affiliate disclosure
+                        </Link>
+
+                        <Link
+                            to="/privacy"
+                            className="font-medium text-slate-300 underline underline-offset-2 transition-colors hover:text-white"
+                        >
+                            Privacy policy
+                        </Link>
+                    </nav>
                 </div>
 
             </Container>

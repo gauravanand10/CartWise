@@ -25,7 +25,6 @@ export const SORT_OPTIONS: ReadonlyArray<{
     { value: "price-low-high", label: "Price: Low to High" },
     { value: "price-high-low", label: "Price: High to Low" },
     { value: "rating", label: "Customer Rating" },
-    { value: "newest", label: "Newest First" },
 ];
 
 export const RATING_OPTIONS = [4.5, 4, 3.5, 3] as const;

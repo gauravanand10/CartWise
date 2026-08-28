@@ -199,4 +199,195 @@ class ProductImageServiceTest {
             assertThat(done.getImageUrl()).isEqualTo("https://live.staticflickr.com/new.jpg");
         }
     }
+
+    /**
+     * The Chapter 30 tiered backfill: product first, category second, nothing third.
+     *
+     * <p>Every case here is a photograph that actually reached the running application during this
+     * chapter, not a hypothetical. The tiered strategy's entire value is that it refuses images the
+     * category strategy would have accepted, so tests that only prove the happy path would prove
+     * the part that was never in doubt.
+     */
+    @Nested
+    @DisplayName("tiered backfill: exact, then category, then nothing")
+    class Tiered {
+
+        private static OpenverseImage titled(String id, String title) {
+            return new OpenverseImage(
+                    id,
+                    title,
+                    "https://live.staticflickr.com/" + id + ".jpg",
+                    "Someone",
+                    "by-sa",
+                    "https://creativecommons.org/licenses/by-sa/2.0/",
+                    "\"" + title + "\" by Someone is licensed under CC BY-SA 2.0.",
+                    "https://www.flickr.com/photos/someone/" + id);
+        }
+
+        private static Product phone() {
+            return ProductFixtures.product()
+                    .slug("iphone-16-pro").brand("Apple").name("iPhone 16 Pro")
+                    .category("Smartphone").buildWithId(1L);
+        }
+
+        @Test
+        @DisplayName("a title naming the product is accepted as an exact match")
+        void exactMatchAccepted() {
+            Product product = phone();
+            when(products.findAll()).thenReturn(List.of(product));
+            when(openverse.search("Apple iPhone 16 Pro"))
+                    .thenReturn(List.of(titled("ok", "IPhone 16 series in Apple Store Nagoya Sakae")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.exact()).isEqualTo(1);
+            assertThat(rates.exactSlugs()).containsExactly("iphone-16-pro");
+            assertThat(product.getImageUrl()).isEqualTo("https://live.staticflickr.com/ok.jpg");
+        }
+
+        /**
+         * The regression that forced the contiguous-phrase rule.
+         *
+         * <p>Every token the old "any distinctive token" gate looked for is present in this title:
+         * "apple", "iphone", and even "16" — from the MacBook's screen size. The photograph is of a
+         * different phone. Showing an iPhone 13 to somebody buying an iPhone 16 is the exact
+         * misrepresentation the tier exists to prevent, so it must fall through to the category.
+         */
+        @Test
+        @DisplayName("a title naming a DIFFERENT model is not an exact match")
+        void wrongModelRejected() {
+            Product product = phone();
+            when(products.findAll()).thenReturn(List.of(product));
+            when(openverse.search("Apple iPhone 16 Pro")).thenReturn(
+                    List.of(titled("bad", "Apple MacBook Pro 16' M2 Max and iPhone 13 Pro")));
+            when(openverse.search("smartphone"))
+                    .thenReturn(List.of(titled("cat", "A modern smartphone on a desk")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.exact()).isZero();
+            assertThat(rates.categorySlugs()).containsExactly("iphone-16-pro");
+            assertThat(product.getImageUrl()).isEqualTo("https://live.staticflickr.com/cat.jpg");
+        }
+
+        @Test
+        @DisplayName("a title describing the camera, not the subject, is not an exact match")
+        void shotOnRejected() {
+            Product product = phone();
+            when(products.findAll()).thenReturn(List.of(product));
+            when(openverse.search("Apple iPhone 16 Pro")).thenReturn(List.of(
+                    titled("bad", "Sunset over the bay, shot on iPhone 16 Pro")));
+            when(openverse.search("smartphone"))
+                    .thenReturn(List.of(titled("cat", "A modern smartphone on a desk")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.exact()).isZero();
+            assertThat(rates.category()).isEqualTo(1);
+        }
+
+        /**
+         * THE BARE-NUMBER BUG, as it actually shipped.
+         *
+         * <p>"OnePlus 14"'s only distinctive token, once the brand is removed, is the bare number
+         * "14" — and a bare number is exactly the substring a date, a price or an unrelated model is
+         * most likely to contain by chance. Running the tiered backfill against the live catalogue
+         * and then loading a search page landed this product a photograph of a stranger in a kitchen,
+         * titled with a phone's auto-generated filename: the "14" the gate matched on came from a
+         * "12-14-42" timestamp, not from any phone. "OnePlus" appeared in the same title only because
+         * it names the camera that took the photo, not its subject.
+         */
+        @Test
+        @DisplayName("a bare number is not accepted as the sole distinctive token")
+        void bareNumberAloneRejected() {
+            Product product = ProductFixtures.product()
+                    .slug("oneplus-14").brand("OnePlus").name("OnePlus 14")
+                    .category("Smartphone").buildWithId(1L);
+            when(products.findAll()).thenReturn(List.of(product));
+            when(openverse.search("OnePlus OnePlus 14")).thenReturn(List.of(titled(
+                    "bad", "2022-12-25_12-14-42OnePlusNo_IMG20221225121442_Kiri_DxO")));
+            when(openverse.search("smartphone"))
+                    .thenReturn(List.of(titled("cat", "A modern smartphone on a desk")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.exact()).isZero();
+            assertThat(rates.category()).isEqualTo(1);
+        }
+
+        /**
+         * THE CATEGORY-TIER BUG, as it actually shipped.
+         *
+         * <p>Both of these titles were assigned to real LG OLED products by the first tiered run and
+         * were visible side by side in the search grid on the emulator. Tier 2 had no gate at all,
+         * so "a television" was good enough — including a shattered one and a 1963 news broadcast.
+         *
+         * <p>The third result is clean, so the correct behaviour is to skip past the first two and
+         * use it rather than to give up on the category.
+         */
+        @Test
+        @DisplayName("the category tier skips damaged, discarded and period images")
+        void categoryTierRejectsMisleadingPhotographs() {
+            Product tv = ProductFixtures.product()
+                    .slug("lg-oled-g5").brand("LG").name("LG OLED G5")
+                    .category("Television").imageUrl(null).buildWithId(1L);
+            when(products.findAll()).thenReturn(List.of(tv));
+
+            // One stub for both tiers. None of these titles contains "lg", so the exact-match gate
+            // rejects them all and the same list is what the category tier then has to filter —
+            // which is exactly the situation the live run was in.
+            when(openverse.search(anyString())).thenReturn(List.of(
+                    titled("cracked", "Close up of cracked television screen"),
+                    titled("jfk", "Television screen showing the funeral of JFK"),
+                    titled("good", "Flat screen television in a living room")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.category()).isEqualTo(1);
+            assertThat(tv.getImageUrl()).isEqualTo("https://live.staticflickr.com/good.jpg");
+            assertThat(tv.getImageAttribution()).doesNotContain("cracked", "funeral");
+        }
+
+        /**
+         * The honest third tier. If nothing in the category survives the filter the product keeps no
+         * photograph — it does not get the least-bad rejected one, and it is reported by slug so the
+         * gap is visible rather than inferred from a count.
+         */
+        @Test
+        @DisplayName("a category with nothing usable leaves the product without a photograph")
+        void noUsableCategoryImageLeavesNoPhotograph() {
+            Product tv = ProductFixtures.product()
+                    .slug("lg-oled-c5").brand("LG").name("LG OLED C5")
+                    .category("Television").imageUrl(null).buildWithId(1L);
+            when(products.findAll()).thenReturn(List.of(tv));
+            when(openverse.search(anyString())).thenReturn(List.of(
+                    titled("cracked", "Close up of cracked television screen"),
+                    titled("jfk", "Television screen showing the funeral of JFK")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.none()).isEqualTo(1);
+            assertThat(rates.noneSlugs()).containsExactly("lg-oled-c5");
+            assertThat(tv.getImageUrl()).isNull();
+        }
+
+        /**
+         * An untitled result cannot be screened, so it is refused rather than trusted. Without this
+         * the filter would silently stop applying to precisely the results it cannot inspect.
+         */
+        @Test
+        @DisplayName("an untitled category result is refused rather than trusted")
+        void untitledCategoryResultRefused() {
+            Product tv = ProductFixtures.product()
+                    .slug("lg-oled-b5").brand("LG").name("LG OLED B5")
+                    .category("Television").imageUrl(null).buildWithId(1L);
+            when(products.findAll()).thenReturn(List.of(tv));
+            when(openverse.search(anyString())).thenReturn(List.of(titled("blank", "")));
+
+            ProductImageService.MatchRates rates = service.backfillTiered(false);
+
+            assertThat(rates.none()).isEqualTo(1);
+            assertThat(tv.getImageUrl()).isNull();
+        }
+    }
 }

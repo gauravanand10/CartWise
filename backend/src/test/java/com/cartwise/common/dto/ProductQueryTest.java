@@ -25,15 +25,15 @@ class ProductQueryTest {
 
     /** The eight-argument factory is verbose; these keep each test to the one input it is about. */
     private static ProductQuery query() {
-        return ProductQuery.of(null, null, null, null, null, null, null, null);
+        return ProductQuery.of(null, null, null, null, null, null, null, null, null);
     }
 
     private static ProductQuery withPaging(Integer page, Integer size) {
-        return ProductQuery.of(null, null, null, null, null, null, page, size);
+        return ProductQuery.of(null, null, null, null, null, null, null, page, size);
     }
 
     private static ProductQuery withPrices(BigDecimal min, BigDecimal max) {
-        return ProductQuery.of(null, null, min, max, null, null, null, null);
+        return ProductQuery.of(null, null, null, min, max, null, null, null, null);
     }
 
     @Nested
@@ -159,7 +159,7 @@ class ProductQueryTest {
         @DisplayName("an unknown sort is refused")
         void unknownSortIsRejected() {
             assertThatThrownBy(
-                    () -> ProductQuery.of(null, null, null, null, null, "newest", null, null))
+                    () -> ProductQuery.of(null, null, null, null, null, null, "newest", null, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("sort");
         }
@@ -212,7 +212,7 @@ class ProductQueryTest {
         @ValueSource(strings = {"", " ", "   ", "\t"})
         @DisplayName("a blank category is no filter at all")
         void blankCategoryBecomesNull(String blank) {
-            assertThat(ProductQuery.of(blank, null, null, null, null, null, null, null)
+            assertThat(ProductQuery.of(null, blank, null, null, null, null, null, null, null)
                     .categorySlug()).isNull();
         }
 
@@ -220,14 +220,14 @@ class ProductQueryTest {
         @ValueSource(strings = {"", " ", "   "})
         @DisplayName("a blank brand is no filter at all")
         void blankBrandBecomesNull(String blank) {
-            assertThat(ProductQuery.of(null, blank, null, null, null, null, null, null)
+            assertThat(ProductQuery.of(null, null, blank, null, null, null, null, null, null)
                     .brand()).isNull();
         }
 
         @Test
         @DisplayName("a blank sort falls back to the default rather than failing")
         void blankSortUsesDefault() {
-            assertThat(ProductQuery.of(null, null, null, null, null, "  ", null, null).sort())
+            assertThat(ProductQuery.of(null, null, null, null, null, null, "  ", null, null).sort())
                     .isEqualTo(ProductQuery.DEFAULT_SORT);
         }
 
@@ -235,7 +235,7 @@ class ProductQueryTest {
         @DisplayName("surrounding whitespace is trimmed off a real value")
         void valuesAreTrimmed() {
             ProductQuery result =
-                    ProductQuery.of("  smartphone  ", "  Apple  ", null, null, null, null, null, null);
+                    ProductQuery.of(null, "  smartphone  ", "  Apple  ", null, null, null, null, null, null);
 
             assertThat(result.categorySlug()).isEqualTo("smartphone");
             assertThat(result.brand()).isEqualTo("Apple");
@@ -250,7 +250,7 @@ class ProductQueryTest {
         @DisplayName("carries the validated page, size and ordering")
         void carriesPageSizeAndSort() {
             Pageable pageable = ProductQuery
-                    .of(null, null, null, null, null, "price-desc", 3, 25)
+                    .of(null, null, null, null, null, null, "price-desc", 3, 25)
                     .toPageable();
 
             assertThat(pageable.getPageNumber()).isEqualTo(3);
@@ -278,11 +278,11 @@ class ProductQueryTest {
     @Test
     @DisplayName("inStock is passed through unchanged, including false")
     void inStockIsPassedThrough() {
-        assertThat(ProductQuery.of(null, null, null, null, true, null, null, null).inStockOnly())
+        assertThat(ProductQuery.of(null, null, null, null, null, true, null, null, null).inStockOnly())
                 .isTrue();
-        assertThat(ProductQuery.of(null, null, null, null, false, null, null, null).inStockOnly())
+        assertThat(ProductQuery.of(null, null, null, null, null, false, null, null, null).inStockOnly())
                 .isFalse();
-        assertThat(ProductQuery.of(null, null, null, null, null, null, null, null).inStockOnly())
+        assertThat(ProductQuery.of(null, null, null, null, null, null, null, null, null).inStockOnly())
                 .isNull();
     }
 }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The background layer of the adaptive launcher icon. Chapter 30.
+
+    THIS FILE EXISTS BECAUSE THE ICON WAS INVISIBLE.
+
+    An adaptive icon is two layers: this one, and `ic_launcher_foreground`, which
+    the launcher masks to whatever shape the device uses. The foreground is
+    correctly a white sparkle on transparency — it must be, because it is the
+    layer that gets masked and parallaxed, and baking a background into it would
+    show as a square corner poking out of a circular mask.
+
+    Capacitor's scaffold left the background as a flat `#FFFFFF` colour. White
+    mark, white background: the app drawer rendered CartWise as an empty white
+    circle. That is what the emulator screenshot showed, and no amount of
+    checking the generated PNGs would have found it, because every one of those
+    PNGs was correct on its own.
+
+    So the gradient lives here, on the layer that is allowed to have one.
+
+    WHY A SHAPE DRAWABLE AND NOT THE GENERATED PNG
+
+    A PNG would have to exist at five densities at 108dp for a flat wash, and it
+    would be a fourth copy of the brand colours to keep in step. A shape scales
+    to any density from six lines and names the two hex values once.
+
+    The angle is 315 rather than 45: Android measures gradient angle
+    anticlockwise from east, so 315 runs top-left to bottom-right and matches
+    both the web header's `bg-gradient-to-br` and the store assets that
+    tools/generate-app-icons.ps1 draws at GDI+'s 45 (which measures the other
+    way). The two numbers differ; the direction on screen is the same.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="315"
+        android:startColor="#2563EB"
+        android:endColor="#7C3AED" />
+</shape>

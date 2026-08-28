@@ -93,6 +93,30 @@ cartwise:
     # Comma-separated list of deployed frontend origins, e.g.
     # CARTWISE_ALLOWED_ORIGINS=https://cartwise.example.com
     # Unset means no CORS mapping is registered — a misconfigured deploy fails visibly.
+    #
+    # CHAPTER 30 — THE ANDROID APP NEEDS AN ENTRY HERE, AND IT IS NOT A URL.
+    #
+    # If CartWise ships the Play Store build, this list must ALSO contain
+    #
+    #     https://localhost
+    #
+    # exactly as written: no port, no host name. Capacitor serves the bundle
+    # from the device through a local content provider, so the WebView's origin
+    # is literally `https://localhost` — see `frontend/capacitor.config.ts`,
+    # where `androidScheme: "https"` fixes it. It is not the phone talking to a
+    # server on itself, and it does not vary per device or per install.
+    #
+    # This is worth the paragraph because of how the failure presents. The app
+    # launches, the splash clears, and every screen renders its chrome perfectly
+    # while showing an error where the data should be — it looks like the API is
+    # down rather than like a config line is missing. That is exactly what the
+    # emulator run in Chapter 30 produced, and the reason was only visible in
+    # logcat as a CORS preflight rejection.
+    #
+    # An iOS build, if one is ever produced, adds `capacitor://localhost` on the
+    # same reasoning. It is not listed here because no iOS project exists yet
+    # and an allowlist entry for a platform that does not ship is a permission
+    # granted for nothing.
     allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:}
 
 logging:

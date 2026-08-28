@@ -1,0 +1,41 @@
+# CartWise backend — Railway config-as-code. Chapter 30.
+#
+# WHERE THIS FILE LIVES, AND WHY THAT MATTERS
+#
+# This file is checked in at backend/railway.toml, not the repository root. Railway's schema
+# (verified against docs.railway.com/config-as-code/reference while writing this) covers exactly
+# one service per file — there is no documented syntax for listing several services in one
+# config, and no field in it sets a service's root directory. Both of those are dashboard (or CLI)
+# settings on the service itself:
+#
+#   - Settings -> Source -> Root Directory: backend
+#   - Settings -> Source -> Config-as-code path: backend/railway.toml
+#
+# See DEPLOYMENT.md for the exact clicks. This file only takes effect once those two are set —
+# committing it does not, by itself, configure anything.
+#
+# WHAT RAILWAY SUPPLIES THAT THIS FILE DOES NOT
+#
+# $PORT is injected automatically and application-prod.yml already reads it
+# (`server.port: ${PORT:8080}`), so nothing here needs to reference it.
+#
+# Every secret — DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, CARTWISE_ALLOWED_ORIGINS, the
+# Openverse and affiliate variables — is set as a Railway service Variable, never here. This file
+# is committed to a public-readable git history; a secret placed in it would be published the
+# moment it was pushed. See DEPLOYMENT.md for the complete variable list and where each value
+# comes from.
+
+"$schema" = "https://railway.com/railway.schema.json"
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# The endpoint Chapter 25 established as the real signal — it aggregates every health indicator
+# including the database, where /api/health returns a hardcoded "UP" and would call a backend with
+# no database perfectly healthy. See application.yml for the long comment this restates.
+healthcheckPath = "/actuator/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

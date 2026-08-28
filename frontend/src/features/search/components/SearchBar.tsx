@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Search, X } from "lucide-react";
 
 import { getCatalogue } from "../services/searchService";
@@ -7,6 +7,7 @@ import { buildSuggestions } from "../utils/searchUtils";
 import { useClickOutside } from "../hooks/useClickOutside";
 import SearchSuggestions from "./SearchSuggestions";
 import type { DropdownItem } from "./SearchSuggestions";
+import type { SearchProduct } from "../types/search";
 
 interface SearchBarProps {
     query: string;
@@ -47,7 +48,26 @@ export default function SearchBar({
 
     useClickOutside(wrapperRef, () => setOpen(false), open);
 
-    const catalogue = useMemo(() => getCatalogue(), []);
+    /*
+     * Chapter 30: a request rather than a module array. An empty catalogue
+     * simply means no suggestions for the moment before it lands, which the
+     * dropdown already renders correctly.
+     */
+    const [catalogue, setCatalogue] = useState<SearchProduct[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        void getCatalogue()
+            .then((items) => {
+                if (!cancelled) setCatalogue(items);
+            })
+            .catch(() => {
+                if (!cancelled) setCatalogue([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
     const trimmed = query.trim();
 
     // One flat list drives both rendering and arrow-key movement, so the

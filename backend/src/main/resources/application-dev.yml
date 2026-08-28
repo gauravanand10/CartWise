@@ -198,7 +198,28 @@ cartwise:
     # Written as a comma-separated default rather than a list because that is the form Spring can
     # bind an environment variable to; the relaxed binding maps a single scalar onto List<String>
     # by splitting on commas. The dev origins remain the default so a laptop needs no .env.
-    allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174}
+    #
+    # CHAPTER 30 — THE LAST TWO ORIGINS ARE THE MOBILE APP, NOT A BROWSER.
+    #
+    # The Capacitor Android app does not serve its bundle from a port. Capacitor
+    # runs a local content provider and the WebView's origin is a bare
+    # `https://localhost` — no port, and `http://localhost` when the app is
+    # built in CAP_LOCAL_API mode. Neither matches any entry above, because a
+    # port-less origin is a different origin from `http://localhost:5173`.
+    #
+    # Found by running the app, not by reading the config. The first emulator
+    # build rendered its whole shell and filled every data region with "Failed
+    # to fetch"; logcat gave the actual reason:
+    #
+    #   Access to fetch at 'http://10.0.2.2:8080/api/categories' from origin
+    #   'http://localhost' has been blocked by CORS policy: Response to
+    #   preflight request doesn't pass access control check
+    #
+    # This is not a dev-only wrinkle. The SHIPPED app has origin
+    # `https://localhost`, so a production API whose allowlist names only the
+    # website will reject every call the mobile app makes — see the note in
+    # application-prod.yml, which now says so explicitly.
+    allowed-origins: ${CARTWISE_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost,https://localhost}
 
 logging:
   level:

@@ -1,0 +1,120 @@
+# CartWise — Render Blueprint. Chapter 30.
+#
+# THIS FILE, NOT railway.toml, IS THE ONE ROOT-LEVEL DEPLOYMENT CONFIG
+#
+# Render's Blueprint spec (checked against render.com/docs/blueprint-spec and the published
+# render.yaml.json schema while writing this) DOES support several services in one file, unlike
+# Railway's config-as-code, which is scoped to one service per file — that is why backend/ and
+# frontend/ each carry their own railway.toml but there is exactly one render.yaml, at the
+# repository root, covering both services.
+#
+# WHY RAILWAY IS THE PRIMARY RECOMMENDATION AND THIS FILE IS THE ALTERNATIVE
+#
+# See railway.toml's own header for the full reasoning (cold-start latency on Render's free tier).
+# This file is a genuine, complete alternative for an owner who already has a Render account or
+# prefers Render's dashboard, not a token gesture — every service here was checked against Render's
+# actual documented schema, not assumed from Railway's.
+#
+# NO DOCKER BUILD-ARGS FIELD EXISTS IN THIS SCHEMA, AND THAT SHAPES HOW VITE_API_URL IS SET
+#
+# Render has no `dockerBuildArgs` (or equivalent) key. What it has instead: a plain `envVars` entry
+# on a `runtime: docker` service is automatically forwarded into any Dockerfile `ARG` of the same
+# name during the build — the same mechanism Railway uses, and the reason frontend/Dockerfile
+# declares `ARG VITE_API_URL` rather than something Render- or Railway-specific.
+#
+# The harder part is the VALUE. Render's `fromService` reference can only return a bare property —
+# `host`, `port`, `hostport`, or `connectionString` — never a scheme, so
+# `fromService: {property: host}` on its own is not a usable `https://...` URL and Blueprint YAML
+# has no string-concatenation to fix that inline. The `backendUrl` variable below is therefore a
+# LITERAL, built from Render's own predictable naming rule (a web service not yet claimed under
+# a name gets `https://<name>.onrender.com`) rather than a live reference. IT MUST BE CHECKED
+# after the backend service is first created — if `cartwise-backend` was already taken and Render
+# suffixed it, this literal is wrong until updated. DEPLOYMENT.md's Render walkthrough calls this
+# out as an explicit step rather than leaving it to be discovered as a "Failed to fetch" screen.
+
+databases: []
+
+services:
+  # -----------------------------------------------------------------------------------------
+  # Backend
+  # -----------------------------------------------------------------------------------------
+  - type: web
+    name: cartwise-backend
+    runtime: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # Render's `docker` runtime does not publish a $PORT the way Railway does in every
+      # environment; application-prod.yml's `${PORT:8080}` default covers it either way.
+
+      # DATABASE. `sync: false` means Render prompts for the real value once, at Blueprint
+      # creation, and never stores it in this file or in git. Point these at a managed Postgres
+      # — Render's own, or any external instance — and paste in its connection details. If the
+      # database is a Render Postgres instance created separately, its connection string can be
+      # wired here with `fromDatabase` instead; left as three manual secrets so this Blueprint
+      # does not assume a database topology the owner has not chosen yet.
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # SECURITY. generateValue produces a random 256-bit base64 secret at Blueprint creation —
+      # exactly the "openssl rand -base64 64"-grade key application-prod.yml's own comment asks
+      # for, without anyone having to run that command or paste the result anywhere.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 24h
+
+      # CORS. The frontend's Render URL, PLUS the two Capacitor origins from Chapter 30 — see the
+      # long comment on this exact variable in application-prod.yml for why a mobile build's
+      # WebView origin is a bare "https://localhost" and not a URL naming this deployment at all.
+      # The frontend host below must be updated to match wherever the frontend service actually
+      # ends up, for the same reason backendUrl is called out above.
+      - key: CARTWISE_ALLOWED_ORIGINS
+        value: https://cartwise-frontend.onrender.com,https://localhost
+
+      # OPENVERSE. Optional. Blank means the image backfill calls Openverse anonymously, which is
+      # the supported default — see application.yml. Set these only if higher rate limits from a
+      # registered Openverse application are needed.
+      - key: OPENVERSE_CLIENT_ID
+        sync: false
+      - key: OPENVERSE_CLIENT_SECRET
+        sync: false
+
+      # AFFILIATE TAGS. Optional. Every one of these defaults to a literal "cartwise-test-00" or
+      # blank in application.yml — see that file's long comment on why no real affiliate
+      # credential exists anywhere in this repository. Set real values here only once real
+      # affiliate program approval exists; leaving them unset changes nothing except which
+      # placeholder tag appears in outbound links.
+      - key: AFFILIATE_AMAZON_TAG
+        sync: false
+      - key: AFFILIATE_FLIPKART_TAG
+        sync: false
+
+  # -----------------------------------------------------------------------------------------
+  # Frontend
+  # -----------------------------------------------------------------------------------------
+  - type: web
+    name: cartwise-frontend
+    runtime: docker
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    healthCheckPath: /
+
+    envVars:
+      # See the file-level comment above: this is a literal prediction of the backend's URL, not
+      # a live reference, because Render's Blueprint schema has no way to concatenate a scheme
+      # onto a `fromService` host. VERIFY THIS after the backend service first deploys and update
+      # it (then redeploy the frontend) if the actual assigned hostname differs.
+      - key: VITE_API_URL
+        value: https://cartwise-backend.onrender.com/api

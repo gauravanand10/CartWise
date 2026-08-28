@@ -23,6 +23,30 @@ RUN npm ci
 
 COPY . .
 
+# CHAPTER 30 — THE DEPLOYED API HOST, AS A BUILD ARGUMENT.
+#
+# Compose never needed this: `docker-compose.yml` publishes both services to the host's own
+# loopback (frontend on :8081, backend on :8080), so the unset default in `services/api.ts` —
+# `http://localhost:8080/api` — happens to be correct there. It is correct BECAUSE the browser
+# runs on the same machine as both containers, which is a coincidence of local Compose and not
+# true of any real deployment.
+#
+# On Railway or Render the frontend and backend are two separate services, each with its own
+# HTTPS hostname, and neither is `localhost` to the browser. Vite reads `import.meta.env.*` at
+# BUILD time, not at container start — an `ENV` set on the running nginx container would be
+# invisible to a bundle that was already written to static files. A build ARG is therefore the
+# only point in this Dockerfile where the value can still reach the bundle.
+#
+# Unset, this defaults to the same `http://localhost:8080/api` the unset environment variable
+# already falls back to — so an image built exactly as Compose has always built it is unaffected.
+# A platform deployment supplies the real one:
+#
+#     docker build --build-arg VITE_API_URL=https://cartwise-api.up.railway.app/api .
+#
+# See railway.toml / render.yaml for where that value comes from during an actual deploy.
+ARG VITE_API_URL=http://localhost:8080/api
+ENV VITE_API_URL=$VITE_API_URL
+
 # `npm run build` is `tsc -b && vite build`, so a type error fails the image build rather than
 # shipping a broken bundle. That is worth keeping even though CI type-checks separately: the two
 # catch the same class of problem at different moments, and only this one blocks the artifact.

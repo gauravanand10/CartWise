@@ -44,7 +44,7 @@ class ProductServiceTest {
     private final ProductService productService = new ProductService(productRepository);
 
     private static final ProductQuery ANY_QUERY =
-            ProductQuery.of(null, null, null, null, null, null, null, null);
+            ProductQuery.of(null, null, null, null, null, null, null, null, null);
 
     @Nested
     @DisplayName("getProducts")

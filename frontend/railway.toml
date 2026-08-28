@@ -1,0 +1,37 @@
+# CartWise frontend — Railway config-as-code. Chapter 30.
+#
+# Lives at frontend/railway.toml for the same reason backend/railway.toml is not at the repository
+# root — Railway's config-as-code schema covers one service per file, and a service's root
+# directory and its config-as-code path are dashboard (or CLI) settings, not fields this file can
+# set for itself:
+#
+#   - Settings -> Source -> Root Directory: frontend
+#   - Settings -> Source -> Config-as-code path: frontend/railway.toml
+#
+# WHERE VITE_API_URL COMES FROM — NOT THIS FILE
+#
+# There is no "build arguments" key in Railway's config-as-code schema (checked against
+# docs.railway.com/config-as-code/reference while writing this), so this file cannot set
+# VITE_API_URL itself. Railway's actual mechanism is simpler: a service Variable is forwarded into
+# any Dockerfile `ARG` of the same name — which is why frontend/Dockerfile declares
+# `ARG VITE_API_URL` — so the value is set once, as a Variable on THIS service:
+#
+#     VITE_API_URL = https://${{cartwise-backend.RAILWAY_PUBLIC_DOMAIN}}/api
+#
+# `${{cartwise-backend.RAILWAY_PUBLIC_DOMAIN}}` is Railway's reference-variable syntax for reading
+# another service's public hostname — see DEPLOYMENT.md, where this is spelled out as one of the
+# ordered steps because it only resolves to something real once the backend service exists.
+
+"$schema" = "https://railway.com/railway.schema.json"
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# There is no dedicated liveness endpoint for a static nginx bundle; "did the root document load"
+# is the correct question and "/" answers it.
+healthcheckPath = "/"
+healthcheckTimeout = 15
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

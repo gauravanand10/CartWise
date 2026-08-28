@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    DEBUG BUILD TYPE ONLY. Chapter 30.
+
+    Android has banned cleartext HTTP by default since API 28, which is why the
+    first emulator run of this app rendered its shell perfectly and filled every
+    data region with "Failed to fetch": the backend under test was
+    http://10.0.2.2:8080 and the platform dropped the request before it left the
+    device.
+
+    This file lifts that ban for exactly one host and no others.
+
+    WHY IT CANNOT AFFECT A RELEASE
+
+    It lives in `src/debug/`, so Gradle merges it into the debug manifest and
+    into no other variant. `assembleRelease` and `bundleRelease` never see it —
+    not as an override that happens to be off, but as a file that is not part of
+    the build at all. Verify with:
+
+        ./gradlew :app:processReleaseManifest
+        grep -c networkSecurityConfig app/build/intermediates/merged_manifests/release/AndroidManifest.xml
+
+    WHY 10.0.2.2 AND NOTHING ELSE
+
+    10.0.2.2 is the Android emulator's fixed alias for the host machine's
+    loopback — it is meaningless on a real handset, so even this debug APK
+    cannot be pointed at an attacker's server by DNS. `cleartextTrafficPermitted`
+    is left at its secure default for every other destination, so a debug build
+    that talks to the real API still requires HTTPS.
+
+    `includeSubdomains` is absent deliberately: an IP literal has no subdomains,
+    and setting it would only widen the rule for no benefit.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

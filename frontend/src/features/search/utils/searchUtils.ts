@@ -103,10 +103,6 @@ export function sortProducts(
             return sorted.sort(
                 (a, b) => b.rating - a.rating || b.reviews - a.reviews,
             );
-        case "newest":
-            return sorted.sort(
-                (a, b) => Date.parse(b.addedAt) - Date.parse(a.addedAt),
-            );
         case "relevance":
         default:
             return sorted.sort(

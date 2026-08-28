@@ -28,6 +28,9 @@ import org.springframework.data.domain.Pageable;
  *
  * <p>The general rule: clamp when the request is merely immoderate, reject when it is incoherent.
  *
+ * @param text          free-text search across name, brand and category, or null for all.
+ *                      Added in Chapter 30 — see {@link #of} for why it is a filter rather than a
+ *                      separate endpoint
  * @param categorySlug  category to filter by, in URL form, or null for all
  * @param brand         brand to filter by, matched case-insensitively, or null for all
  * @param minPrice      inclusive lower bound, or null
@@ -39,6 +42,7 @@ import org.springframework.data.domain.Pageable;
  * @param size          page size, already clamped to {@link #MIN_PAGE_SIZE}..{@link #MAX_PAGE_SIZE}
  */
 public record ProductQuery(
+        String text,
         String categorySlug,
         String brand,
         BigDecimal minPrice,
@@ -77,10 +81,23 @@ public record ProductQuery(
     /**
      * Validates and normalises raw query-string values.
      *
+     * <h2>Chapter 30 — why {@code q} is a filter here rather than a {@code /search} endpoint</h2>
+     *
+     * <p>Free text is one more optional predicate over the same table, ordered the same ways and
+     * paged the same way. A second endpoint would duplicate every one of those concerns and then
+     * have to answer "can I search within a category" with a third. Adding it here means
+     * {@code ?q=pixel&category=smartphone&maxPrice=90000&sort=price-asc} composes for free, and the
+     * frontend's search page and browse page can share one client function.
+     *
+     * <p><strong>A blank {@code q} is not a search for nothing.</strong> It is treated as absent, by
+     * the same {@link #blankToNull} rule the other string filters use, so a search box that submits
+     * an empty field returns the catalogue rather than zero results.
+     *
      * @throws IllegalArgumentException for a negative page, a negative price, an inverted price
      *                                  range, or an unrecognised sort value (→ 400)
      */
     public static ProductQuery of(
+            String q,
             String category,
             String brand,
             BigDecimal minPrice,
@@ -122,6 +139,7 @@ public record ProductQuery(
                 : ProductSort.from(sort);
 
         return new ProductQuery(
+                blankToNull(q),
                 blankToNull(category),
                 blankToNull(brand),
                 minPrice,

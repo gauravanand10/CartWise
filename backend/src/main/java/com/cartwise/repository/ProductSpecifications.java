@@ -46,6 +46,9 @@ public final class ProductSpecifications {
     public static Specification<Product> from(ProductQuery query) {
         List<Specification<Product>> predicates = new ArrayList<>();
 
+        if (query.text() != null) {
+            predicates.add(matchesText(query.text()));
+        }
         if (query.categorySlug() != null) {
             predicates.add(hasCategorySlug(query.categorySlug()));
         }
@@ -66,6 +69,94 @@ public final class ProductSpecifications {
         }
 
         return predicates.stream().reduce(Specification::and).orElse(null);
+    }
+
+    /**
+     * Free-text search across name, brand and category. Chapter 30.
+     *
+     * <h2>Why {@code ILIKE} rather than PostgreSQL full-text search</h2>
+     *
+     * <p>The obvious "proper" answer is a {@code tsvector} column with a GIN index and
+     * {@code to_tsquery}. It is the wrong tool for this data, and the reason is what the strings
+     * actually are.
+     *
+     * <p>Full-text search tokenises on word boundaries and stems. That is exactly right for prose
+     * and exactly wrong for product names, which are mostly model designations: a shopper typing
+     * {@code wh-1000} expects the Sony WH-1000XM6, and {@code xm6}, {@code s25}, {@code m4} and
+     * {@code g14} are all real substrings of real product names in this catalogue that FTS would
+     * either not match at all or match only after the whole token was typed. Stemming actively
+     * hurts here — there is no linguistic root of "QN90F" worth finding.
+     *
+     * <p>{@code ILIKE '%term%'} is a substring match, which is the semantics a product-name search
+     * box actually has. It also needs no schema change, no migration, and no trigger to keep a
+     * derived column in step with the source.
+     *
+     * <p><strong>The cost, stated rather than discovered later:</strong> a leading-wildcard
+     * {@code ILIKE} cannot use a B-tree index, so this is a sequential scan. Over a hundred rows
+     * that is sub-millisecond and PostgreSQL would choose a scan over an index anyway. It stays
+     * acceptable into the low tens of thousands. Past that the fix is a {@code pg_trgm} GIN index
+     * — {@code CREATE INDEX … USING gin (name gin_trgm_ops)} — which makes exactly this predicate
+     * index-backed <em>without changing the API or this method's semantics</em>. That is the
+     * property that makes ILIKE the right starting point rather than a corner cut: the upgrade path
+     * is additive.
+     *
+     * <h2>Multiple words are ANDed, each against any field</h2>
+     *
+     * <p>{@code "samsung galaxy"} splits into two terms, and a product matches only if BOTH appear
+     * somewhere across its name, brand or category. So {@code "apple watch"} finds the Apple Watch
+     * without also returning every other Apple product, and — because each term may match a
+     * different field — {@code "sony headphones"} finds the WH-1000XM6 by matching the brand on one
+     * term and the category on the other, which no single-field search could do.
+     *
+     * <p>Order-independent by construction: {@code "galaxy samsung"} matches the same rows.
+     */
+    private static Specification<Product> matchesText(String text) {
+        // Split on any run of whitespace. A caller who pastes "  sony   wh-1000  " gets two terms,
+        // not four with two empties.
+        String[] terms = text.trim().toLowerCase(Locale.ROOT).split("\\s+");
+
+        return (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> perTerm = new ArrayList<>();
+
+            for (String term : terms) {
+                if (term.isEmpty()) {
+                    continue;
+                }
+
+                // Escaped so a product name containing % or _ cannot be searched for by accident,
+                // and so a user typing "50%" searches for the characters rather than a wildcard.
+                String pattern = "%" + escapeLike(term) + "%";
+
+                perTerm.add(cb.or(
+                        cb.like(cb.lower(root.get("name")), pattern, LIKE_ESCAPE),
+                        cb.like(cb.lower(root.get("brand")), pattern, LIKE_ESCAPE),
+                        cb.like(cb.lower(root.get("category")), pattern, LIKE_ESCAPE)));
+            }
+
+            // No usable terms (the input was punctuation or whitespace) means no restriction,
+            // matching how a blank q is treated as absent in ProductQuery.of.
+            return perTerm.isEmpty()
+                    ? cb.conjunction()
+                    : cb.and(perTerm.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
+    }
+
+    /** The character LIKE patterns below use to escape their own wildcards. */
+    private static final char LIKE_ESCAPE = '\\';
+
+    /**
+     * Neutralises LIKE's wildcards in user input.
+     *
+     * <p>Without this, searching for {@code %} matches every product and searching for {@code _}
+     * matches every product with at least one character — both of which look like a broken search
+     * rather than a literal match. The escape character itself must be escaped first, or escaping
+     * the wildcards would corrupt it.
+     */
+    private static String escapeLike(String value) {
+        return value
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     /**

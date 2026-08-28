@@ -7,6 +7,7 @@ import Wishlist from "../pages/Wishlist/Wishlist";
 import Product from "../pages/Product/Product";
 import NotFound from "../pages/NotFound/NotFound";
 import AffiliateDisclosure from "../pages/AffiliateDisclosure/AffiliateDisclosure";
+import PrivacyPolicy from "../pages/PrivacyPolicy/PrivacyPolicy";
 import AffiliateClicks from "../pages/Admin/AffiliateClicks";
 
 import { SearchPage } from "../features/search";
@@ -68,6 +69,18 @@ export default function AppRoutes() {
                 <Route
                     path="/affiliate-disclosure"
                     element={<AffiliateDisclosure />}
+                />
+
+                {/* Chapter 30. Public for the same reason the disclosure above
+                    is: required reading for a signed-OUT visitor deciding
+                    whether to sign up, so gating it behind an account would
+                    defeat its purpose. Written for the Play Store submission
+                    in this chapter's Part D, which requires a real policy URL
+                    — see the page itself for what it does and does not claim. */}
+
+                <Route
+                    path="/privacy"
+                    element={<PrivacyPolicy />}
                 />
 
                 <Route element={<ProtectedRoute />}>

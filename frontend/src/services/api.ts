@@ -157,6 +157,14 @@ export interface ApiCategory {
  * that makes query-string bugs hard to see.
  */
 export interface ProductQueryParams {
+    /**
+     * Free-text search across name, brand and category. Chapter 30.
+     *
+     * Multiple words are ANDed by the server and each may match a different
+     * field, so `"sony headphones"` finds the WH-1000XM6. Blank is treated as
+     * absent rather than as a search for nothing.
+     */
+    q?: string;
     category?: string;
     brand?: string;
     minPrice?: number;

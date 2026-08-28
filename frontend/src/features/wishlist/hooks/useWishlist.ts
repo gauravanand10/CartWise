@@ -65,7 +65,7 @@ export function useWishlist(): UseWishlist {
                 setProducts(loaded);
 
                 /*
-                 * SELF-HEALING, ADAPTED IN CHAPTER 23.5 — AND NARROWED.
+                 * SELF-HEALING, DISABLED IN CHAPTER 23.5. STILL DISABLED, FOR A DIFFERENT REASON.
                  *
                  * This used to read: `for (const slug of missing) remove(slug)`.
                  * A slug that no longer resolved was dropped from the selection,
@@ -74,31 +74,33 @@ export function useWishlist(): UseWishlist {
                  * — the list was the only record, and pruning it cost nothing
                  * that was not already broken.
                  *
-                 * Against the API it is destructive, and quietly so. `remove`
-                 * now issues a DELETE against the user's real wishlist, and
-                 * `missing` does not mean "the server forgot this product" — it
-                 * means "this frontend's mock catalogue could not resolve it".
-                 * Those came apart the moment the database became the source of
-                 * truth: V3 seeded 50 products, of which 27 exist only in
-                 * PostgreSQL and have no entry in the mock catalogue the product
-                 * service reads. Saving any of those and opening this page would
-                 * have deleted the row — a real saved product, erased by a
-                 * client-side lookup miss, with nothing on screen to say so.
+                 * Chapter 23.5 disabled it because `missing` meant something
+                 * unsafe at the time: this frontend read products from a
+                 * hand-written mock array that covered only some of what the
+                 * database actually held, so `missing` could mean "not in the
+                 * mock file" rather than "genuinely gone" — and `remove` issued
+                 * a real DELETE. Pruning on that signal risked erasing a
+                 * perfectly real saved product because of a client-side lookup
+                 * gap, with nothing on screen to say so.
                  *
-                 * So the pruning is gone and the products that did resolve are
-                 * rendered. The server is authoritative about what is saved; a
-                 * slug it returned is saved, whether or not this build can draw
-                 * a card for it.
+                 * THAT mock catalogue is gone — Chapter 26.5 deleted the last of
+                 * it, and every product this hook can be asked to load now comes
+                 * from the same database the wishlist itself is stored in, so
+                 * `missing` is back to meaning what it originally meant: the
+                 * server answered 404. Checked while writing this note, not
+                 * assumed — `GET /api/products/{slug}` was tried against several
+                 * seeded products and resolved all of them.
                  *
-                 * The cost is the problem the original code solved: the badge
-                 * counts what the server holds while the grid shows only what
-                 * resolved, so the two can disagree by exactly the number of
-                 * database-only products saved. That is a visible inconsistency
-                 * and it is the lesser one — the alternative is silent data
-                 * loss. The real repair is for this hook to build its cards from
-                 * the wishlist response, which already embeds every product in
-                 * full; that is a larger change than unblocking the wiring and
-                 * is recorded rather than smuggled in here.
+                 * Pruning stays disabled anyway. A 404 today almost always means
+                 * a product was genuinely delisted, and re-enabling silent
+                 * deletion on that signal reintroduces the original risk for a
+                 * saving that is now marginal — the badge/grid mismatch below is
+                 * a visible inconsistency, which is a cheaper failure mode than
+                 * a wishlist row vanishing without the user doing anything. The
+                 * real fix remains what it always was: build this hook's cards
+                 * from the wishlist response itself, which already embeds every
+                 * product in full and would make `missing` unnecessary rather
+                 * than merely safer to ignore.
                  */
                 void missing;
             } catch {

@@ -70,6 +70,11 @@ public class ProductController {
      * {@code numeric(12,2)} column exists to avoid. A price that is not a number fails to bind and
      * Spring MVC's own handling answers 400.
      *
+     * @param q        free-text search across name, brand and category. Multiple words are ANDed
+     *                 and each may match a different field, so {@code sony headphones} finds the
+     *                 WH-1000XM6. Blank is treated as absent. Chapter 30 — before it, {@code /search}
+     *                 ran on a 20-product mock file because this endpoint could not answer a text
+     *                 query at all
      * @param category one category slug, e.g. {@code smartphone}; matched case-insensitively
      * @param brand    one brand name, matched case-insensitively
      * @param minPrice inclusive lower bound
@@ -83,6 +88,7 @@ public class ProductController {
      */
     @GetMapping
     public ResponseEntity<PageResponse<ProductDto>> getProducts(
+            @RequestParam(required = false) String q,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) BigDecimal minPrice,
@@ -93,7 +99,7 @@ public class ProductController {
             @RequestParam(required = false) Integer size) {
 
         ProductQuery query = ProductQuery.of(
-                category, brand, minPrice, maxPrice, inStock, sort, page, size);
+                q, category, brand, minPrice, maxPrice, inStock, sort, page, size);
 
         return ResponseEntity.ok(productService.getProducts(query));
     }

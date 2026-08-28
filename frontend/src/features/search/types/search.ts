@@ -18,8 +18,12 @@ export interface SearchProduct {
     rating: number;
     /** Number of ratings behind `rating` — needed to show credible social proof. */
     reviews: number;
-    /** ISO date the product was listed. Drives the "Newest" sort. */
-    addedAt: string;
+    /*
+     * Chapter 30 removed `addedAt`. The database records no creation date
+     * for a product; the mock file's values were invented, and the
+     * "Newest First" sort that read them went with it. Chapter 26.5
+     * removed "New arrivals" from the footer for exactly this reason.
+     */
     inStock: boolean;
     image: string;
 }
@@ -28,8 +32,7 @@ export type SortOption =
     | "relevance"
     | "price-low-high"
     | "price-high-low"
-    | "rating"
-    | "newest";
+    | "rating";
 
 /** What the results panel should render right now. */
 export type SearchStatus =

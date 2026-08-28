@@ -126,6 +126,32 @@ public class AdminController {
     }
 
     /**
+     * {@code POST /api/admin/products/images/tiered} — the Chapter 30 backfill.
+     *
+     * <p>Everything the route above says still applies: admin-only, idempotent without
+     * {@code ?force=true}, and it spends a third party's rate limit.
+     *
+     * <p>What differs is the strategy. That one searches once per category and distributes the
+     * results, so a product gets a photograph of its KIND. This one searches for the product's own
+     * brand and model first, accepts the result only if its title actually names the thing, and
+     * falls back to the category search when it does not — and to no photograph at all when neither
+     * turns anything up. See {@link ProductImageService#backfillTiered}.
+     *
+     * <p>The old route is deliberately kept rather than replaced. It is one request per category
+     * against this one's request-per-product, so on a large catalogue or a tight upstream quota it
+     * is still the one an operator wants; and keeping both means the improvement can be measured by
+     * running each and comparing, which is how this chapter reported its match rates.
+     *
+     * <p>200 with a {@link ProductImageService.MatchRates} naming which products landed in which
+     * tier — not just how many. A count alone could not be checked against the catalogue.
+     */
+    @PostMapping("/products/images/tiered")
+    public ResponseEntity<ProductImageService.MatchRates> backfillImagesTiered(
+            @RequestParam(defaultValue = "false") boolean force) {
+        return ResponseEntity.ok(productImageService.backfillTiered(force));
+    }
+
+    /**
      * {@code GET /api/admin/users} — every account, oldest first.
      *
      * <p>200 with a list of {@link UserDto}; {@code []} if there are somehow no accounts, which is

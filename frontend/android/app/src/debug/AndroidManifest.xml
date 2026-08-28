@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    DEBUG BUILD TYPE ONLY. Chapter 30.
+
+    A manifest overlay, not a replacement. Gradle merges this into the main
+    manifest for the debug variant alone; everything the main manifest declares
+    (the launcher activity, the file provider, the INTERNET permission) is
+    inherited and only the attribute named below is added.
+
+    Its single job is to point the debug app at `network_security_config.xml`
+    in this same source set, which permits cleartext to the emulator's host
+    alias so the app can be verified against a backend running on this machine.
+    See that file for why this cannot reach a release build.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>

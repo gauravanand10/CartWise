@@ -71,21 +71,18 @@ export function useComparison(): UseComparison {
 
                 /*
                  * Pruning removed in Chapter 23.5, for the same reason as the
-                 * wishlist's — see the long note in `useWishlist`.
+                 * wishlist's — see the current, corrected note in `useWishlist`
+                 * for why `missing` no longer carries the risk that disabled
+                 * this: the mock catalogue it once meant "not in" is gone, and
+                 * `getComparisonProducts` resolves every seeded product through
+                 * `getProductBySlug`, the same real API path the product page
+                 * itself uses — checked directly, not assumed.
                  *
-                 * In short: `remove` now DELETEs a real comparison row, and
-                 * `missing` means "the mock catalogue could not resolve it", not
-                 * "the server does not have it". Those stopped being the same
-                 * thing when the database became the source of truth, and the
-                 * old line would have silently dropped columns for any of the 27
-                 * seeded products that exist only in PostgreSQL.
-                 *
-                 * It bites harder here than on the wishlist: this hook feeds the
-                 * comparison grid, whose specifications and verdicts come from
-                 * the mock catalogue and have no backend equivalent at all, so
-                 * database-only products cannot be compared today regardless.
-                 * They now stay in the selection unrendered instead of being
-                 * deleted from it.
+                 * Pruning stays off for the same reason it stays off there: a
+                 * 404 today is almost always a genuinely delisted product, and
+                 * silently deleting a comparison column on that signal is worse
+                 * than leaving a visible gap for the user to notice and clear
+                 * themselves.
                  */
                 void missing;
             } catch {

@@ -58,7 +58,16 @@ class ProductRepositoryTest {
     private static ProductQuery query(
             String category, String brand, String min, String max, Boolean inStock, String sort,
             Integer page, Integer size) {
+        return search(null, category, brand, min, max, inStock, sort, page, size);
+    }
+
+    /** Chapter 30 — the same helper with the free-text term exposed. */
+    private static ProductQuery search(
+            String q,
+            String category, String brand, String min, String max, Boolean inStock, String sort,
+            Integer page, Integer size) {
         return ProductQuery.of(
+                q,
                 category,
                 brand,
                 min == null ? null : new BigDecimal(min),
